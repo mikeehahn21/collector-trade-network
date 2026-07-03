@@ -16,6 +16,10 @@ export default tseslint.config(
       "thumb-check-final/**",
       "packages/*/src/*.d.ts",
       "packages/*/src/*.js",
+      // Next.js auto-generated files that must use triple-slash references
+      "**/next-env.d.ts",
+      // Vitest config files are not part of the TS project service
+      "**/vitest.config.ts",
     ],
   },
   js.configs.recommended,
