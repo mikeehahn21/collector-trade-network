@@ -26,7 +26,10 @@ import { findUserByClerkId } from "../../db/repositories/users.repository";
 import type { AppServices } from "../services";
 import { notifyTradeProposed, notifyTradeStatusChanged } from "./trade-notifications";
 
-export async function registerTradeRoutes(app: FastifyInstance, services: AppServices): Promise<void> {
+export async function registerTradeRoutes(
+  app: FastifyInstance,
+  services: AppServices,
+): Promise<void> {
   app.post(apiRoutes.trades, async (request, reply) => {
     const user = await requireCurrentUser(request, services);
     const parsed = createTradeContract.body.safeParse(request.body);

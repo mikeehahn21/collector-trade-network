@@ -74,6 +74,8 @@ export default function ItemVerificationScreen() {
     setIsUploading(true);
     setError(undefined);
 
+    if (!item) return;
+
     try {
       const response = await api.uploadItemVerificationVideo(item.id, {
         videoUrl: videoUri,
@@ -103,7 +105,10 @@ export default function ItemVerificationScreen() {
       subtitle="Record a 5-30 second video showing the item front, back, tag, flaws, and rotation with the code visible."
       footer={
         <View style={{ gap: theme.spacing.md }}>
-          <AppButton accessibilityLabel="Record verification video" onPress={() => void recordVideo()}>
+          <AppButton
+            accessibilityLabel="Record verification video"
+            onPress={() => void recordVideo()}
+          >
             Record Verification Video
           </AppButton>
           <AppButton
@@ -136,7 +141,14 @@ export default function ItemVerificationScreen() {
           <Text style={{ color: theme.colors.textPrimary, fontSize: 44, fontWeight: "900" }}>
             {verificationCode}
           </Text>
-          <Text style={{ color: theme.colors.textSecondary, fontSize: 14, lineHeight: 20, textAlign: "center" }}>
+          <Text
+            style={{
+              color: theme.colors.textSecondary,
+              fontSize: 14,
+              lineHeight: 20,
+              textAlign: "center",
+            }}
+          >
             Keep this code visible in the frame while recording.
           </Text>
         </View>
@@ -155,7 +167,10 @@ export default function ItemVerificationScreen() {
             Recording guide
           </Text>
           {verificationSteps.map((step, index) => (
-            <View key={step} style={{ alignItems: "center", flexDirection: "row", gap: theme.spacing.md }}>
+            <View
+              key={step}
+              style={{ alignItems: "center", flexDirection: "row", gap: theme.spacing.md }}
+            >
               <View
                 style={{
                   alignItems: "center",
@@ -170,7 +185,9 @@ export default function ItemVerificationScreen() {
                   {index + 1}
                 </Text>
               </View>
-              <Text style={{ color: theme.colors.textSecondary, flex: 1, fontSize: 15 }}>{step}</Text>
+              <Text style={{ color: theme.colors.textSecondary, flex: 1, fontSize: 15 }}>
+                {step}
+              </Text>
             </View>
           ))}
         </View>
@@ -192,9 +209,16 @@ export default function ItemVerificationScreen() {
           <Text style={{ color: theme.colors.textPrimary, fontSize: 22, fontWeight: "900" }}>
             Camera guide overlay
           </Text>
-          <Text style={{ color: theme.colors.textSecondary, fontSize: 15, lineHeight: 22, textAlign: "center" }}>
-            Center the shirt inside this frame. Move slowly through each step so the AI review can compare the
-            video against the listing.
+          <Text
+            style={{
+              color: theme.colors.textSecondary,
+              fontSize: 15,
+              lineHeight: 22,
+              textAlign: "center",
+            }}
+          >
+            Center the shirt inside this frame. Move slowly through each step so the AI review can
+            compare the video against the listing.
           </Text>
           {videoUri ? (
             <Text style={{ color: theme.colors.accent, fontSize: 14, fontWeight: "900" }}>

@@ -9,43 +9,61 @@ export default tseslint.config(
       "**/.next/**",
       "**/node_modules/**",
       "**/coverage/**",
+      "**/next-env.d.ts",
       "facebook-assets/**",
       "facebook-video-frames/**",
       "facebook-video-frames-winrt/**",
       "thumb-check/**",
       "thumb-check-final/**",
       "packages/*/src/*.d.ts",
-      "packages/*/src/*.js"
-    ]
+      "packages/*/src/*.js",
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
+  // All packages except api: use projectService
   {
+    ignores: ["apps/api/**"],
     languageOptions: {
       parserOptions: {
         projectService: {
-          // Allow files not explicitly listed in tsconfig (migrations, vitest configs, etc.)
+          // Allow files not explicitly listed in tsconfig (root config files, validation vitest config)
           allowDefaultProject: [
-            "apps/api/migrations/*.ts",
-            "apps/api/vitest.config.ts",
-            "apps/api/vitest.integration.config.ts",
-            "packages/types/src/*.js",
-            "packages/types/src/*.d.ts",
-            "packages/validation/src/*.js",
-            "packages/validation/src/*.d.ts",
+            "packages/validation/vitest.config.ts",
             "eslint.config.mjs",
             "lint-staged.config.cjs",
-            "commitlint.config.cjs"
-          ]
+            "commitlint.config.cjs",
+          ],
         },
-        tsconfigRootDir: import.meta.dirname
-      }
+        tsconfigRootDir: import.meta.dirname,
+      },
     },
+  },
+  // API package: use tsconfig.lint.json which includes migrations and vitest configs
+  {
+    files: ["apps/api/**/*.ts"],
+    languageOptions: {
+      parserOptions: {
+        project: "./apps/api/tsconfig.lint.json",
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
+  // Root config files and CJS modules: disable type-checked rules that don't apply
+  {
+    files: ["eslint.config.mjs", "*.cjs"],
     rules: {
-      "@typescript-eslint/consistent-type-imports": [
-        "error",
-        { "prefer": "type-imports" }
-      ],
+      "@typescript-eslint/no-unsafe-argument": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off",
+      "@typescript-eslint/no-unsafe-call": "off",
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-require-imports": "off",
+      "no-undef": "off",
+    },
+  },
+  {
+    rules: {
+      "@typescript-eslint/consistent-type-imports": ["error", { prefer: "type-imports" }],
       "@typescript-eslint/no-floating-promises": "error",
       "@typescript-eslint/no-misused-promises": "error",
       // Fastify route handlers must be async for the reply/lifecycle system even when
@@ -54,9 +72,9 @@ export default tseslint.config(
       // Allow underscore-prefixed parameters to indicate intentionally unused args
       "@typescript-eslint/no-unused-vars": [
         "error",
-        { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_", "caughtErrorsIgnorePattern": "^_" }
-      ]
-    }
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrorsIgnorePattern: "^_" },
+      ],
+    },
   },
-  eslintConfigPrettier
+  eslintConfigPrettier,
 );

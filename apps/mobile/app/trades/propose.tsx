@@ -109,7 +109,9 @@ export default function TradeProposalScreen() {
 
   return (
     <Screen>
-      <ScrollView contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}>
+      <ScrollView
+        contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}
+      >
         <View style={{ gap: theme.spacing.sm }}>
           <Text style={{ color: theme.colors.accent, fontSize: 12, fontWeight: "900" }}>
             TRADE PROPOSAL
@@ -172,7 +174,11 @@ export default function TradeProposalScreen() {
         >
           Send Trade Proposal
         </AppButton>
-        <AppButton accessibilityLabel="Cancel trade proposal" onPress={() => router.back()} variant="ghost">
+        <AppButton
+          accessibilityLabel="Cancel trade proposal"
+          onPress={() => router.back()}
+          variant="ghost"
+        >
           Cancel
         </AppButton>
       </ScrollView>

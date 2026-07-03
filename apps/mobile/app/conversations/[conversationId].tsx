@@ -30,38 +30,41 @@ export default function ConversationDetailScreen() {
     apiRef.current = api;
   }, [api]);
 
-  const refresh = useCallback(async ({ initial = false }: { initial?: boolean } = {}) => {
-    if (initial) {
-      setIsLoading(true);
-    }
-    setError(undefined);
-
-    try {
-      const [meResponse, conversationResponse, messagesResponse] = await Promise.all([
-        apiRef.current.getMe(),
-        apiRef.current.getConversation(conversationId),
-        apiRef.current.listMessages(conversationId),
-      ]);
-
-      setCurrentUser(meResponse.user);
-      setConversation(conversationResponse.conversation);
-      setMessages(messagesResponse.messages);
-
-      const latestIncoming = [...messagesResponse.messages]
-        .reverse()
-        .find((message) => message.senderId !== meResponse.user.id);
-
-      if (latestIncoming) {
-        void apiRef.current.markMessageRead(latestIncoming.id);
-      }
-    } catch {
-      setError("This conversation could not be loaded.");
-    } finally {
+  const refresh = useCallback(
+    async ({ initial = false }: { initial?: boolean } = {}) => {
       if (initial) {
-        setIsLoading(false);
+        setIsLoading(true);
       }
-    }
-  }, [conversationId]);
+      setError(undefined);
+
+      try {
+        const [meResponse, conversationResponse, messagesResponse] = await Promise.all([
+          apiRef.current.getMe(),
+          apiRef.current.getConversation(conversationId),
+          apiRef.current.listMessages(conversationId),
+        ]);
+
+        setCurrentUser(meResponse.user);
+        setConversation(conversationResponse.conversation);
+        setMessages(messagesResponse.messages);
+
+        const latestIncoming = [...messagesResponse.messages]
+          .reverse()
+          .find((message) => message.senderId !== meResponse.user.id);
+
+        if (latestIncoming) {
+          void apiRef.current.markMessageRead(latestIncoming.id);
+        }
+      } catch {
+        setError("This conversation could not be loaded.");
+      } finally {
+        if (initial) {
+          setIsLoading(false);
+        }
+      }
+    },
+    [conversationId],
+  );
 
   useEffect(() => {
     void refresh({ initial: true });
@@ -118,7 +121,10 @@ export default function ConversationDetailScreen() {
       <Screen>
         <View style={{ gap: theme.spacing.md }}>
           <ScreenState message={error} title="Conversation unavailable" tone="warning" />
-          <AppButton accessibilityLabel="Back to conversations" onPress={() => router.replace("/conversations")}>
+          <AppButton
+            accessibilityLabel="Back to conversations"
+            onPress={() => router.replace("/conversations")}
+          >
             Back to Conversations
           </AppButton>
         </View>
@@ -132,7 +138,9 @@ export default function ConversationDetailScreen() {
 
   return (
     <Screen>
-      <ScrollView contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}>
+      <ScrollView
+        contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}
+      >
         <View style={{ gap: theme.spacing.sm }}>
           <Text style={{ color: theme.colors.accent, fontSize: 12, fontWeight: "900" }}>
             {conversation.contextType.toUpperCase()} CONVERSATION
@@ -268,7 +276,10 @@ function MessageBubble({ isMine, message }: { isMine: boolean; message: Conversa
             opacity: 0.78,
           }}
         >
-          {new Date(message.createdAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+          {new Date(message.createdAt).toLocaleTimeString([], {
+            hour: "numeric",
+            minute: "2-digit",
+          })}
           {isMine && message.readAt ? " / Read" : ""}
         </Text>
       </View>

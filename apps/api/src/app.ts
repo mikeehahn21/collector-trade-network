@@ -55,7 +55,9 @@ export async function buildApp(env: Env) {
     }
 
     app.log.error(error);
-    return reply.status(500).send({ code: "INTERNAL_SERVER_ERROR", message: "Unexpected server error." });
+    return reply
+      .status(500)
+      .send({ code: "INTERNAL_SERVER_ERROR", message: "Unexpected server error." });
   });
 
   const appInstance = app as unknown as FastifyInstance;

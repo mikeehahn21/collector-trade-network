@@ -56,7 +56,7 @@ export function listContextualMessages(
   db: Queryable,
   conversationId: string,
   userId: string,
-  before?: string | undefined,
+  before?: string,
 ): Promise<ConversationMessage[]> {
   return listMessagesForConversation(db, conversationId, userId, before);
 }
@@ -74,7 +74,7 @@ export function markContextualMessageRead(
   db: Queryable,
   messageId: string,
   userId: string,
-  readAt?: string | undefined,
+  readAt?: string,
 ): Promise<boolean> {
   return markMessageReadForUser(db, messageId, userId, readAt ? new Date(readAt) : undefined);
 }

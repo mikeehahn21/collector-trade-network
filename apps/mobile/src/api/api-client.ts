@@ -33,19 +33,19 @@ import type {
 
 import { getMobileEnv } from "@/config/env";
 
-export type AuthHeaderProvider = () => Promise<{
-  bearerToken?: string | undefined;
-  clerkUserId?: string | undefined;
-  email?: string | undefined;
-} | undefined>;
+export type AuthHeaderProvider = () => Promise<
+  | {
+      bearerToken?: string;
+      clerkUserId?: string;
+      email?: string;
+    }
+  | undefined
+>;
 
 export type ApiClient = {
   getMe: () => Promise<MeResponse>;
   upsertMe: (
-    profile: Pick<
-      UserProfile,
-      "bio" | "displayName" | "email" | "locationRegion" | "socialHandle"
-    >,
+    profile: Pick<UserProfile, "bio" | "displayName" | "email" | "locationRegion" | "socialHandle">,
   ) => Promise<MeResponse>;
   listItems: () => Promise<ItemsResponse>;
   createItem: (item: Partial<TradeableItem>) => Promise<ItemResponse>;
@@ -72,7 +72,7 @@ export type ApiClient = {
     recommendationId: string,
     input: {
       rating: RecommendationFeedbackRating;
-      targetItemId?: string | undefined;
+      targetItemId?: string;
     },
   ) => Promise<RecommendationFeedbackResponse>;
   createTrade: (input: CreateTradeInput) => Promise<TradeResponse>;
@@ -82,10 +82,7 @@ export type ApiClient = {
     tradeId: string,
     status: Extract<TradeStatus, "accepted" | "declined" | "cancelled">,
   ) => Promise<TradeResponse>;
-  counterTrade: (
-    tradeId: string,
-    input: CounterTradeInput,
-  ) => Promise<TradeResponse>;
+  counterTrade: (tradeId: string, input: CounterTradeInput) => Promise<TradeResponse>;
   shipTrade: (tradeId: string, input: ShipTradeInput) => Promise<TradeResponse>;
   receiveTrade: (tradeId: string) => Promise<TradeResponse>;
   completeTrade: (tradeId: string) => Promise<TradeResponse>;
@@ -96,10 +93,7 @@ export type ApiClient = {
   }) => Promise<ConversationResponse>;
   listConversations: () => Promise<ConversationsResponse>;
   getConversation: (conversationId: string) => Promise<ConversationResponse>;
-  listMessages: (
-    conversationId: string,
-    before?: string | undefined,
-  ) => Promise<ConversationMessagesResponse>;
+  listMessages: (conversationId: string, before?: string) => Promise<ConversationMessagesResponse>;
   sendMessage: (
     conversationId: string,
     input: SendMessageInput,
@@ -111,10 +105,7 @@ export type ApiClient = {
 export function createApiClient(getAuthHeaders: AuthHeaderProvider): ApiClient {
   const { apiBaseUrl } = getMobileEnv();
 
-  async function request<TResponse>(
-    path: string,
-    options: RequestInit = {},
-  ): Promise<TResponse> {
+  async function request<TResponse>(path: string, options: RequestInit = {}): Promise<TResponse> {
     const auth = await getAuthHeaders();
     const response = await fetchWithRetry(`${apiBaseUrl}${path}`, {
       ...options,

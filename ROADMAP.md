@@ -21,14 +21,14 @@ The following constraints are permanent product boundaries:
 
 ## Completed Milestones
 
-| Milestone | Status | Summary |
-|-----------|--------|---------|
-| Sprint 0 — Foundation | Complete | Monorepo, CI, shared packages, API, mobile, admin shells |
-| Sprint 1 — Onboarding | Complete | Invite-only access, account creation, onboarding preferences |
-| Sprint 2 — Collection Engine | Complete | Inventory management, item lifecycle, photo management |
-| Sprint 3 — Wishlist & Grails | Complete | Wishlist, Grail limits, demand-side data model |
-| Sprint 4 — Auth & Persistence | Complete | Server-side user model, repository structure, auth hardening |
-| Sprint 5 — Clerk & Sync | Complete | Clerk integration, authenticated sync, protected routes |
+| Milestone                     | Status   | Summary                                                        |
+| ----------------------------- | -------- | -------------------------------------------------------------- |
+| Sprint 0 — Foundation         | Complete | Monorepo, CI, shared packages, API, mobile, admin shells       |
+| Sprint 1 — Onboarding         | Complete | Invite-only access, account creation, onboarding preferences   |
+| Sprint 2 — Collection Engine  | Complete | Inventory management, item lifecycle, photo management         |
+| Sprint 3 — Wishlist & Grails  | Complete | Wishlist, Grail limits, demand-side data model                 |
+| Sprint 4 — Auth & Persistence | Complete | Server-side user model, repository structure, auth hardening   |
+| Sprint 5 — Clerk & Sync       | Complete | Clerk integration, authenticated sync, protected routes        |
 | Sprint 6 — Trade Graph Engine | Complete | Deterministic recommendation engine, scoring, mobile dashboard |
 
 ---
@@ -84,4 +84,4 @@ The following are explicitly deferred until after MVP:
 
 ---
 
-*Last updated: 2026-07-03*
+_Last updated: 2026-07-03_

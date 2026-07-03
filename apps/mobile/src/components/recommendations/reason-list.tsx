@@ -23,8 +23,12 @@ export function ReasonList({ reasons }: ReasonListProps) {
             padding: theme.spacing.md,
           }}
         >
-          <View style={{ flexDirection: "row", justifyContent: "space-between", gap: theme.spacing.md }}>
-            <Text style={{ color: theme.colors.textPrimary, flex: 1, fontSize: 15, fontWeight: "800" }}>
+          <View
+            style={{ flexDirection: "row", justifyContent: "space-between", gap: theme.spacing.md }}
+          >
+            <Text
+              style={{ color: theme.colors.textPrimary, flex: 1, fontSize: 15, fontWeight: "800" }}
+            >
               {reason.label}
             </Text>
             <Text style={{ color: theme.colors.accent, fontSize: 13, fontWeight: "900" }}>

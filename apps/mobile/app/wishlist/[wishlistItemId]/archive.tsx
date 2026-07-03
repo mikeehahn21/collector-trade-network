@@ -41,7 +41,10 @@ export default function ArchiveWishlistItemScreen() {
       deleteWishlistItem(currentItem.id);
     } catch {
       deleteWishlistItem(currentItem.id);
-      Alert.alert("Deleted locally", "Server sync failed. This delete action may need reconciliation.");
+      Alert.alert(
+        "Deleted locally",
+        "Server sync failed. This delete action may need reconciliation.",
+      );
     }
     router.replace("/wishlist");
   }
@@ -63,7 +66,11 @@ export default function ArchiveWishlistItemScreen() {
           >
             Delete permanently
           </AppButton>
-          <AppButton accessibilityLabel="Cancel archive" onPress={() => router.back()} variant="ghost">
+          <AppButton
+            accessibilityLabel="Cancel archive"
+            onPress={() => router.back()}
+            variant="ghost"
+          >
             Cancel
           </AppButton>
         </>

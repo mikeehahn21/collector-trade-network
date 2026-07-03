@@ -20,10 +20,10 @@ Thank you for contributing to the Collector Trade Network. This guide covers eve
 
 ### Prerequisites
 
-| Tool | Version |
-|------|---------|
-| Node.js | >= 20.11.0 |
-| pnpm | >= 11.0.0 |
+| Tool           | Version       |
+| -------------- | ------------- |
+| Node.js        | >= 20.11.0    |
+| pnpm           | >= 11.0.0     |
 | Docker Desktop | Latest stable |
 
 ### First-Time Setup
@@ -57,13 +57,13 @@ pnpm test
 
 This repository uses a trunk-based branching model with the following branches:
 
-| Branch | Purpose |
-|--------|---------|
-| `main` | Production-ready code. Protected. Requires PR + review. |
-| `develop` | Integration branch for sprint work. All feature branches merge here first. |
-| `feature/*` | New features and enhancements (e.g., `feature/trade-graph-v2`). |
-| `hotfix/*` | Urgent production fixes branched from `main` (e.g., `hotfix/auth-token-expiry`). |
-| `release/*` | Release preparation branches (e.g., `release/v1.0.0`). |
+| Branch      | Purpose                                                                          |
+| ----------- | -------------------------------------------------------------------------------- |
+| `main`      | Production-ready code. Protected. Requires PR + review.                          |
+| `develop`   | Integration branch for sprint work. All feature branches merge here first.       |
+| `feature/*` | New features and enhancements (e.g., `feature/trade-graph-v2`).                  |
+| `hotfix/*`  | Urgent production fixes branched from `main` (e.g., `hotfix/auth-token-expiry`). |
+| `release/*` | Release preparation branches (e.g., `release/v1.0.0`).                           |
 
 ### Workflow
 
@@ -86,17 +86,17 @@ This project uses [Conventional Commits](https://www.conventionalcommits.org/). 
 
 ### Types
 
-| Type | When to Use |
-|------|-------------|
-| `feat` | A new feature |
-| `fix` | A bug fix |
-| `docs` | Documentation changes only |
-| `style` | Formatting, missing semicolons, etc. (no logic change) |
-| `refactor` | Code change that is neither a fix nor a feature |
-| `test` | Adding or updating tests |
-| `chore` | Build process, dependency updates, tooling |
-| `perf` | Performance improvements |
-| `ci` | CI/CD configuration changes |
+| Type       | When to Use                                            |
+| ---------- | ------------------------------------------------------ |
+| `feat`     | A new feature                                          |
+| `fix`      | A bug fix                                              |
+| `docs`     | Documentation changes only                             |
+| `style`    | Formatting, missing semicolons, etc. (no logic change) |
+| `refactor` | Code change that is neither a fix nor a feature        |
+| `test`     | Adding or updating tests                               |
+| `chore`    | Build process, dependency updates, tooling             |
+| `perf`     | Performance improvements                               |
+| `ci`       | CI/CD configuration changes                            |
 
 ### Examples
 
@@ -139,12 +139,12 @@ pnpm test           # Unit tests
 
 ## Testing Requirements
 
-| Layer | Tool | Requirement |
-|-------|------|-------------|
-| Unit tests | Vitest | Required for all business logic |
-| Integration tests | Vitest | Required for API routes |
-| E2E tests | Playwright | Required for critical user flows |
-| Mobile component tests | Vitest | Required for state and utility logic |
+| Layer                  | Tool       | Requirement                          |
+| ---------------------- | ---------- | ------------------------------------ |
+| Unit tests             | Vitest     | Required for all business logic      |
+| Integration tests      | Vitest     | Required for API routes              |
+| E2E tests              | Playwright | Required for critical user flows     |
+| Mobile component tests | Vitest     | Required for state and utility logic |
 
 New features must include tests. Bug fixes must include a regression test.
 

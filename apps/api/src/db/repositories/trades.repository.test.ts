@@ -2,7 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import type { Trade } from "@ctn/types";
 
-import { canCompleteTrade, canReceiveTrade, canShipTrade, canUpdateTradeStatus } from "./trades.repository";
+import {
+  canCompleteTrade,
+  canReceiveTrade,
+  canShipTrade,
+  canUpdateTradeStatus,
+} from "./trades.repository";
 
 const baseTrade: Trade = {
   id: "trade_1",
@@ -66,7 +71,11 @@ describe("canUpdateTradeStatus", () => {
     const acceptedTrade = {
       ...baseTrade,
       status: "accepted" as const,
-      proposerShipping: { status: "shipped" as const, trackingNumber: "1Z", carrier: "ups" as const },
+      proposerShipping: {
+        status: "shipped" as const,
+        trackingNumber: "1Z",
+        carrier: "ups" as const,
+      },
     };
 
     expect(canReceiveTrade(acceptedTrade, "user_counterparty")).toBe(true);
@@ -82,6 +91,8 @@ describe("canUpdateTradeStatus", () => {
     };
 
     expect(canCompleteTrade(deliveredTrade)).toBe(true);
-    expect(canCompleteTrade({ ...deliveredTrade, counterpartyShipping: { status: "shipped" as const } })).toBe(false);
+    expect(
+      canCompleteTrade({ ...deliveredTrade, counterpartyShipping: { status: "shipped" as const } }),
+    ).toBe(false);
   });
 });

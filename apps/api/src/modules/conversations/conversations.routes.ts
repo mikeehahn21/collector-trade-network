@@ -153,7 +153,11 @@ export async function registerConversationRoutes(
       });
     }
 
-    const didMarkTyping = await markContextualTyping(services.db, parsed.data.conversationId, user.id);
+    const didMarkTyping = await markContextualTyping(
+      services.db,
+      parsed.data.conversationId,
+      user.id,
+    );
 
     if (!didMarkTyping) {
       return reply.status(404).send({

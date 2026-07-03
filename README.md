@@ -16,29 +16,29 @@ This platform is **trade-first, not marketplace-first**. Collectors discover pot
 
 ## Repository Layout
 
-| Path | Description |
-|------|-------------|
-| `apps/mobile` | Expo React Native mobile application |
-| `apps/api` | Node.js TypeScript modular monolith API (Fastify) |
-| `apps/admin` | Next.js internal admin dashboard |
-| `apps/e2e` | Playwright end-to-end test suite |
-| `packages/types` | Shared domain types |
-| `packages/validation` | Shared Zod validation schemas |
-| `packages/constants` | Shared application constants |
-| `packages/api-contracts` | Shared API request/response contracts |
-| `packages/utils` | Shared utility functions |
-| `infra/` | Infrastructure notes and deployment preparation |
-| `docs/` | Sprint deliverables, ADRs, and product documents |
-| `.github/` | CI workflows, issue templates, and PR template |
+| Path                     | Description                                       |
+| ------------------------ | ------------------------------------------------- |
+| `apps/mobile`            | Expo React Native mobile application              |
+| `apps/api`               | Node.js TypeScript modular monolith API (Fastify) |
+| `apps/admin`             | Next.js internal admin dashboard                  |
+| `apps/e2e`               | Playwright end-to-end test suite                  |
+| `packages/types`         | Shared domain types                               |
+| `packages/validation`    | Shared Zod validation schemas                     |
+| `packages/constants`     | Shared application constants                      |
+| `packages/api-contracts` | Shared API request/response contracts             |
+| `packages/utils`         | Shared utility functions                          |
+| `infra/`                 | Infrastructure notes and deployment preparation   |
+| `docs/`                  | Sprint deliverables, ADRs, and product documents  |
+| `.github/`               | CI workflows, issue templates, and PR template    |
 
 ---
 
 ## Prerequisites
 
-| Tool | Version |
-|------|---------|
-| Node.js | >= 20.11.0 |
-| pnpm | >= 11.0.0 |
+| Tool           | Version       |
+| -------------- | ------------- |
+| Node.js        | >= 20.11.0    |
+| pnpm           | >= 11.0.0     |
 | Docker Desktop | Latest stable |
 
 ---
@@ -81,13 +81,13 @@ pnpm build          # Production build
 
 ## Branch Strategy
 
-| Branch | Purpose |
-|--------|---------|
-| `main` | Production-ready code. Protected. |
-| `develop` | Sprint integration branch. |
+| Branch      | Purpose                                                |
+| ----------- | ------------------------------------------------------ |
+| `main`      | Production-ready code. Protected.                      |
+| `develop`   | Sprint integration branch.                             |
 | `feature/*` | Feature branches (e.g., `feature/public-item-detail`). |
-| `hotfix/*` | Urgent production fixes. |
-| `release/*` | Release preparation. |
+| `hotfix/*`  | Urgent production fixes.                               |
+| `release/*` | Release preparation.                                   |
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for the full workflow.
 
@@ -95,16 +95,16 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for the full workflow.
 
 ## Sprint History
 
-| Sprint | Focus | Status |
-|--------|-------|--------|
-| Sprint 0 | Monorepo foundation, CI, shared packages | Complete |
-| Sprint 1 | Invite-only onboarding | Complete |
-| Sprint 2 | Collection Engine (inventory) | Complete |
-| Sprint 3 | Wishlist & Grails | Complete |
-| Sprint 4 | Auth & persistence hardening | Complete |
-| Sprint 5 | Clerk integration & server sync | Complete |
-| Sprint 6 | Trade Graph Engine v1 | Complete |
-| Sprint 7 | Public Item Detail + Recommendation Feedback | Planned |
+| Sprint   | Focus                                        | Status   |
+| -------- | -------------------------------------------- | -------- |
+| Sprint 0 | Monorepo foundation, CI, shared packages     | Complete |
+| Sprint 1 | Invite-only onboarding                       | Complete |
+| Sprint 2 | Collection Engine (inventory)                | Complete |
+| Sprint 3 | Wishlist & Grails                            | Complete |
+| Sprint 4 | Auth & persistence hardening                 | Complete |
+| Sprint 5 | Clerk integration & server sync              | Complete |
+| Sprint 6 | Trade Graph Engine v1                        | Complete |
+| Sprint 7 | Public Item Detail + Recommendation Feedback | Planned  |
 
 Full sprint details are in [`docs/`](./docs/).
 
@@ -134,11 +134,11 @@ The following are permanent product constraints:
 
 ## Documentation
 
-| Document | Location |
-|----------|----------|
-| Roadmap | [ROADMAP.md](./ROADMAP.md) |
-| Changelog | [CHANGELOG.md](./CHANGELOG.md) |
-| Contributing | [CONTRIBUTING.md](./CONTRIBUTING.md) |
-| Security | [SECURITY.md](./SECURITY.md) |
+| Document                | Location                                                             |
+| ----------------------- | -------------------------------------------------------------------- |
+| Roadmap                 | [ROADMAP.md](./ROADMAP.md)                                           |
+| Changelog               | [CHANGELOG.md](./CHANGELOG.md)                                       |
+| Contributing            | [CONTRIBUTING.md](./CONTRIBUTING.md)                                 |
+| Security                | [SECURITY.md](./SECURITY.md)                                         |
 | Product Source of Truth | [docs/product/source-of-truth.md](./docs/product/source-of-truth.md) |
-| Infrastructure | [infra/README.md](./infra/README.md) |
+| Infrastructure          | [infra/README.md](./infra/README.md)                                 |

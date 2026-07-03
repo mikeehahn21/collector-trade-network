@@ -27,7 +27,9 @@ export default function WishlistHomeScreen() {
 
   return (
     <Screen>
-      <ScrollView contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}>
+      <ScrollView
+        contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}
+      >
         <View style={{ gap: theme.spacing.sm }}>
           <Text style={{ color: theme.colors.accent, fontSize: 12, fontWeight: "800" }}>
             WISHLIST
@@ -89,8 +91,8 @@ export default function WishlistHomeScreen() {
               Build your dream collection.
             </Text>
             <Text style={{ color: theme.colors.textSecondary, fontSize: 15, lineHeight: 23 }}>
-              Start with the pieces you would actually move inventory for. Grails should stay
-              scarce so they remain meaningful.
+              Start with the pieces you would actually move inventory for. Grails should stay scarce
+              so they remain meaningful.
             </Text>
           </View>
         ) : (

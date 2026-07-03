@@ -44,14 +44,19 @@ export default function ConversationListScreen() {
   if (isLoading) {
     return (
       <Screen>
-        <ScreenState message="Loading your item and trade conversations." title="Loading conversations" />
+        <ScreenState
+          message="Loading your item and trade conversations."
+          title="Loading conversations"
+        />
       </Screen>
     );
   }
 
   return (
     <Screen>
-      <ScrollView contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}>
+      <ScrollView
+        contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}
+      >
         <View style={{ gap: theme.spacing.sm }}>
           <Text style={{ color: theme.colors.accent, fontSize: 12, fontWeight: "900" }}>
             CONTEXTUAL MESSAGES
@@ -81,7 +86,11 @@ export default function ConversationListScreen() {
           ))
         )}
 
-        <AppButton accessibilityLabel="Refresh conversations" onPress={() => void refresh()} variant="secondary">
+        <AppButton
+          accessibilityLabel="Refresh conversations"
+          onPress={() => void refresh()}
+          variant="secondary"
+        >
           Refresh
         </AppButton>
       </ScrollView>
@@ -114,7 +123,9 @@ function ConversationRow({
         padding: theme.spacing.lg,
       })}
     >
-      <View style={{ flexDirection: "row", justifyContent: "space-between", gap: theme.spacing.md }}>
+      <View
+        style={{ flexDirection: "row", justifyContent: "space-between", gap: theme.spacing.md }}
+      >
         <Text style={{ color: theme.colors.accent, fontSize: 11, fontWeight: "900" }}>
           {conversation.contextType.toUpperCase()}
         </Text>
@@ -127,8 +138,13 @@ function ConversationRow({
       <Text style={{ color: theme.colors.textPrimary, fontSize: 18, fontWeight: "900" }}>
         {conversation.context.title}
       </Text>
-      <Text numberOfLines={2} style={{ color: theme.colors.textSecondary, fontSize: 14, lineHeight: 20 }}>
-        {lastMessage ? `${lastMessage.senderDisplayName}: ${lastMessage.content}` : "No messages yet"}
+      <Text
+        numberOfLines={2}
+        style={{ color: theme.colors.textSecondary, fontSize: 14, lineHeight: 20 }}
+      >
+        {lastMessage
+          ? `${lastMessage.senderDisplayName}: ${lastMessage.content}`
+          : "No messages yet"}
       </Text>
     </Pressable>
   );

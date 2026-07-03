@@ -25,7 +25,10 @@ export default function ItemCommunicationSettingsScreen() {
       title="Control item questions."
       subtitle="Conversations are useful, but they must stay attached to this item."
       footer={
-        <AppButton accessibilityLabel="Done editing communication settings" onPress={() => router.back()}>
+        <AppButton
+          accessibilityLabel="Done editing communication settings"
+          onPress={() => router.back()}
+        >
           Done
         </AppButton>
       }
@@ -35,9 +38,7 @@ export default function ItemCommunicationSettingsScreen() {
           description={preference.description}
           key={preference.value}
           label={preference.label}
-          onPress={() =>
-            updateItem(item.id, { communicationPreference: preference.value })
-          }
+          onPress={() => updateItem(item.id, { communicationPreference: preference.value })}
           selected={item.communicationPreference === preference.value}
         />
       ))}
@@ -47,7 +48,8 @@ export default function ItemCommunicationSettingsScreen() {
           label: "Allow photo requests",
           description: "Collectors can ask for tag, flaw, or detail photos.",
           value: item.allowsPhotoRequests,
-          onValueChange: (allowsPhotoRequests: boolean) => updateItem(item.id, { allowsPhotoRequests }),
+          onValueChange: (allowsPhotoRequests: boolean) =>
+            updateItem(item.id, { allowsPhotoRequests }),
         },
         {
           label: "Allow measurement requests",

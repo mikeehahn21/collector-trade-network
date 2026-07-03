@@ -87,7 +87,9 @@ export default function ConditionEditorScreen() {
           <AppButton
             accessibilityLabel={`Remove flaw ${index + 1}`}
             onPress={() =>
-              updateItem(currentItem.id, { flaws: currentItem.flaws.filter((_, flawIndex) => flawIndex !== index) })
+              updateItem(currentItem.id, {
+                flaws: currentItem.flaws.filter((_, flawIndex) => flawIndex !== index),
+              })
             }
             variant="ghost"
           >

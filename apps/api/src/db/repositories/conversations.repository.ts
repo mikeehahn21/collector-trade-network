@@ -149,7 +149,7 @@ export async function listMessagesForConversation(
   db: Queryable,
   conversationId: string,
   userId: string,
-  before?: string | undefined,
+  before?: string,
   limit = 30,
 ): Promise<ConversationMessage[]> {
   const isParticipant = await isConversationParticipant(db, conversationId, userId);
@@ -411,7 +411,10 @@ async function hydrateConversation(
   };
 }
 
-async function listParticipants(db: Queryable, conversationId: string): Promise<ConversationParticipant[]> {
+async function listParticipants(
+  db: Queryable,
+  conversationId: string,
+): Promise<ConversationParticipant[]> {
   const rows = await queryMany<ParticipantRow>(
     db,
     `
@@ -461,7 +464,11 @@ async function findLastMessage(
   return row ? mapMessage(row) : undefined;
 }
 
-async function countUnreadMessages(db: Queryable, conversationId: string, userId: string): Promise<number> {
+async function countUnreadMessages(
+  db: Queryable,
+  conversationId: string,
+  userId: string,
+): Promise<number> {
   const row = await queryOne<{ count: string }>(
     db,
     `

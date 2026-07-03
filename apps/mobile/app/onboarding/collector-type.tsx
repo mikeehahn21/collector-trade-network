@@ -29,7 +29,11 @@ export default function CollectorTypeScreen() {
       title="How do you participate?"
       subtitle="This tunes trade recommendations and early trust signals."
       footer={
-        <AppButton accessibilityLabel="Continue to size preferences" disabled={!selected} onPress={submit}>
+        <AppButton
+          accessibilityLabel="Continue to size preferences"
+          disabled={!selected}
+          onPress={submit}
+        >
           Continue
         </AppButton>
       }

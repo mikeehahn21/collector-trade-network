@@ -65,7 +65,10 @@ export default function PublicItemDetailScreen() {
   if (isLoading) {
     return (
       <Screen>
-        <ScreenState message="Loading item details from the collector network." title="Loading item" />
+        <ScreenState
+          message="Loading item details from the collector network."
+          title="Loading item"
+        />
       </Screen>
     );
   }
@@ -97,6 +100,7 @@ export default function PublicItemDetailScreen() {
     .join(" / ");
 
   async function contactOwner() {
+    if (!item) return;
     setIsStartingConversation(true);
     setError(undefined);
 
@@ -115,7 +119,9 @@ export default function PublicItemDetailScreen() {
 
   return (
     <Screen>
-      <ScrollView contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}>
+      <ScrollView
+        contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}
+      >
         <View
           style={{
             alignItems: "center",
@@ -186,9 +192,7 @@ export default function PublicItemDetailScreen() {
         {item.flaws.length > 0 ? (
           <DetailPanel
             title="Flaws"
-            rows={item.flaws.map(
-              (flaw, index): [string, string] => [`Flaw ${index + 1}`, flaw],
-            )}
+            rows={item.flaws.map((flaw, index): [string, string] => [`Flaw ${index + 1}`, flaw])}
           />
         ) : null}
 
@@ -218,7 +222,13 @@ export default function PublicItemDetailScreen() {
   );
 }
 
-function DetailPanel({ rows, title = "Item details" }: { rows: [string, string][]; title?: string }) {
+function DetailPanel({
+  rows,
+  title = "Item details",
+}: {
+  rows: [string, string][];
+  title?: string;
+}) {
   const theme = useTheme();
 
   return (
@@ -232,14 +242,23 @@ function DetailPanel({ rows, title = "Item details" }: { rows: [string, string][
         padding: theme.spacing.lg,
       }}
     >
-      <Text style={{ color: theme.colors.textPrimary, fontSize: 18, fontWeight: "900" }}>{title}</Text>
+      <Text style={{ color: theme.colors.textPrimary, fontSize: 18, fontWeight: "900" }}>
+        {title}
+      </Text>
       {rows.map(([label, value]) => (
         <View
           key={label}
           style={{ flexDirection: "row", justifyContent: "space-between", gap: theme.spacing.md }}
         >
           <Text style={{ color: theme.colors.textSecondary, flex: 1 }}>{label}</Text>
-          <Text style={{ color: theme.colors.textPrimary, flex: 1, fontWeight: "700", textAlign: "right" }}>
+          <Text
+            style={{
+              color: theme.colors.textPrimary,
+              flex: 1,
+              fontWeight: "700",
+              textAlign: "right",
+            }}
+          >
             {value}
           </Text>
         </View>

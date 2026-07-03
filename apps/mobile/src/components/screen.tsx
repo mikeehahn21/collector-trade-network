@@ -13,7 +13,15 @@ export function Screen({ children }: PropsWithChildren) {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      <View style={{ flex: 1, padding: theme.spacing.lg, width: "100%", maxWidth: 720, alignSelf: "center" }}>
+      <View
+        style={{
+          flex: 1,
+          padding: theme.spacing.lg,
+          width: "100%",
+          maxWidth: 720,
+          alignSelf: "center",
+        }}
+      >
         {children}
       </View>
     </SafeAreaView>

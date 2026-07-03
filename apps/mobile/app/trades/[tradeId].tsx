@@ -2,7 +2,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Linking, Pressable, ScrollView, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
-import type { Trade, TradeCarrier, TradeShippingSide, TradeStatus, TradeableItem } from "@ctn/types";
+import type {
+  Trade,
+  TradeCarrier,
+  TradeShippingSide,
+  TradeStatus,
+  TradeableItem,
+} from "@ctn/types";
 
 import { useApiClient } from "@/api/use-api-client";
 import { AppButton } from "@/components/app-button";
@@ -72,9 +78,7 @@ export default function TradeDetailScreen() {
     void refresh();
   }, [refresh]);
 
-  async function updateStatus(
-    status: Extract<TradeStatus, "accepted" | "declined" | "cancelled">,
-  ) {
+  async function updateStatus(status: Extract<TradeStatus, "accepted" | "declined" | "cancelled">) {
     if (!trade) {
       return;
     }
@@ -247,11 +251,14 @@ export default function TradeDetailScreen() {
     trade.counterpartyShipping.status === "delivered";
   const canDispute =
     trade.status === "accepted" &&
-    (trade.proposerShipping.status !== "pending" || trade.counterpartyShipping.status !== "pending");
+    (trade.proposerShipping.status !== "pending" ||
+      trade.counterpartyShipping.status !== "pending");
 
   return (
     <Screen>
-      <ScrollView contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}>
+      <ScrollView
+        contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}
+      >
         <View style={{ gap: theme.spacing.sm }}>
           <Text style={{ color: theme.colors.accent, fontSize: 12, fontWeight: "900" }}>
             {tradeStatusLabels[trade.status]}
@@ -465,7 +472,8 @@ export default function TradeDetailScreen() {
             </View>
           ) : null}
 
-          {trade.viewerRole === "counterparty" && ["pending", "countered"].includes(trade.status) ? (
+          {trade.viewerRole === "counterparty" &&
+          ["pending", "countered"].includes(trade.status) ? (
             <>
               <AppButton
                 accessibilityLabel="Accept trade"
@@ -583,8 +591,12 @@ function ShippingProgress({ label, shipping }: { label: string; shipping: TradeS
 
   return (
     <View style={{ gap: theme.spacing.sm }}>
-      <View style={{ flexDirection: "row", justifyContent: "space-between", gap: theme.spacing.md }}>
-        <Text style={{ color: theme.colors.textPrimary, fontSize: 16, fontWeight: "900" }}>{label}</Text>
+      <View
+        style={{ flexDirection: "row", justifyContent: "space-between", gap: theme.spacing.md }}
+      >
+        <Text style={{ color: theme.colors.textPrimary, fontSize: 16, fontWeight: "900" }}>
+          {label}
+        </Text>
         <Text style={{ color: theme.colors.accent, fontSize: 13, fontWeight: "900" }}>
           {shippingStatusLabels[shipping.status]}
         </Text>
@@ -594,7 +606,8 @@ function ShippingProgress({ label, shipping }: { label: string; shipping: TradeS
           <View
             key={step}
             style={{
-              backgroundColor: index <= activeIndex ? theme.colors.accent : theme.colors.surfaceElevated,
+              backgroundColor:
+                index <= activeIndex ? theme.colors.accent : theme.colors.surfaceElevated,
               borderRadius: 999,
               flex: 1,
               height: 8,
@@ -607,10 +620,18 @@ function ShippingProgress({ label, shipping }: { label: string; shipping: TradeS
           accessibilityLabel={`Open ${carrierLabels[shipping.carrier ?? "other"]} tracking`}
           accessibilityRole="link"
           onPress={() => {
-            void Linking.openURL(getTrackingUrl(shipping.carrier ?? "other", shipping.trackingNumber ?? ""));
+            void Linking.openURL(
+              getTrackingUrl(shipping.carrier ?? "other", shipping.trackingNumber ?? ""),
+            );
           }}
         >
-          <Text style={{ color: theme.colors.textSecondary, fontSize: 13, textDecorationLine: "underline" }}>
+          <Text
+            style={{
+              color: theme.colors.textSecondary,
+              fontSize: 13,
+              textDecorationLine: "underline",
+            }}
+          >
             {carrierLabels[shipping.carrier ?? "other"]}: {shipping.trackingNumber}
           </Text>
         </Pressable>
@@ -687,14 +708,23 @@ function DetailPanel({ rows, title }: { rows: [string, string][]; title: string 
         padding: theme.spacing.lg,
       }}
     >
-      <Text style={{ color: theme.colors.textPrimary, fontSize: 18, fontWeight: "900" }}>{title}</Text>
+      <Text style={{ color: theme.colors.textPrimary, fontSize: 18, fontWeight: "900" }}>
+        {title}
+      </Text>
       {rows.map(([label, value]) => (
         <View
           key={label}
           style={{ flexDirection: "row", justifyContent: "space-between", gap: theme.spacing.md }}
         >
           <Text style={{ color: theme.colors.textSecondary, flex: 1 }}>{label}</Text>
-          <Text style={{ color: theme.colors.textPrimary, flex: 1, fontWeight: "700", textAlign: "right" }}>
+          <Text
+            style={{
+              color: theme.colors.textPrimary,
+              flex: 1,
+              fontWeight: "700",
+              textAlign: "right",
+            }}
+          >
             {value}
           </Text>
         </View>

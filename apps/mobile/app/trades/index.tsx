@@ -21,7 +21,7 @@ export default function TradeListScreen() {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [tab, setTab] = useState<TradeTab>("incoming");
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | undefined>();
+  const [error, setError] = useState<string>();
 
   useEffect(() => {
     apiRef.current = api;
@@ -108,27 +108,41 @@ export default function TradeListScreen() {
         {error ? (
           <View style={{ gap: theme.spacing.md }}>
             <ScreenState message={error} title="Trades unavailable" tone="warning" />
-            <AppButton accessibilityLabel="Retry trades" onPress={() => void refresh()} variant="secondary">
+            <AppButton
+              accessibilityLabel="Retry trades"
+              onPress={() => void refresh()}
+              variant="secondary"
+            >
               Retry
             </AppButton>
           </View>
         ) : null}
 
         {!isLoading && !error ? (
-          <ScrollView contentContainerStyle={{ gap: theme.spacing.md, paddingBottom: theme.spacing.xl }}>
+          <ScrollView
+            contentContainerStyle={{ gap: theme.spacing.md, paddingBottom: theme.spacing.xl }}
+          >
             {visibleTrades.length === 0 ? (
               <Text style={{ color: theme.colors.textSecondary, fontSize: 15, lineHeight: 22 }}>
                 No trade offers in this section yet.
               </Text>
             ) : (
               visibleTrades.map((trade) => (
-                <TradeCard key={trade.id} onPress={() => router.push(`/trades/${trade.id}`)} trade={trade} />
+                <TradeCard
+                  key={trade.id}
+                  onPress={() => router.push(`/trades/${trade.id}`)}
+                  trade={trade}
+                />
               ))
             )}
           </ScrollView>
         ) : null}
 
-        <AppButton accessibilityLabel="Back to Home" onPress={() => router.replace("/home")} variant="ghost">
+        <AppButton
+          accessibilityLabel="Back to Home"
+          onPress={() => router.replace("/home")}
+          variant="ghost"
+        >
           Back to Home
         </AppButton>
       </View>
@@ -159,7 +173,7 @@ function TradeCard({ onPress, trade }: { onPress: () => void; trade: Trade }) {
         {trade.proposerItem.title} for {trade.counterpartyItem.title}
       </Text>
       <Text style={{ color: theme.colors.textSecondary, fontSize: 14 }}>
-        {trade.proposerDisplayName} -> {trade.counterpartyDisplayName}
+        {trade.proposerDisplayName} {"→"} {trade.counterpartyDisplayName}
       </Text>
     </Pressable>
   );

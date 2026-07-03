@@ -41,7 +41,9 @@ describe("validation", () => {
   });
 
   it("requires non-empty contextual messages", () => {
-    expect(() => sendMessageSchema.parse({ content: "Can you send tag photos?", type: "text" })).not.toThrow();
+    expect(() =>
+      sendMessageSchema.parse({ content: "Can you send tag photos?", type: "text" }),
+    ).not.toThrow();
     expect(() => sendMessageSchema.parse({ content: " ", type: "text" })).toThrow();
   });
 
@@ -77,7 +79,9 @@ describe("validation", () => {
   });
 
   it("requires complete tradeable items before publish", () => {
-    expect(() => tradeableItemPublishSchema.parse({ title: "1996 Bulls tee", status: "tradeable" })).toThrow();
+    expect(() =>
+      tradeableItemPublishSchema.parse({ title: "1996 Bulls tee", status: "tradeable" }),
+    ).toThrow();
   });
 
   it("allows sparse wishlist drafts", () => {
@@ -85,7 +89,9 @@ describe("validation", () => {
   });
 
   it("requires title and category for active wishlist wants", () => {
-    expect(() => wishlistItemPublishSchema.parse({ title: "Mosquitohead", priority: "high" })).toThrow();
+    expect(() =>
+      wishlistItemPublishSchema.parse({ title: "Mosquitohead", priority: "high" }),
+    ).toThrow();
   });
 
   it("accepts concise recommendation feedback", () => {
@@ -109,9 +115,13 @@ describe("validation", () => {
   });
 
   it("validates trade execution inputs", () => {
-    expect(() => shipTradeSchema.parse({ trackingNumber: "9400 1000 0000", carrier: "usps" })).not.toThrow();
+    expect(() =>
+      shipTradeSchema.parse({ trackingNumber: "9400 1000 0000", carrier: "usps" }),
+    ).not.toThrow();
     expect(() => shipTradeSchema.parse({ trackingNumber: "", carrier: "usps" })).toThrow();
-    expect(() => disputeTradeSchema.parse({ reason: "Tag does not match the agreed item." })).not.toThrow();
+    expect(() =>
+      disputeTradeSchema.parse({ reason: "Tag does not match the agreed item." }),
+    ).not.toThrow();
   });
 
   it("validates item verification video rules", () => {

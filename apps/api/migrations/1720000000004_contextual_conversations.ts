@@ -5,7 +5,12 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     id: { type: "uuid", primaryKey: true, default: pgm.func("gen_random_uuid()") },
     type: { type: "text", notNull: true },
     context_id: { type: "uuid", notNull: true },
-    created_by_user_id: { type: "uuid", notNull: true, references: "users(id)", onDelete: "cascade" },
+    created_by_user_id: {
+      type: "uuid",
+      notNull: true,
+      references: "users(id)",
+      onDelete: "cascade",
+    },
     created_at: { type: "timestamptz", notNull: true, default: pgm.func("now()") },
     updated_at: { type: "timestamptz", notNull: true, default: pgm.func("now()") },
     archived_at: { type: "timestamptz" },

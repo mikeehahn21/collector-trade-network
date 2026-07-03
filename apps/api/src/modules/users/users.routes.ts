@@ -7,7 +7,10 @@ import { requireAuthContext } from "../../auth/auth-context";
 import { findUserByClerkId, upsertUserProfile } from "../../db/repositories/users.repository";
 import type { AppServices } from "../services";
 
-export async function registerUserRoutes(app: FastifyInstance, services: AppServices): Promise<void> {
+export async function registerUserRoutes(
+  app: FastifyInstance,
+  services: AppServices,
+): Promise<void> {
   app.get(apiRoutes.me, async (request, reply) => {
     const auth = await requireAuthContext(request, services.env);
     const user = await findUserByClerkId(services.db, auth.clerkUserId);

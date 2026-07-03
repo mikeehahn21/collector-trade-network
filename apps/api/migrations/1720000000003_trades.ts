@@ -5,7 +5,12 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     id: { type: "uuid", primaryKey: true, default: pgm.func("gen_random_uuid()") },
     proposer_id: { type: "uuid", notNull: true, references: "users(id)", onDelete: "cascade" },
     counterparty_id: { type: "uuid", notNull: true, references: "users(id)", onDelete: "cascade" },
-    proposer_item_id: { type: "uuid", notNull: true, references: "items(id)", onDelete: "restrict" },
+    proposer_item_id: {
+      type: "uuid",
+      notNull: true,
+      references: "items(id)",
+      onDelete: "restrict",
+    },
     counterparty_item_id: {
       type: "uuid",
       notNull: true,
@@ -19,7 +24,11 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     updated_at: { type: "timestamptz", notNull: true, default: pgm.func("now()") },
   });
 
-  pgm.addConstraint("trades", "trades_participants_distinct", "check (proposer_id <> counterparty_id)");
+  pgm.addConstraint(
+    "trades",
+    "trades_participants_distinct",
+    "check (proposer_id <> counterparty_id)",
+  );
   pgm.addConstraint(
     "trades",
     "trades_items_distinct",

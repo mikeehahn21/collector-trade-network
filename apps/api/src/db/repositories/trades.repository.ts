@@ -156,12 +156,16 @@ export async function updateTradeStatusForUser(
     return undefined;
   }
 
-  await db.query("update trades set status = $1, updated_at = now() where id = $2", [status, tradeId]);
+  await db.query("update trades set status = $1, updated_at = now() where id = $2", [
+    status,
+    tradeId,
+  ]);
 
   if (status === "accepted") {
-    await db.query("update items set status = 'reserved', updated_at = now() where id = any($1::uuid[])", [
-      [trade.proposerItemId, trade.counterpartyItemId],
-    ]);
+    await db.query(
+      "update items set status = 'reserved', updated_at = now() where id = any($1::uuid[])",
+      [[trade.proposerItemId, trade.counterpartyItemId]],
+    );
   }
 
   return findTradeByParticipant(db, tradeId, userId);
@@ -245,9 +249,10 @@ export async function completeTradeForUser(
     `,
     [tradeId],
   );
-  await db.query("update items set status = 'traded', updated_at = now() where id = any($1::uuid[])", [
-    [trade.proposerItemId, trade.counterpartyItemId],
-  ]);
+  await db.query(
+    "update items set status = 'traded', updated_at = now() where id = any($1::uuid[])",
+    [[trade.proposerItemId, trade.counterpartyItemId]],
+  );
 
   return findTradeByParticipant(db, tradeId, userId);
 }
@@ -307,7 +312,12 @@ export async function counterTradeForUser(
         updated_at = now()
       where id = $1
     `,
-    [input.tradeId, input.proposerItemId, input.counterpartyItemId, input.counterpartyNotes ?? null],
+    [
+      input.tradeId,
+      input.proposerItemId,
+      input.counterpartyItemId,
+      input.counterpartyNotes ?? null,
+    ],
   );
 
   return findTradeByParticipant(db, input.tradeId, input.userId);
@@ -380,7 +390,10 @@ export function canDisputeTrade(trade: Trade, userId: string): boolean {
   );
 }
 
-async function findTradeableItem(db: Queryable, itemId: string): Promise<TradeableItemOwnerRow | undefined> {
+async function findTradeableItem(
+  db: Queryable,
+  itemId: string,
+): Promise<TradeableItemOwnerRow | undefined> {
   return queryOne<TradeableItemOwnerRow>(
     db,
     `

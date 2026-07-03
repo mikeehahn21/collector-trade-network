@@ -12,3 +12,17 @@ coverage/
 .expo/
 android/
 ios/
+
+# Stale compiled files outside dist (migrations, vitest configs, package src)
+apps/api/migrations/*.js
+apps/api/migrations/*.js.map
+apps/api/migrations/*.d.ts
+apps/api/vitest.config.js
+apps/api/vitest.config.js.map
+apps/api/vitest.config.d.ts
+apps/api/vitest.integration.config.js
+apps/api/vitest.integration.config.js.map
+apps/api/vitest.integration.config.d.ts
+packages/*/src/*.js
+packages/*/src/*.js.map
+packages/*/src/*.d.ts

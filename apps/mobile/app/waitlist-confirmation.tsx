@@ -13,7 +13,10 @@ export default function WaitlistConfirmationScreen() {
       title="You are on the access list."
       subtitle="We review early members manually to protect trade quality."
       footer={
-        <AppButton accessibilityLabel="Return to welcome" onPress={() => router.replace("/welcome")}>
+        <AppButton
+          accessibilityLabel="Return to welcome"
+          onPress={() => router.replace("/welcome")}
+        >
           Done
         </AppButton>
       }
