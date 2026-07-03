@@ -2,19 +2,24 @@ import type { FastifyInstance, FastifyRequest } from "fastify";
 
 import {
   apiRoutes,
+  aiReviewWebhookContract,
   itemAiSuggestionContract,
   itemDraftContract,
   itemPublishContract,
+  itemVerificationVideoContract,
 } from "@ctn/api-contracts";
 import { tradeableItemDraftSchema } from "@ctn/validation";
 
 import { requireAuthContext, UserProfileRequiredError } from "../../auth/auth-context";
 import {
+  applyAiReviewResult,
   createItemForOwner,
   deleteItemForOwner,
   findItemByOwner,
+  findVerificationStatusByOwner,
   findVisiblePublicItem,
   listItemsByOwner,
+  updateVerificationVideoForOwner,
   updateItemForOwner,
   type PersistItemInput,
 } from "../../db/repositories/items.repository";
@@ -145,6 +150,76 @@ export async function registerItemRoutes(
       confidence: parsed.data.photos.length > 1 ? "medium" : "low",
       generatedAt: new Date().toISOString(),
     });
+  });
+
+  app.post("/v1/items/:itemId/verification-video", async (request, reply) => {
+    const user = await requireCurrentUser(request, services);
+    const itemId = (request.params as { itemId: string }).itemId;
+    const parsed = itemVerificationVideoContract.body.safeParse(request.body);
+
+    if (!parsed.success) {
+      return reply.status(400).send({
+        code: "INVALID_VERIFICATION_VIDEO",
+        message: "Verification video must be between 5 and 30 seconds and include a 4-digit code.",
+      });
+    }
+
+    const item = await updateVerificationVideoForOwner(services.db, user.id, itemId, {
+      videoUrl: parsed.data.videoUrl,
+      verificationCode: parsed.data.verificationCode,
+    });
+
+    if (!item) {
+      return reply.status(404).send({ code: "ITEM_NOT_FOUND", message: "Item not found." });
+    }
+
+    request.log.info(
+      { itemId, verificationCode: parsed.data.verificationCode },
+      "Queued placeholder AI verification review.",
+    );
+
+    return reply.status(202).send({ item });
+  });
+
+  app.get("/v1/items/:itemId/verification-status", async (request, reply) => {
+    const user = await requireCurrentUser(request, services);
+    const itemId = (request.params as { itemId: string }).itemId;
+    const item = await findVerificationStatusByOwner(services.db, user.id, itemId);
+
+    if (!item) {
+      return reply.status(404).send({ code: "ITEM_NOT_FOUND", message: "Item not found." });
+    }
+
+    return reply.status(200).send({ item });
+  });
+
+  app.post(apiRoutes.aiReviewWebhook, async (request, reply) => {
+    const configuredSecret = services.env.AI_REVIEW_WEBHOOK_SECRET;
+    const providedSecret = request.headers["x-ai-review-secret"];
+
+    if (configuredSecret && providedSecret !== configuredSecret) {
+      return reply.status(401).send({
+        code: "AI_REVIEW_WEBHOOK_UNAUTHORIZED",
+        message: "Webhook secret is invalid.",
+      });
+    }
+
+    const parsed = aiReviewWebhookContract.body.safeParse(request.body);
+
+    if (!parsed.success) {
+      return reply.status(400).send({
+        code: "INVALID_AI_REVIEW_RESULT",
+        message: "AI review result is invalid.",
+      });
+    }
+
+    const item = await applyAiReviewResult(services.db, parsed.data);
+
+    if (!item) {
+      return reply.status(404).send({ code: "ITEM_NOT_FOUND", message: "Item not found." });
+    }
+
+    return reply.status(200).send({ item });
   });
 }
 

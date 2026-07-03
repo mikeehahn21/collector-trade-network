@@ -134,6 +134,21 @@ export default function PublicItemDetailScreen() {
           <Text style={{ color: theme.colors.accent, fontSize: 12, fontWeight: "900" }}>
             {item.owner.displayName}
           </Text>
+          <View
+            style={{
+              alignSelf: "flex-start",
+              backgroundColor: theme.colors.accentMuted,
+              borderColor: theme.colors.accent,
+              borderRadius: theme.radius.md,
+              borderWidth: 1,
+              paddingHorizontal: theme.spacing.md,
+              paddingVertical: theme.spacing.sm,
+            }}
+          >
+            <Text style={{ color: theme.colors.textPrimary, fontSize: 12, fontWeight: "900" }}>
+              CTN Verified
+            </Text>
+          </View>
           <Text style={{ color: theme.colors.textPrimary, fontSize: 32, fontWeight: "900" }}>
             {item.title}
           </Text>

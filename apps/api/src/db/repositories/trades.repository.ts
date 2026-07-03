@@ -389,6 +389,7 @@ async function findTradeableItem(db: Queryable, itemId: string): Promise<Tradeab
       join users on users.id = items.owner_id
       where items.id = $1
         and items.status = 'tradeable'
+        and items.verification_status = 'verified'
         and items.archived_at is null
         and users.access_status = 'active'
     `,

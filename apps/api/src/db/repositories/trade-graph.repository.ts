@@ -59,6 +59,7 @@ export async function loadTradeGraphDataset(
       from items
       join users on users.id = items.owner_id
       where items.status = 'tradeable'
+        and items.verification_status = 'verified'
         and items.archived_at is null
         and items.visibility in ('approved_members', 'verified_members')
         and users.access_status = 'active'
@@ -113,6 +114,7 @@ function mapGraphItem(row: TradeGraphItemRow): TradeableItem & { ownerDisplayNam
     communicationPreference: "approved_traders",
     allowsPhotoRequests: true,
     allowsMeasurementRequests: true,
+    verificationStatus: "verified",
     createdAt: row.created_at.toISOString(),
     updatedAt: row.updated_at.toISOString(),
     ownerDisplayName: row.owner_display_name,

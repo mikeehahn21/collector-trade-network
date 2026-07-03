@@ -17,6 +17,7 @@ const baseItem: TradeableItem = {
   communicationPreference: "approved_traders",
   allowsPhotoRequests: true,
   allowsMeasurementRequests: true,
+  verificationStatus: "pending",
   createdAt: "2026-07-01T00:00:00.000Z",
   updatedAt: "2026-07-01T00:00:00.000Z",
 };

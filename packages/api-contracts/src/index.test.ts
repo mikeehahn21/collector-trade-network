@@ -33,6 +33,12 @@ describe("api contracts", () => {
     );
   });
 
+  it("defines Sprint 11 item verification routes", () => {
+    expect(apiRoutes.itemVerificationVideo).toBe("/v1/items/:itemId/verification-video");
+    expect(apiRoutes.itemVerificationStatus).toBe("/v1/items/:itemId/verification-status");
+    expect(apiRoutes.aiReviewWebhook).toBe("/v1/webhooks/ai-review");
+  });
+
   it("defines Sprint 8 trade routes", () => {
     expect(apiRoutes.trades).toBe("/v1/trades");
     expect(apiRoutes.tradeById).toBe("/v1/trades/:tradeId");

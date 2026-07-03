@@ -1,7 +1,9 @@
 import type {
   ApiHealth,
+  AiReviewWebhookInput,
   Conversation,
   ConversationMessage,
+  ItemVerificationVideoInput,
   PublicTradeableItem,
   RecommendationFeedback,
   RecommendationFeedbackMetrics,
@@ -16,9 +18,11 @@ import type {
 
 import {
   accessRequestSchema,
+  aiReviewWebhookSchema,
   createConversationSchema,
   healthResponseSchema,
   inviteCodeSchema,
+  itemVerificationVideoSchema,
   markMessageReadSchema,
   tradeableItemDraftSchema,
   tradeableItemPublishSchema,
@@ -42,6 +46,9 @@ export const apiRoutes = {
   itemById: "/v1/items/:itemId",
   publicItemById: "/v1/public/items/:itemId",
   itemAiSuggestions: "/v1/items/ai-suggestions",
+  itemVerificationVideo: "/v1/items/:itemId/verification-video",
+  itemVerificationStatus: "/v1/items/:itemId/verification-status",
+  aiReviewWebhook: "/v1/webhooks/ai-review",
   wishlistItems: "/v1/wishlist-items",
   wishlistItemById: "/v1/wishlist-items/:wishlistItemId",
   me: "/v1/me",
@@ -109,6 +116,18 @@ export const itemAiSuggestionContract = {
   method: "POST",
   path: apiRoutes.itemAiSuggestions,
   body: tradeableItemDraftSchema.pick({ photos: true, title: true, category: true, size: true }),
+} as const;
+
+export const itemVerificationVideoContract = {
+  method: "POST",
+  path: apiRoutes.itemVerificationVideo,
+  body: itemVerificationVideoSchema,
+} as const;
+
+export const aiReviewWebhookContract = {
+  method: "POST",
+  path: apiRoutes.aiReviewWebhook,
+  body: aiReviewWebhookSchema,
 } as const;
 
 export const recommendationFeedbackContract = {
@@ -204,6 +223,22 @@ export type ItemsResponse = {
 export type ItemResponse = {
   item: TradeableItem;
 };
+
+export type ItemVerificationVideoRequest = ItemVerificationVideoInput;
+
+export type ItemVerificationStatusResponse = {
+  item: Pick<
+    TradeableItem,
+    | "aiMetadata"
+    | "id"
+    | "verificationFailedReason"
+    | "verificationStatus"
+    | "verificationVideoUrl"
+    | "verifiedAt"
+  >;
+};
+
+export type AiReviewWebhookRequest = AiReviewWebhookInput;
 
 export type PublicItemResponse = {
   item: PublicTradeableItem;

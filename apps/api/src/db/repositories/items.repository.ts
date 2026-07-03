@@ -1,8 +1,10 @@
 import type {
   CommunicationPreference,
   ItemCondition,
+  ItemAiMetadata,
   ItemPhoto,
   ItemStatus,
+  ItemVerificationStatus,
   ItemVisibility,
   PublicTradeableItem,
   ShirtSize,
@@ -33,6 +35,11 @@ type ItemRow = {
   communication_preference: CommunicationPreference;
   allows_photo_requests: boolean;
   allows_measurement_requests: boolean;
+  verification_video_url: string | null;
+  verification_status: ItemVerificationStatus;
+  verification_failed_reason: string | null;
+  verified_at: Date | null;
+  ai_metadata: ItemAiMetadata | null;
   ai_suggestions: TradeableItem["aiSuggestions"] | null;
   created_at: Date;
   updated_at: Date;
@@ -59,6 +66,16 @@ type PublicItemRow = ItemRow & {
 export type PersistItemInput = Omit<
   Partial<TradeableItem>,
   "id" | "ownerId" | "createdAt" | "updatedAt" | "publishedAt" | "archivedAt"
+>;
+
+export type VerificationStatusSummary = Pick<
+  TradeableItem,
+  | "aiMetadata"
+  | "id"
+  | "verificationFailedReason"
+  | "verificationStatus"
+  | "verificationVideoUrl"
+  | "verifiedAt"
 >;
 
 export async function listItemsByOwner(db: Queryable, ownerId: string): Promise<TradeableItem[]> {
@@ -121,6 +138,7 @@ export async function findVisiblePublicItem(
       join users on users.id = items.owner_id
       where items.id = $1
         and items.status = 'tradeable'
+        and items.verification_status = 'verified'
         and items.archived_at is null
         and users.access_status = 'active'
     `,
@@ -274,6 +292,74 @@ export async function deleteItemForOwner(
   return result.rowCount === 1;
 }
 
+export async function updateVerificationVideoForOwner(
+  db: Queryable,
+  ownerId: string,
+  itemId: string,
+  input: {
+    videoUrl: string;
+    verificationCode: string;
+  },
+): Promise<VerificationStatusSummary | undefined> {
+  const row = await queryOne<ItemRow>(
+    db,
+    `
+      update items set
+        verification_video_url = $3,
+        verification_status = 'pending',
+        verification_failed_reason = null,
+        verified_at = null,
+        ai_metadata = jsonb_build_object('codeExpected', $4),
+        updated_at = now()
+      where id = $1 and owner_id = $2
+      returning *
+    `,
+    [itemId, ownerId, input.videoUrl, input.verificationCode],
+  );
+
+  return row ? mapVerificationSummary(row) : undefined;
+}
+
+export async function findVerificationStatusByOwner(
+  db: Queryable,
+  ownerId: string,
+  itemId: string,
+): Promise<VerificationStatusSummary | undefined> {
+  const row = await queryOne<ItemRow>(db, "select * from items where id = $1 and owner_id = $2", [
+    itemId,
+    ownerId,
+  ]);
+
+  return row ? mapVerificationSummary(row) : undefined;
+}
+
+export async function applyAiReviewResult(
+  db: Queryable,
+  input: {
+    itemId: string;
+    status: Extract<ItemVerificationStatus, "verified" | "failed">;
+    verificationFailedReason?: string | undefined;
+    aiMetadata?: ItemAiMetadata | undefined;
+  },
+): Promise<VerificationStatusSummary | undefined> {
+  const row = await queryOne<ItemRow>(
+    db,
+    `
+      update items set
+        verification_status = $2,
+        verification_failed_reason = case when $2 = 'failed' then $3 else null end,
+        verified_at = case when $2 = 'verified' then now() else null end,
+        ai_metadata = coalesce($4::jsonb, ai_metadata),
+        updated_at = now()
+      where id = $1
+      returning *
+    `,
+    [input.itemId, input.status, input.verificationFailedReason ?? null, input.aiMetadata ?? null],
+  );
+
+  return row ? mapVerificationSummary(row) : undefined;
+}
+
 function mapItem(row: ItemRow, photos: ItemPhotoRow[]): TradeableItem {
   return {
     id: row.id,
@@ -301,11 +387,27 @@ function mapItem(row: ItemRow, photos: ItemPhotoRow[]): TradeableItem {
     communicationPreference: row.communication_preference,
     allowsPhotoRequests: row.allows_photo_requests,
     allowsMeasurementRequests: row.allows_measurement_requests,
+    verificationVideoUrl: row.verification_video_url ?? undefined,
+    verificationStatus: row.verification_status,
+    verificationFailedReason: row.verification_failed_reason ?? undefined,
+    verifiedAt: row.verified_at?.toISOString(),
+    aiMetadata: row.ai_metadata ?? undefined,
     aiSuggestions: row.ai_suggestions ?? undefined,
     createdAt: row.created_at.toISOString(),
     updatedAt: row.updated_at.toISOString(),
     publishedAt: row.published_at?.toISOString(),
     archivedAt: row.archived_at?.toISOString(),
+  };
+}
+
+function mapVerificationSummary(row: ItemRow): VerificationStatusSummary {
+  return {
+    id: row.id,
+    verificationVideoUrl: row.verification_video_url ?? undefined,
+    verificationStatus: row.verification_status,
+    verificationFailedReason: row.verification_failed_reason ?? undefined,
+    verifiedAt: row.verified_at?.toISOString(),
+    aiMetadata: row.ai_metadata ?? undefined,
   };
 }
 

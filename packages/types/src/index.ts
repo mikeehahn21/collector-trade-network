@@ -146,6 +146,17 @@ export type ItemCondition = "deadstock" | "excellent" | "very_good" | "good" | "
 
 export type ItemVisibility = "private" | "approved_members" | "verified_members";
 
+export type ItemVerificationStatus = "pending" | "verified" | "failed";
+
+export type ItemAiMetadata = {
+  brand?: string | undefined;
+  color?: string | undefined;
+  condition?: ItemCondition | undefined;
+  codeDetected?: string | undefined;
+  consistencyNotes?: string | undefined;
+  confidence?: "low" | "medium" | "high" | undefined;
+};
+
 export type MeasurementUnit = "in";
 
 export type ItemMeasurements = {
@@ -190,6 +201,11 @@ export type TradeableItem = {
   communicationPreference: CommunicationPreference;
   allowsPhotoRequests: boolean;
   allowsMeasurementRequests: boolean;
+  verificationVideoUrl?: string | undefined;
+  verificationStatus: ItemVerificationStatus;
+  verificationFailedReason?: string | undefined;
+  verifiedAt?: string | undefined;
+  aiMetadata?: ItemAiMetadata | undefined;
   aiSuggestions?: AiListingSuggestions | undefined;
   createdAt: string;
   updatedAt: string;
@@ -485,4 +501,17 @@ export type ApiHealth = {
   status: "ok";
   service: string;
   version: string;
+};
+
+export type ItemVerificationVideoInput = {
+  videoUrl: string;
+  durationSeconds: number;
+  verificationCode: string;
+};
+
+export type AiReviewWebhookInput = {
+  itemId: string;
+  status: Extract<ItemVerificationStatus, "verified" | "failed">;
+  verificationFailedReason?: string | undefined;
+  aiMetadata?: ItemAiMetadata | undefined;
 };

@@ -2,12 +2,14 @@ import { describe, expect, it } from "vitest";
 
 import {
   accessRequestSchema,
+  aiReviewWebhookSchema,
   conversationContextSchema,
   createConversationSchema,
   disputeTradeSchema,
   onboardingPreferencesSchema,
   sendMessageSchema,
   shipTradeSchema,
+  itemVerificationVideoSchema,
   createTradeSchema,
   recommendationFeedbackSchema,
   tradeableItemDraftSchema,
@@ -110,5 +112,44 @@ describe("validation", () => {
     expect(() => shipTradeSchema.parse({ trackingNumber: "9400 1000 0000", carrier: "usps" })).not.toThrow();
     expect(() => shipTradeSchema.parse({ trackingNumber: "", carrier: "usps" })).toThrow();
     expect(() => disputeTradeSchema.parse({ reason: "Tag does not match the agreed item." })).not.toThrow();
+  });
+
+  it("validates item verification video rules", () => {
+    expect(() =>
+      itemVerificationVideoSchema.parse({
+        videoUrl: "file:///verification.mov",
+        durationSeconds: 12,
+        verificationCode: "4821",
+      }),
+    ).not.toThrow();
+    expect(() =>
+      itemVerificationVideoSchema.parse({
+        videoUrl: "file:///too-short.mov",
+        durationSeconds: 4,
+        verificationCode: "4821",
+      }),
+    ).toThrow();
+    expect(() =>
+      itemVerificationVideoSchema.parse({
+        videoUrl: "file:///too-long.mov",
+        durationSeconds: 31,
+        verificationCode: "4821",
+      }),
+    ).toThrow();
+  });
+
+  it("validates AI review webhook results", () => {
+    expect(() =>
+      aiReviewWebhookSchema.parse({
+        itemId: "00000000-0000-0000-0000-000000000001",
+        status: "verified",
+        aiMetadata: {
+          brand: "Screen Stars",
+          color: "Black",
+          condition: "very_good",
+          confidence: "high",
+        },
+      }),
+    ).not.toThrow();
   });
 });

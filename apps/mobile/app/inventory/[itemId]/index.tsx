@@ -22,7 +22,7 @@ export default function ItemDetailScreen() {
   const router = useRouter();
   const theme = useTheme();
   const api = useApiClient();
-  const { getItem, publishItem, upsertItemFromServer } = useCollectionState();
+  const { getItem, publishItem, updateItem, upsertItemFromServer } = useCollectionState();
   const item = getItem(itemId);
 
   if (!item) {
@@ -78,6 +78,21 @@ export default function ItemDetailScreen() {
     }
   }
 
+  async function refreshVerificationStatus() {
+    try {
+      const response = await api.getItemVerificationStatus(currentItem.id);
+      updateItem(currentItem.id, {
+        verificationVideoUrl: response.item.verificationVideoUrl,
+        verificationStatus: response.item.verificationStatus,
+        verificationFailedReason: response.item.verificationFailedReason,
+        verifiedAt: response.item.verifiedAt,
+        aiMetadata: response.item.aiMetadata,
+      });
+    } catch {
+      Alert.alert("Verification unavailable", "Verification status could not be refreshed.");
+    }
+  }
+
   return (
     <Screen>
       <ScrollView contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}>
@@ -107,6 +122,14 @@ export default function ItemDetailScreen() {
             {currentItem.size ? sizeLabels[currentItem.size] : "No size"}
           </Text>
         </View>
+
+        <VerificationPanel
+          failedReason={currentItem.verificationFailedReason}
+          onRefresh={() => void refreshVerificationStatus()}
+          onVerify={() => router.push(`/inventory/${currentItem.id}/verify`)}
+          status={currentItem.verificationStatus ?? "pending"}
+          verifiedAt={currentItem.verifiedAt}
+        />
 
         <DetailPanel
           rows={[
@@ -146,6 +169,13 @@ export default function ItemDetailScreen() {
             variant="secondary"
           >
             Manage photos
+          </AppButton>
+          <AppButton
+            accessibilityLabel="Verify item"
+            onPress={() => router.push(`/inventory/${currentItem.id}/verify`)}
+            variant="secondary"
+          >
+            Verify Item
           </AppButton>
           <AppButton
             accessibilityLabel="Publish item"
@@ -191,6 +221,56 @@ function DetailPanel({ rows, title = "Item details" }: { rows: [string, string][
           </Text>
         </View>
       ))}
+    </View>
+  );
+}
+
+function VerificationPanel({
+  failedReason,
+  onRefresh,
+  onVerify,
+  status,
+  verifiedAt,
+}: {
+  failedReason?: string | undefined;
+  onRefresh: () => void;
+  onVerify: () => void;
+  status: "pending" | "verified" | "failed";
+  verifiedAt?: string | undefined;
+}) {
+  const theme = useTheme();
+  const title =
+    status === "verified" ? "CTN Verified" : status === "failed" ? "Verification failed" : "Review in progress";
+  const message =
+    status === "verified"
+      ? `Verified${verifiedAt ? ` on ${new Date(verifiedAt).toLocaleDateString()}` : ""}. This item can appear in collector discovery.`
+      : status === "failed"
+        ? failedReason ?? "AI review could not verify the item. Re-record a clearer proof-of-life video."
+        : "This item will stay hidden from public discovery until AI review verifies it.";
+
+  return (
+    <View
+      style={{
+        backgroundColor: status === "verified" ? theme.colors.accentMuted : theme.colors.surface,
+        borderColor: status === "verified" ? theme.colors.accent : theme.colors.border,
+        borderRadius: theme.radius.lg,
+        borderWidth: 1,
+        gap: theme.spacing.md,
+        padding: theme.spacing.lg,
+      }}
+    >
+      <Text style={{ color: theme.colors.textPrimary, fontSize: 20, fontWeight: "900" }}>{title}</Text>
+      <Text style={{ color: theme.colors.textSecondary, fontSize: 15, lineHeight: 22 }}>{message}</Text>
+      <View style={{ gap: theme.spacing.sm }}>
+        <AppButton accessibilityLabel="Refresh verification status" onPress={onRefresh} variant="secondary">
+          Refresh Status
+        </AppButton>
+        {status !== "verified" ? (
+          <AppButton accessibilityLabel="Start item verification" onPress={onVerify}>
+            {status === "failed" ? "Re-verify Item" : "Start Verification"}
+          </AppButton>
+        ) : null}
+      </View>
     </View>
   );
 }

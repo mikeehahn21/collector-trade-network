@@ -90,6 +90,17 @@ export const itemConditionSchema = z.enum([
 
 export const itemVisibilitySchema = z.enum(["private", "approved_members", "verified_members"]);
 
+export const itemVerificationStatusSchema = z.enum(["pending", "verified", "failed"]);
+
+export const itemAiMetadataSchema = z.object({
+  brand: z.string().trim().max(120).optional(),
+  color: z.string().trim().max(80).optional(),
+  condition: itemConditionSchema.optional(),
+  codeDetected: z.string().trim().max(12).optional(),
+  consistencyNotes: z.string().trim().max(1000).optional(),
+  confidence: z.enum(["low", "medium", "high"]).optional(),
+});
+
 export const itemPhotoSchema = z.object({
   id: z.string().min(1),
   uri: z.string().min(1),
@@ -242,6 +253,22 @@ export const shipTradeSchema = z.object({
 
 export const disputeTradeSchema = z.object({
   reason: z.string().trim().min(10, "Explain the issue before opening a dispute.").max(2000),
+});
+
+export const itemVerificationVideoSchema = z.object({
+  videoUrl: z.string().trim().min(1).max(512),
+  durationSeconds: z
+    .number()
+    .min(5, "Verification videos must be at least 5 seconds.")
+    .max(30, "Verification videos must be no longer than 30 seconds."),
+  verificationCode: z.string().regex(/^\d{4}$/, "Verification code must be 4 digits."),
+});
+
+export const aiReviewWebhookSchema = z.object({
+  itemId: z.string().uuid(),
+  status: z.enum(["verified", "failed"]),
+  verificationFailedReason: z.string().trim().max(2000).optional(),
+  aiMetadata: itemAiMetadataSchema.optional(),
 });
 
 export const accessRequestSchema = z.object({

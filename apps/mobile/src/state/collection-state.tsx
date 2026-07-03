@@ -7,9 +7,11 @@ import type {
   CommunicationPreference,
   EstimatedValueRange,
   ItemCondition,
+  ItemAiMetadata,
   ItemMeasurements,
   ItemPhoto,
   ItemStatus,
+  ItemVerificationStatus,
   ItemVisibility,
   ShirtSize,
   TradeOfferPreference,
@@ -40,6 +42,11 @@ export type ItemInput = {
   communicationPreference?: CommunicationPreference;
   allowsPhotoRequests?: boolean;
   allowsMeasurementRequests?: boolean;
+  verificationVideoUrl?: string | undefined;
+  verificationStatus?: ItemVerificationStatus | undefined;
+  verificationFailedReason?: string | undefined;
+  verifiedAt?: string | undefined;
+  aiMetadata?: ItemAiMetadata | undefined;
   aiSuggestions?: AiListingSuggestions;
 };
 
@@ -195,6 +202,11 @@ export function CollectionStateProvider({ children }: PropsWithChildren) {
       communicationPreference: input.communicationPreference ?? "approved_traders",
       allowsPhotoRequests: input.allowsPhotoRequests ?? true,
       allowsMeasurementRequests: input.allowsMeasurementRequests ?? true,
+      verificationVideoUrl: input.verificationVideoUrl,
+      verificationStatus: input.verificationStatus ?? "pending",
+      verificationFailedReason: input.verificationFailedReason,
+      verifiedAt: input.verifiedAt,
+      aiMetadata: input.aiMetadata,
       aiSuggestions: input.aiSuggestions,
       createdAt: now,
       updatedAt: now,

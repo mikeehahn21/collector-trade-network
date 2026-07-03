@@ -4,6 +4,8 @@ import type {
   ConversationResponse,
   ConversationsResponse,
   ItemResponse,
+  ItemVerificationStatusResponse,
+  ItemVerificationVideoRequest,
   ItemsResponse,
   MeResponse,
   PublicItemResponse,
@@ -50,6 +52,11 @@ export type ApiClient = {
   publishItem: (item: Partial<TradeableItem>) => Promise<ItemResponse>;
   updateItem: (itemId: string, item: Partial<TradeableItem>) => Promise<ItemResponse>;
   deleteItem: (itemId: string) => Promise<void>;
+  uploadItemVerificationVideo: (
+    itemId: string,
+    input: ItemVerificationVideoRequest,
+  ) => Promise<ItemVerificationStatusResponse>;
+  getItemVerificationStatus: (itemId: string) => Promise<ItemVerificationStatusResponse>;
   getPublicItem: (itemId: string) => Promise<PublicItemResponse>;
   listWishlistItems: () => Promise<WishlistItemsResponse>;
   createWishlistItem: (item: Partial<WishlistItem>) => Promise<WishlistItemResponse>;
@@ -146,6 +153,13 @@ export function createApiClient(getAuthHeaders: AuthHeaderProvider): ApiClient {
     updateItem: (itemId, item) =>
       request<ItemResponse>(`/v1/items/${itemId}`, { method: "PUT", body: JSON.stringify(item) }),
     deleteItem: (itemId) => request<void>(`/v1/items/${itemId}`, { method: "DELETE" }),
+    uploadItemVerificationVideo: (itemId, input) =>
+      request<ItemVerificationStatusResponse>(`/v1/items/${itemId}/verification-video`, {
+        method: "POST",
+        body: JSON.stringify(input),
+      }),
+    getItemVerificationStatus: (itemId) =>
+      request<ItemVerificationStatusResponse>(`/v1/items/${itemId}/verification-status`),
     getPublicItem: (itemId) => request<PublicItemResponse>(`/v1/public/items/${itemId}`),
     listWishlistItems: () => request<WishlistItemsResponse>(apiRoutes.wishlistItems),
     createWishlistItem: (item) =>
