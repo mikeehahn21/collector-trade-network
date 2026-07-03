@@ -4,8 +4,10 @@ import {
   accessRequestSchema,
   conversationContextSchema,
   onboardingPreferencesSchema,
+  createTradeSchema,
   recommendationFeedbackSchema,
   tradeableItemDraftSchema,
+  updateTradeStatusSchema,
   tradeableItemPublishSchema,
   wishlistItemDraftSchema,
   wishlistItemPublishSchema,
@@ -70,5 +72,15 @@ describe("validation", () => {
         reason: "wrong_size",
       }),
     ).not.toThrow();
+  });
+
+  it("validates trade offer inputs", () => {
+    expect(() =>
+      createTradeSchema.parse({
+        proposerItemId: "00000000-0000-0000-0000-000000000001",
+        counterpartyItemId: "00000000-0000-0000-0000-000000000002",
+      }),
+    ).not.toThrow();
+    expect(() => updateTradeStatusSchema.parse({ status: "pending" })).toThrow();
   });
 });

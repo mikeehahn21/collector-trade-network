@@ -6,11 +6,7 @@
     "allowJs": true,
     "noEmit": true,
     "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
+    "plugins": [{ "name": "next" }],
     "paths": {
       "@/*": ["./src/*"],
       "@ctn/api-contracts": ["../../packages/api-contracts/src/index.ts"],
@@ -18,8 +14,7 @@
       "@ctn/types": ["../../packages/types/src/index.ts"],
       "@ctn/utils": ["../../packages/utils/src/index.ts"],
       "@ctn/validation": ["../../packages/validation/src/index.ts"]
-    },
-    "isolatedModules": true
+    }
   },
   "include": [
     "next-env.d.ts",

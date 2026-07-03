@@ -203,6 +203,9 @@ export default function HomeScreen() {
                   if (item === "Wishlist") {
                     router.push("/wishlist");
                   }
+                  if (item === "Trades") {
+                    router.push("/trades");
+                  }
                 }}
                 style={{
                   alignItems: "center",

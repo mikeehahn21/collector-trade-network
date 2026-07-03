@@ -4,6 +4,8 @@ import type {
   RecommendationFeedback,
   RecommendationFeedbackMetrics,
   RecommendationSummary,
+  Trade,
+  TradeSummary,
   TradeableItem,
   TradeRecommendation,
   UserProfile,
@@ -17,6 +19,9 @@ import {
   tradeableItemDraftSchema,
   tradeableItemPublishSchema,
   recommendationFeedbackSchema,
+  counterTradeSchema,
+  createTradeSchema,
+  updateTradeStatusSchema,
   wishlistItemDraftSchema,
   wishlistItemPublishSchema,
 } from "@ctn/validation";
@@ -36,6 +41,10 @@ export const apiRoutes = {
   recommendationById: "/v1/recommendations/:recommendationId",
   recommendationFeedback: "/v1/recommendations/:recommendationId/feedback",
   recommendationFeedbackMetrics: "/v1/admin/recommendation-feedback/metrics",
+  trades: "/v1/trades",
+  tradeById: "/v1/trades/:tradeId",
+  tradeStatus: "/v1/trades/:tradeId/status",
+  tradeCounter: "/v1/trades/:tradeId/counter",
 } as const;
 
 export const healthContract = {
@@ -92,6 +101,24 @@ export const recommendationFeedbackContract = {
   body: recommendationFeedbackSchema,
 } as const;
 
+export const createTradeContract = {
+  method: "POST",
+  path: apiRoutes.trades,
+  body: createTradeSchema,
+} as const;
+
+export const updateTradeStatusContract = {
+  method: "PATCH",
+  path: apiRoutes.tradeStatus,
+  body: updateTradeStatusSchema,
+} as const;
+
+export const counterTradeContract = {
+  method: "POST",
+  path: apiRoutes.tradeCounter,
+  body: counterTradeSchema,
+} as const;
+
 export const wishlistItemDraftContract = {
   method: "POST",
   path: apiRoutes.wishlistItems,
@@ -143,4 +170,13 @@ export type RecommendationFeedbackResponse = {
 
 export type RecommendationFeedbackMetricsResponse = {
   metrics: RecommendationFeedbackMetrics;
+};
+
+export type TradesResponse = {
+  trades: Trade[];
+  summary: TradeSummary;
+};
+
+export type TradeResponse = {
+  trade: Trade;
 };

@@ -185,6 +185,31 @@ export const recommendationFeedbackSchema = z.object({
   targetItemId: z.string().uuid().optional(),
 });
 
+export const tradeStatusSchema = z.enum([
+  "pending",
+  "accepted",
+  "declined",
+  "countered",
+  "cancelled",
+  "completed",
+]);
+
+export const createTradeSchema = z.object({
+  proposerItemId: z.string().uuid(),
+  counterpartyItemId: z.string().uuid(),
+  proposerNotes: z.string().trim().max(500).optional(),
+});
+
+export const updateTradeStatusSchema = z.object({
+  status: z.enum(["accepted", "declined", "cancelled", "completed"]),
+});
+
+export const counterTradeSchema = z.object({
+  proposerItemId: z.string().uuid(),
+  counterpartyItemId: z.string().uuid(),
+  counterpartyNotes: z.string().trim().max(500).optional(),
+});
+
 export const accessRequestSchema = z.object({
   name: z.string().trim().min(2).max(80),
   email: z.string().trim().email(),

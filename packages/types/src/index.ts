@@ -279,6 +279,59 @@ export type RecommendationFeedbackMetrics = {
   latestFeedbackAt?: string | undefined;
 };
 
+export type TradeStatus =
+  "pending" | "accepted" | "declined" | "countered" | "cancelled" | "completed";
+
+export type TradeItemSummary = {
+  id: string;
+  ownerId: string;
+  ownerDisplayName: string;
+  title: string;
+  category?: VintageCategory | undefined;
+  size?: ShirtSize | undefined;
+  status: ItemStatus;
+};
+
+export type Trade = {
+  id: string;
+  proposerId: string;
+  proposerDisplayName: string;
+  counterpartyId: string;
+  counterpartyDisplayName: string;
+  proposerItemId: string;
+  counterpartyItemId: string;
+  proposerItem: TradeItemSummary;
+  counterpartyItem: TradeItemSummary;
+  status: TradeStatus;
+  proposerNotes?: string | undefined;
+  counterpartyNotes?: string | undefined;
+  viewerRole: "proposer" | "counterparty";
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CreateTradeInput = {
+  proposerItemId: string;
+  counterpartyItemId: string;
+  proposerNotes?: string | undefined;
+};
+
+export type UpdateTradeStatusInput = {
+  status: Extract<TradeStatus, "accepted" | "declined" | "cancelled" | "completed">;
+};
+
+export type CounterTradeInput = {
+  proposerItemId: string;
+  counterpartyItemId: string;
+  counterpartyNotes?: string | undefined;
+};
+
+export type TradeSummary = {
+  incoming: number;
+  sent: number;
+  history: number;
+};
+
 export type OnboardingProfile = {
   displayName: string;
   locationRegion: string;

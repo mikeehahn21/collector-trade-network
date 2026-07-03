@@ -14,6 +14,7 @@ import { registerAccessRoutes } from "./modules/access/access.routes";
 import { registerHealthRoutes } from "./modules/health/health.routes";
 import { registerItemRoutes } from "./modules/items/items.routes";
 import { registerRecommendationRoutes } from "./modules/recommendations/recommendations.routes";
+import { registerTradeRoutes } from "./modules/trades/trades.routes";
 import { registerUserRoutes } from "./modules/users/users.routes";
 import { registerWishlistRoutes } from "./modules/wishlist/wishlist.routes";
 
@@ -65,6 +66,7 @@ export async function buildApp(env: Env) {
   await registerItemRoutes(appInstance, { db, env });
   await registerWishlistRoutes(appInstance, { db, env });
   await registerRecommendationRoutes(appInstance, { db, env });
+  await registerTradeRoutes(appInstance, { db, env });
 
   return app;
 }

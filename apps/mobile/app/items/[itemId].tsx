@@ -169,6 +169,12 @@ export default function PublicItemDetailScreen() {
         >
           Back
         </AppButton>
+        <AppButton
+          accessibilityLabel="Propose trade"
+          onPress={() => router.push(`/trades/propose?counterpartyItemId=${item.id}`)}
+        >
+          Propose Trade
+        </AppButton>
       </ScrollView>
     </Screen>
   );

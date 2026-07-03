@@ -32,4 +32,11 @@ describe("api contracts", () => {
       "/v1/admin/recommendation-feedback/metrics",
     );
   });
+
+  it("defines Sprint 8 trade routes", () => {
+    expect(apiRoutes.trades).toBe("/v1/trades");
+    expect(apiRoutes.tradeById).toBe("/v1/trades/:tradeId");
+    expect(apiRoutes.tradeStatus).toBe("/v1/trades/:tradeId/status");
+    expect(apiRoutes.tradeCounter).toBe("/v1/trades/:tradeId/counter");
+  });
 });

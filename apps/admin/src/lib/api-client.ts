@@ -17,7 +17,7 @@ export async function getHealth(): Promise<HealthResponse> {
 }
 
 export async function getRecommendationFeedbackMetrics(
-  bearerToken?: string,
+  bearerToken?: string | undefined,
 ): Promise<RecommendationFeedbackMetricsResponse> {
   const response = await fetch(`${apiBaseUrl}${apiRoutes.recommendationFeedbackMetrics}`, {
     headers: {

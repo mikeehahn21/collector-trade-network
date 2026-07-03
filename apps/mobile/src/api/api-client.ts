@@ -6,12 +6,17 @@ import type {
   RecommendationFeedbackResponse,
   RecommendationResponse,
   RecommendationsResponse,
+  TradeResponse,
+  TradesResponse,
   WishlistItemResponse,
   WishlistItemsResponse,
 } from "@ctn/api-contracts";
 import { apiRoutes } from "@ctn/api-contracts";
 import type {
+  CreateTradeInput,
+  CounterTradeInput,
   RecommendationFeedbackRating,
+  TradeStatus,
   TradeableItem,
   UserProfile,
   WishlistItem,
@@ -56,6 +61,14 @@ export type ApiClient = {
       targetItemId?: string | undefined;
     },
   ) => Promise<RecommendationFeedbackResponse>;
+  createTrade: (input: CreateTradeInput) => Promise<TradeResponse>;
+  listTrades: () => Promise<TradesResponse>;
+  getTrade: (tradeId: string) => Promise<TradeResponse>;
+  updateTradeStatus: (
+    tradeId: string,
+    status: Extract<TradeStatus, "accepted" | "declined" | "cancelled" | "completed">,
+  ) => Promise<TradeResponse>;
+  counterTrade: (tradeId: string, input: CounterTradeInput) => Promise<TradeResponse>;
 };
 
 export function createApiClient(getAuthHeaders: AuthHeaderProvider): ApiClient {
@@ -126,6 +139,24 @@ export function createApiClient(getAuthHeaders: AuthHeaderProvider): ApiClient {
       request<RecommendationFeedbackResponse>(`/v1/recommendations/${recommendationId}/feedback`, {
         method: "POST",
         body: JSON.stringify(input),
+      }),
+    createTrade: (input) =>
+      request<TradeResponse>(apiRoutes.trades, { method: "POST", body: JSON.stringify(input) }),
+    listTrades: () => request<TradesResponse>(apiRoutes.trades),
+    getTrade: (tradeId) => request<TradeResponse>(`/v1/trades/${tradeId}`),
+    updateTradeStatus: (tradeId, status) =>
+      request<TradeResponse>(`/v1/trades/${tradeId}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ status }),
+      }),
+    counterTrade: (tradeId, input) =>
+      request<TradeResponse>(`/v1/trades/${tradeId}/counter`, {
+        method: "POST",
+        body: JSON.stringify({
+          proposerItemId: input.proposerItemId,
+          counterpartyItemId: input.counterpartyItemId,
+          counterpartyNotes: input.counterpartyNotes,
+        }),
       }),
   };
 }
