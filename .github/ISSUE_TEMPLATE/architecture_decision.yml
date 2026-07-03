@@ -1,0 +1,68 @@
+name: Architecture Decision Record (ADR)
+description: Propose or document an architectural decision
+title: "[adr] "
+labels: ["documentation", "technical debt"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template to propose or record an architectural decision. Once accepted, the decision should be added to `docs/decisions/` as a numbered ADR file.
+
+  - type: input
+    id: title
+    attributes:
+      label: Decision Title
+      description: A short, descriptive title for this decision.
+      placeholder: e.g., "Use Clerk for authentication"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: status
+    attributes:
+      label: Status
+      options:
+        - Proposed
+        - Accepted
+        - Deprecated
+        - Superseded
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: What is the situation that requires a decision? What forces are at play?
+    validations:
+      required: true
+
+  - type: textarea
+    id: decision
+    attributes:
+      label: Decision
+      description: What is the decision that was made or is being proposed?
+    validations:
+      required: true
+
+  - type: textarea
+    id: consequences
+    attributes:
+      label: Consequences
+      description: What are the positive and negative consequences of this decision?
+      placeholder: |
+        Positive:
+        - ...
+
+        Negative:
+        - ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: What other options were evaluated?
+    validations:
+      required: false

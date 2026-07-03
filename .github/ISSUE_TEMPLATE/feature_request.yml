@@ -1,0 +1,70 @@
+name: Feature Request
+description: Propose a new feature or enhancement
+title: "[feature] "
+labels: ["feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template to propose a new feature. Be as specific as possible so the team can evaluate and scope the work accurately.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of the product does this feature belong to?
+      options:
+        - Mobile App
+        - API / Backend
+        - Admin Dashboard
+        - Infrastructure / DevOps
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What problem does this feature solve? Who is affected?
+      placeholder: As a collector, I want to...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the feature you'd like to see built.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Have you considered any alternative approaches?
+    validations:
+      required: false
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      description: How will we know this feature is complete and working correctly?
+      placeholder: |
+        - [ ] Criterion 1
+        - [ ] Criterion 2
+    validations:
+      required: false
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Suggested Priority
+      options:
+        - High
+        - Medium
+        - Low
+    validations:
+      required: false

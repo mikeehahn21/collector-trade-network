@@ -1,0 +1,18 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@ctn/api-contracts": ["../../packages/api-contracts/src/index.ts"],
+      "@ctn/constants": ["../../packages/constants/src/index.ts"],
+      "@ctn/types": ["../../packages/types/src/index.ts"],
+      "@ctn/utils": ["../../packages/utils/src/index.ts"],
+      "@ctn/validation": ["../../packages/validation/src/index.ts"]
+    }
+  },
+  "include": ["app/**/*.tsx", "src/**/*.ts", "src/**/*.tsx", "expo-env.d.ts"]
+}

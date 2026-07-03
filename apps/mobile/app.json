@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "Collector Trade",
+    "slug": "collector-trade",
+    "scheme": "collectortrade",
+    "version": "0.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.collectortrade.mobile"
+    },
+    "android": {
+      "package": "com.collectortrade.mobile",
+      "adaptiveIcon": {
+        "backgroundColor": "#0F1115"
+      }
+    },
+    "plugins": ["expo-router", "expo-secure-store"],
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "apiBaseUrl": "$EXPO_PUBLIC_API_BASE_URL",
+      "clerkPublishableKey": "$EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY",
+      "sentryDsn": "$EXPO_PUBLIC_SENTRY_DSN",
+      "posthogApiKey": "$EXPO_PUBLIC_POSTHOG_API_KEY",
+      "oneSignalAppId": "$EXPO_PUBLIC_ONESIGNAL_APP_ID"
+    }
+  }
+}

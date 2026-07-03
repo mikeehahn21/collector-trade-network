@@ -1,0 +1,18 @@
+{
+  "name": "@ctn/e2e",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "echo \"No build step for e2e\"",
+    "dev": "echo \"No dev server for e2e\"",
+    "lint": "eslint .",
+    "test": "echo \"E2E tests run via test:e2e\"",
+    "test:e2e": "playwright test",
+    "test:integration": "echo \"No integration tests for e2e\"",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.2",
+    "typescript": "^5.6.3"
+  }
+}

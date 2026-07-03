@@ -1,0 +1,77 @@
+name: Sprint Review
+description: Document sprint completion and outcomes
+title: "[sprint-review] Sprint X"
+labels: ["documentation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template to document the outcome of a completed sprint.
+
+  - type: input
+    id: sprint
+    attributes:
+      label: Sprint Number
+      placeholder: e.g., Sprint 6
+    validations:
+      required: true
+
+  - type: input
+    id: dates
+    attributes:
+      label: Sprint Dates
+      placeholder: e.g., 2026-07-01 to 2026-07-14
+    validations:
+      required: false
+
+  - type: textarea
+    id: goal
+    attributes:
+      label: Sprint Goal
+      description: What was the primary objective of this sprint?
+    validations:
+      required: true
+
+  - type: textarea
+    id: completed
+    attributes:
+      label: Completed Work
+      description: List all items completed during this sprint.
+      placeholder: |
+        - [ ] Feature A
+        - [ ] Feature B
+        - [ ] Bug fix C
+    validations:
+      required: true
+
+  - type: textarea
+    id: not_completed
+    attributes:
+      label: Not Completed / Carried Over
+      description: List any items that were not completed and will carry over.
+    validations:
+      required: false
+
+  - type: textarea
+    id: decisions
+    attributes:
+      label: Key Decisions Made
+      description: Any architectural or product decisions made during this sprint.
+    validations:
+      required: false
+
+  - type: textarea
+    id: blockers
+    attributes:
+      label: Blockers & Risks
+      description: What blocked progress or poses risk going forward?
+    validations:
+      required: false
+
+  - type: textarea
+    id: next_sprint
+    attributes:
+      label: Next Sprint Preview
+      description: What is the proposed focus for the next sprint?
+    validations:
+      required: false

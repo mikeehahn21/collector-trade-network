@@ -1,0 +1,27 @@
+# CODEOWNERS
+#
+# Each line is a file pattern followed by one or more owners.
+# Owners are automatically requested for review when someone opens a PR
+# that modifies matching files.
+#
+# More information: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default: founding team owns everything
+*                               @mikeehahn21
+
+# Core application areas
+apps/mobile/**                  @mikeehahn21
+apps/api/**                     @mikeehahn21
+apps/admin/**                   @mikeehahn21
+
+# Shared packages — changes here affect all apps
+packages/**                     @mikeehahn21
+
+# Infrastructure and CI — high-risk changes
+infra/**                        @mikeehahn21
+.github/workflows/**            @mikeehahn21
+docker-compose.yml              @mikeehahn21
+
+# Documentation
+docs/**                         @mikeehahn21
+*.md                            @mikeehahn21

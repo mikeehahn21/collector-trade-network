@@ -1,0 +1,11 @@
+node_modules
+dist
+.next
+coverage
+*.pptx
+*.ndjson
+facebook-assets
+facebook-video-frames
+facebook-video-frames-winrt
+thumb-check
+thumb-check-final
