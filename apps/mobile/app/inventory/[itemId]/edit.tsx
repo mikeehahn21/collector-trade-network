@@ -58,9 +58,7 @@ export default function EditItemScreen() {
 
   return (
     <Screen>
-      <ScrollView
-        contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}
-      >
+      <ScrollView contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}>
         <View style={{ gap: theme.spacing.sm }}>
           <Text style={{ color: theme.colors.accent, fontSize: 12, fontWeight: "800" }}>
             ITEM BUILDER
@@ -100,11 +98,7 @@ export default function EditItemScreen() {
             </Text>
             <AppButton
               accessibilityLabel="Apply suggested title"
-              onPress={() =>
-                updateItem(currentItem.id, {
-                  title: currentItem.aiSuggestions?.title ?? currentItem.title,
-                })
-              }
+              onPress={() => updateItem(currentItem.id, { title: currentItem.aiSuggestions?.title ?? currentItem.title })}
               variant="ghost"
             >
               Apply suggested title
@@ -119,9 +113,7 @@ export default function EditItemScreen() {
           value={currentItem.title}
         />
 
-        <Text style={{ color: theme.colors.textPrimary, fontSize: 16, fontWeight: "900" }}>
-          Category
-        </Text>
+        <Text style={{ color: theme.colors.textPrimary, fontSize: 16, fontWeight: "900" }}>Category</Text>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: theme.spacing.sm }}>
           {VINTAGE_CATEGORIES.map((category) => (
             <Chip
@@ -133,9 +125,7 @@ export default function EditItemScreen() {
           ))}
         </View>
 
-        <Text style={{ color: theme.colors.textPrimary, fontSize: 16, fontWeight: "900" }}>
-          Size
-        </Text>
+        <Text style={{ color: theme.colors.textPrimary, fontSize: 16, fontWeight: "900" }}>Size</Text>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: theme.spacing.sm }}>
           {SHIRT_SIZES.map((size) => (
             <Chip
@@ -147,9 +137,7 @@ export default function EditItemScreen() {
           ))}
         </View>
 
-        <Text style={{ color: theme.colors.textPrimary, fontSize: 16, fontWeight: "900" }}>
-          Era
-        </Text>
+        <Text style={{ color: theme.colors.textPrimary, fontSize: 16, fontWeight: "900" }}>Era</Text>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: theme.spacing.sm }}>
           {ITEM_ERAS.map((era) => (
             <Chip
@@ -176,9 +164,7 @@ export default function EditItemScreen() {
             <AppTextField
               label="Chest"
               onChangeText={(chest) =>
-                updateItem(currentItem.id, {
-                  measurements: { ...currentItem.measurements, chest, unit: "in" },
-                })
+                updateItem(currentItem.id, { measurements: { ...currentItem.measurements, chest, unit: "in" } })
               }
               placeholder="23 in"
               value={currentItem.measurements.chest ?? ""}
@@ -188,9 +174,7 @@ export default function EditItemScreen() {
             <AppTextField
               label="Length"
               onChangeText={(length) =>
-                updateItem(currentItem.id, {
-                  measurements: { ...currentItem.measurements, length, unit: "in" },
-                })
+                updateItem(currentItem.id, { measurements: { ...currentItem.measurements, length, unit: "in" } })
               }
               placeholder="29 in"
               value={currentItem.measurements.length ?? ""}
@@ -202,9 +186,7 @@ export default function EditItemScreen() {
             <AppTextField
               label="Shoulder"
               onChangeText={(shoulder) =>
-                updateItem(currentItem.id, {
-                  measurements: { ...currentItem.measurements, shoulder, unit: "in" },
-                })
+                updateItem(currentItem.id, { measurements: { ...currentItem.measurements, shoulder, unit: "in" } })
               }
               placeholder="21 in"
               value={currentItem.measurements.shoulder ?? ""}
@@ -214,9 +196,7 @@ export default function EditItemScreen() {
             <AppTextField
               label="Sleeve"
               onChangeText={(sleeve) =>
-                updateItem(currentItem.id, {
-                  measurements: { ...currentItem.measurements, sleeve, unit: "in" },
-                })
+                updateItem(currentItem.id, { measurements: { ...currentItem.measurements, sleeve, unit: "in" } })
               }
               placeholder="8 in"
               value={currentItem.measurements.sleeve ?? ""}

@@ -26,10 +26,7 @@ export default function WishlistItemDetailScreen() {
           <Text style={{ color: theme.colors.textPrimary, fontSize: 24, fontWeight: "900" }}>
             Wishlist item not found
           </Text>
-          <AppButton
-            accessibilityLabel="Back to wishlist"
-            onPress={() => router.replace("/wishlist")}
-          >
+          <AppButton accessibilityLabel="Back to wishlist" onPress={() => router.replace("/wishlist")}>
             Back to wishlist
           </AppButton>
         </View>
@@ -39,14 +36,10 @@ export default function WishlistItemDetailScreen() {
 
   return (
     <Screen>
-      <ScrollView
-        contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}
-      >
+      <ScrollView contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}>
         <View style={{ gap: theme.spacing.sm }}>
           <Text style={{ color: theme.colors.accent, fontSize: 12, fontWeight: "900" }}>
-            {item.isGrail
-              ? "GRAIL"
-              : `${wishlistPriorityLabels[item.priority].toUpperCase()} PRIORITY`}
+            {item.isGrail ? "GRAIL" : `${wishlistPriorityLabels[item.priority].toUpperCase()} PRIORITY`}
           </Text>
           <Text style={{ color: theme.colors.textPrimary, fontSize: 34, fontWeight: "900" }}>
             {item.title || "Untitled want"}
@@ -93,13 +86,7 @@ export default function WishlistItemDetailScreen() {
   );
 }
 
-function DetailPanel({
-  rows,
-  title = "Wishlist details",
-}: {
-  rows: [string, string][];
-  title?: string;
-}) {
+function DetailPanel({ rows, title = "Wishlist details" }: { rows: [string, string][]; title?: string }) {
   const theme = useTheme();
 
   return (
@@ -113,23 +100,11 @@ function DetailPanel({
         padding: theme.spacing.lg,
       }}
     >
-      <Text style={{ color: theme.colors.textPrimary, fontSize: 18, fontWeight: "900" }}>
-        {title}
-      </Text>
+      <Text style={{ color: theme.colors.textPrimary, fontSize: 18, fontWeight: "900" }}>{title}</Text>
       {rows.map(([label, value]) => (
-        <View
-          key={label}
-          style={{ flexDirection: "row", justifyContent: "space-between", gap: theme.spacing.md }}
-        >
+        <View key={label} style={{ flexDirection: "row", justifyContent: "space-between", gap: theme.spacing.md }}>
           <Text style={{ color: theme.colors.textSecondary, flex: 1 }}>{label}</Text>
-          <Text
-            style={{
-              color: theme.colors.textPrimary,
-              flex: 1,
-              fontWeight: "700",
-              textAlign: "right",
-            }}
-          >
+          <Text style={{ color: theme.colors.textPrimary, flex: 1, fontWeight: "700", textAlign: "right" }}>
             {value}
           </Text>
         </View>

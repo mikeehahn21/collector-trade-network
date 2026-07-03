@@ -1,5 +1,7 @@
 import type {
   ApiHealth,
+  Conversation,
+  ConversationMessage,
   PublicTradeableItem,
   RecommendationFeedback,
   RecommendationFeedbackMetrics,
@@ -14,11 +16,15 @@ import type {
 
 import {
   accessRequestSchema,
+  createConversationSchema,
   healthResponseSchema,
   inviteCodeSchema,
+  markMessageReadSchema,
   tradeableItemDraftSchema,
   tradeableItemPublishSchema,
   recommendationFeedbackSchema,
+  sendMessageSchema,
+  conversationTypingSchema,
   counterTradeSchema,
   createTradeSchema,
   updateTradeStatusSchema,
@@ -45,6 +51,10 @@ export const apiRoutes = {
   tradeById: "/v1/trades/:tradeId",
   tradeStatus: "/v1/trades/:tradeId/status",
   tradeCounter: "/v1/trades/:tradeId/counter",
+  conversations: "/v1/conversations",
+  conversationMessages: "/v1/conversations/:conversationId/messages",
+  messageRead: "/v1/messages/:messageId/read",
+  conversationTyping: "/v1/conversations/typing",
 } as const;
 
 export const healthContract = {
@@ -119,6 +129,30 @@ export const counterTradeContract = {
   body: counterTradeSchema,
 } as const;
 
+export const createConversationContract = {
+  method: "POST",
+  path: apiRoutes.conversations,
+  body: createConversationSchema,
+} as const;
+
+export const sendMessageContract = {
+  method: "POST",
+  path: apiRoutes.conversationMessages,
+  body: sendMessageSchema,
+} as const;
+
+export const markMessageReadContract = {
+  method: "PATCH",
+  path: apiRoutes.messageRead,
+  body: markMessageReadSchema,
+} as const;
+
+export const conversationTypingContract = {
+  method: "POST",
+  path: apiRoutes.conversationTyping,
+  body: conversationTypingSchema,
+} as const;
+
 export const wishlistItemDraftContract = {
   method: "POST",
   path: apiRoutes.wishlistItems,
@@ -179,4 +213,21 @@ export type TradesResponse = {
 
 export type TradeResponse = {
   trade: Trade;
+};
+
+export type ConversationsResponse = {
+  conversations: Conversation[];
+};
+
+export type ConversationResponse = {
+  conversation: Conversation;
+};
+
+export type ConversationMessagesResponse = {
+  messages: ConversationMessage[];
+  nextBefore?: string | undefined;
+};
+
+export type ConversationMessageResponse = {
+  message: ConversationMessage;
 };

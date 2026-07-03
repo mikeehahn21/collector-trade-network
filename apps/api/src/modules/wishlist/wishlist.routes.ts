@@ -1,10 +1,6 @@
 import type { FastifyInstance, FastifyRequest } from "fastify";
 
-import {
-  apiRoutes,
-  wishlistItemDraftContract,
-  wishlistItemPublishContract,
-} from "@ctn/api-contracts";
+import { apiRoutes, wishlistItemDraftContract, wishlistItemPublishContract } from "@ctn/api-contracts";
 import { MAX_GRAILS } from "@ctn/constants";
 import { wishlistItemDraftSchema } from "@ctn/validation";
 

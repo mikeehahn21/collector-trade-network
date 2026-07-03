@@ -32,10 +32,7 @@ export default function ItemDetailScreen() {
           <Text style={{ color: theme.colors.textPrimary, fontSize: 24, fontWeight: "900" }}>
             Item not found
           </Text>
-          <AppButton
-            accessibilityLabel="Back to inventory"
-            onPress={() => router.replace("/inventory")}
-          >
+          <AppButton accessibilityLabel="Back to inventory" onPress={() => router.replace("/inventory")}>
             Back to inventory
           </AppButton>
         </View>
@@ -83,9 +80,7 @@ export default function ItemDetailScreen() {
 
   return (
     <Screen>
-      <ScrollView
-        contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}
-      >
+      <ScrollView contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}>
         <View
           style={{
             alignItems: "center",
@@ -96,9 +91,7 @@ export default function ItemDetailScreen() {
           }}
         >
           <Text style={{ color: theme.colors.textSecondary, fontSize: 16, fontWeight: "800" }}>
-            {currentItem.photos.length > 0
-              ? `${currentItem.photos.length} photos`
-              : "No photos yet"}
+            {currentItem.photos.length > 0 ? `${currentItem.photos.length} photos` : "No photos yet"}
           </Text>
         </View>
 
@@ -117,10 +110,7 @@ export default function ItemDetailScreen() {
 
         <DetailPanel
           rows={[
-            [
-              "Condition",
-              currentItem.condition ? conditionLabels[currentItem.condition] : "Not set",
-            ],
+            ["Condition", currentItem.condition ? conditionLabels[currentItem.condition] : "Not set"],
             ["Tag", currentItem.tag || "Not set"],
             ["Era", currentItem.era || "Not set"],
             ["Measurements", measurements || "Not set"],
@@ -132,36 +122,22 @@ export default function ItemDetailScreen() {
         <DetailPanel
           title="Trade and communication"
           rows={[
-            [
-              "Trade preference",
-              currentItem.tradePreference
-                ? tradePreferenceLabels[currentItem.tradePreference]
-                : "Not set",
-            ],
+            ["Trade preference", currentItem.tradePreference ? tradePreferenceLabels[currentItem.tradePreference] : "Not set"],
             ["Conversations", communicationPreferenceLabels[currentItem.communicationPreference]],
             ["Photo requests", currentItem.allowsPhotoRequests ? "Allowed" : "Disabled"],
-            [
-              "Measurement requests",
-              currentItem.allowsMeasurementRequests ? "Allowed" : "Disabled",
-            ],
+            ["Measurement requests", currentItem.allowsMeasurementRequests ? "Allowed" : "Disabled"],
           ]}
         />
 
         {currentItem.flaws.length > 0 ? (
           <DetailPanel
             title="Flaws"
-            rows={currentItem.flaws.map((flaw, index): [string, string] => [
-              `Flaw ${index + 1}`,
-              flaw,
-            ])}
+            rows={currentItem.flaws.map((flaw, index): [string, string] => [`Flaw ${index + 1}`, flaw])}
           />
         ) : null}
 
         <View style={{ gap: theme.spacing.md }}>
-          <AppButton
-            accessibilityLabel="Edit item"
-            onPress={() => router.push(`/inventory/${currentItem.id}/edit`)}
-          >
+          <AppButton accessibilityLabel="Edit item" onPress={() => router.push(`/inventory/${currentItem.id}/edit`)}>
             Edit item
           </AppButton>
           <AppButton
@@ -192,13 +168,7 @@ export default function ItemDetailScreen() {
   );
 }
 
-function DetailPanel({
-  rows,
-  title = "Item details",
-}: {
-  rows: [string, string][];
-  title?: string;
-}) {
+function DetailPanel({ rows, title = "Item details" }: { rows: [string, string][]; title?: string }) {
   const theme = useTheme();
 
   return (
@@ -212,23 +182,11 @@ function DetailPanel({
         padding: theme.spacing.lg,
       }}
     >
-      <Text style={{ color: theme.colors.textPrimary, fontSize: 18, fontWeight: "900" }}>
-        {title}
-      </Text>
+      <Text style={{ color: theme.colors.textPrimary, fontSize: 18, fontWeight: "900" }}>{title}</Text>
       {rows.map(([label, value]) => (
-        <View
-          key={label}
-          style={{ flexDirection: "row", justifyContent: "space-between", gap: theme.spacing.md }}
-        >
+        <View key={label} style={{ flexDirection: "row", justifyContent: "space-between", gap: theme.spacing.md }}>
           <Text style={{ color: theme.colors.textSecondary, flex: 1 }}>{label}</Text>
-          <Text
-            style={{
-              color: theme.colors.textPrimary,
-              flex: 1,
-              fontWeight: "700",
-              textAlign: "right",
-            }}
-          >
+          <Text style={{ color: theme.colors.textPrimary, flex: 1, fontWeight: "700", textAlign: "right" }}>
             {value}
           </Text>
         </View>

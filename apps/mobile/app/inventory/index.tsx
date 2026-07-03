@@ -22,9 +22,7 @@ export default function InventoryHomeScreen() {
 
   return (
     <Screen>
-      <ScrollView
-        contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}
-      >
+      <ScrollView contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}>
         <View style={{ gap: theme.spacing.sm }}>
           <Text style={{ color: theme.colors.accent, fontSize: 12, fontWeight: "800" }}>
             COLLECTION ENGINE

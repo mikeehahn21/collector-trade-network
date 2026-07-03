@@ -15,8 +15,8 @@ export default tseslint.config(
       "thumb-check/**",
       "thumb-check-final/**",
       "packages/*/src/*.d.ts",
-      "packages/*/src/*.js",
-    ],
+      "packages/*/src/*.js"
+    ]
   },
   js.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
@@ -35,14 +35,17 @@ export default tseslint.config(
             "packages/validation/src/*.d.ts",
             "eslint.config.mjs",
             "lint-staged.config.cjs",
-            "commitlint.config.cjs",
-          ],
+            "commitlint.config.cjs"
+          ]
         },
-        tsconfigRootDir: import.meta.dirname,
-      },
+        tsconfigRootDir: import.meta.dirname
+      }
     },
     rules: {
-      "@typescript-eslint/consistent-type-imports": ["error", { prefer: "type-imports" }],
+      "@typescript-eslint/consistent-type-imports": [
+        "error",
+        { "prefer": "type-imports" }
+      ],
       "@typescript-eslint/no-floating-promises": "error",
       "@typescript-eslint/no-misused-promises": "error",
       // Fastify route handlers must be async for the reply/lifecycle system even when
@@ -51,9 +54,9 @@ export default tseslint.config(
       // Allow underscore-prefixed parameters to indicate intentionally unused args
       "@typescript-eslint/no-unused-vars": [
         "error",
-        { argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrorsIgnorePattern: "^_" },
-      ],
-    },
+        { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_", "caughtErrorsIgnorePattern": "^_" }
+      ]
+    }
   },
-  eslintConfigPrettier,
+  eslintConfigPrettier
 );

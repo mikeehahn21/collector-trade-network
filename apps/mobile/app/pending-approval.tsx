@@ -13,10 +13,7 @@ export default function PendingApprovalScreen() {
       title="Your account is under review."
       subtitle="We are keeping the first trading cohort intentionally curated."
       footer={
-        <AppButton
-          accessibilityLabel="Return to welcome"
-          onPress={() => router.replace("/welcome")}
-        >
+        <AppButton accessibilityLabel="Return to welcome" onPress={() => router.replace("/welcome")}>
           Back to welcome
         </AppButton>
       }

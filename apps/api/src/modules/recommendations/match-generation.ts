@@ -58,8 +58,7 @@ function matchItemToWishlist(
   }
 
   const sizeMatches = Boolean(item.size && wish.size && item.size === wish.size);
-  const titleMatches =
-    normalize(item.title).includes(normalize(wish.title)) ||
+  const titleMatches = normalize(item.title).includes(normalize(wish.title)) ||
     normalize(wish.title).includes(normalize(item.title));
   const isExact = wish.matchPreference === "exact" && titleMatches && (!wish.size || sizeMatches);
   const isSimilar = wish.matchPreference === "similar";

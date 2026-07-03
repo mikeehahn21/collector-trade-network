@@ -12,8 +12,3 @@ coverage/
 .expo/
 android/
 ios/
-
-# Prevent compiled output from being committed to src/ directories
-packages/*/src/*.js
-packages/*/src/*.js.map
-packages/*/src/*.d.ts

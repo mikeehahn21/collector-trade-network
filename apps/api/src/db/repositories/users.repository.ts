@@ -26,10 +26,7 @@ export type UpsertUserInput = {
   socialHandle?: string | undefined;
 };
 
-export async function upsertUserProfile(
-  db: Queryable,
-  input: UpsertUserInput,
-): Promise<UserProfile> {
+export async function upsertUserProfile(db: Queryable, input: UpsertUserInput): Promise<UserProfile> {
   const row = await queryOne<UserRow>(
     db,
     `
@@ -75,9 +72,7 @@ export async function findUserByClerkId(
   db: Queryable,
   clerkUserId: string,
 ): Promise<UserProfile | undefined> {
-  const row = await queryOne<UserRow>(db, "select * from users where clerk_user_id = $1", [
-    clerkUserId,
-  ]);
+  const row = await queryOne<UserRow>(db, "select * from users where clerk_user_id = $1", [clerkUserId]);
   return row ? mapUser(row) : undefined;
 }
 

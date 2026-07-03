@@ -59,17 +59,14 @@ type WishlistContextValue = {
   lastGrailItem?: WishlistItem | undefined;
   canMarkMoreGrails: boolean;
   createWishlistItem: (input?: WishlistInput) => WishlistItem;
-  updateWishlistItem: (
-    itemId: string,
-    patch: WishlistInput,
-  ) => { ok: boolean; message?: string | undefined };
+  updateWishlistItem: (itemId: string, patch: WishlistInput) => { ok: boolean; message?: string | undefined };
   archiveWishlistItem: (itemId: string) => void;
   deleteWishlistItem: (itemId: string) => void;
   moveWishlistItem: (itemId: string, direction: "up" | "down") => void;
   clearGrailCelebration: () => void;
   getWishlistItem: (itemId: string) => WishlistItem | undefined;
   replaceWishlistFromServer: (items: WishlistItem[]) => void;
-  upsertWishlistItemFromServer: (item: WishlistItem, localItemId?: string) => void;
+  upsertWishlistItemFromServer: (item: WishlistItem, localItemId?: string  ) => void;
 };
 
 const initialState: State = {
@@ -98,9 +95,7 @@ function reducer(state: State, action: Action): State {
         ...state,
         lastGrailItemId: action.patch.isGrail ? action.itemId : state.lastGrailItemId,
         items: state.items.map((item) =>
-          item.id === action.itemId
-            ? { ...item, ...action.patch, updatedAt: new Date().toISOString() }
-            : item,
+          item.id === action.itemId ? { ...item, ...action.patch, updatedAt: new Date().toISOString() } : item,
         ),
       };
     case "archive":
@@ -230,9 +225,12 @@ export function WishlistStateProvider({ children }: PropsWithChildren) {
     dispatch({ type: "replace", items });
   }, []);
 
-  const upsertWishlistItemFromServer = useCallback((item: WishlistItem, localItemId?: string) => {
-    dispatch({ type: "upsertFromServer", item, localItemId });
-  }, []);
+  const upsertWishlistItemFromServer = useCallback(
+    (item: WishlistItem, localItemId?: string) => {
+      dispatch({ type: "upsertFromServer", item, localItemId });
+    },
+    [],
+  );
 
   const getWishlistItem = useCallback(
     (itemId: string) => state.items.find((item) => item.id === itemId),

@@ -3,7 +3,10 @@ import { Pressable, Text, View } from "react-native";
 import type { WishlistItem } from "@ctn/types";
 
 import { categoryLabels, sizeLabels } from "@/lib/item-display";
-import { wishlistMatchPreferenceLabels, wishlistPriorityLabels } from "@/lib/wishlist-display";
+import {
+  wishlistMatchPreferenceLabels,
+  wishlistPriorityLabels,
+} from "@/lib/wishlist-display";
 import { useTheme } from "@/theme/theme-provider";
 
 type WishlistCardProps = {
@@ -33,9 +36,7 @@ export function WishlistCard({ item, onMoveDown, onMoveUp, onPress }: WishlistCa
         padding: theme.spacing.lg,
       })}
     >
-      <View
-        style={{ flexDirection: "row", gap: theme.spacing.md, justifyContent: "space-between" }}
-      >
+      <View style={{ flexDirection: "row", gap: theme.spacing.md, justifyContent: "space-between" }}>
         <View style={{ flex: 1, gap: 6 }}>
           <Text style={{ color: theme.colors.accent, fontSize: 12, fontWeight: "900" }}>
             {item.isGrail ? "GRAIL" : wishlistPriorityLabels[item.priority].toUpperCase()}
@@ -50,14 +51,10 @@ export function WishlistCard({ item, onMoveDown, onMoveUp, onPress }: WishlistCa
       </View>
       <View style={{ flexDirection: "row", gap: theme.spacing.sm }}>
         <Pressable accessibilityRole="button" onPress={onMoveUp} style={{ paddingVertical: 4 }}>
-          <Text style={{ color: theme.colors.textSecondary, fontSize: 13, fontWeight: "800" }}>
-            Move up
-          </Text>
+          <Text style={{ color: theme.colors.textSecondary, fontSize: 13, fontWeight: "800" }}>Move up</Text>
         </Pressable>
         <Pressable accessibilityRole="button" onPress={onMoveDown} style={{ paddingVertical: 4 }}>
-          <Text style={{ color: theme.colors.textSecondary, fontSize: 13, fontWeight: "800" }}>
-            Move down
-          </Text>
+          <Text style={{ color: theme.colors.textSecondary, fontSize: 13, fontWeight: "800" }}>Move down</Text>
         </Pressable>
       </View>
     </Pressable>

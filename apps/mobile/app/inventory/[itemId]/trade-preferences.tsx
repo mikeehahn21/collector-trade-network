@@ -29,10 +29,7 @@ export default function ItemTradePreferencesScreen() {
       title="Decide how this piece can move."
       subtitle="Item-level settings let special pieces have stricter boundaries than your default profile."
       footer={
-        <AppButton
-          accessibilityLabel="Done editing trade preferences"
-          onPress={() => router.back()}
-        >
+        <AppButton accessibilityLabel="Done editing trade preferences" onPress={() => router.back()}>
           Done
         </AppButton>
       }
@@ -91,12 +88,8 @@ export default function ItemTradePreferencesScreen() {
           </Text>
         </View>
         <Switch
-          onValueChange={(enabled) =>
-            updateItem(currentItem.id, { status: enabled ? "reserved" : "draft" })
-          }
-          thumbColor={
-            currentItem.status === "reserved" ? theme.colors.accent : theme.colors.textSecondary
-          }
+          onValueChange={(enabled) => updateItem(currentItem.id, { status: enabled ? "reserved" : "draft" })}
+          thumbColor={currentItem.status === "reserved" ? theme.colors.accent : theme.colors.textSecondary}
           value={currentItem.status === "reserved"}
         />
       </View>

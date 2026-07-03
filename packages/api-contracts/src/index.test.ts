@@ -39,4 +39,11 @@ describe("api contracts", () => {
     expect(apiRoutes.tradeStatus).toBe("/v1/trades/:tradeId/status");
     expect(apiRoutes.tradeCounter).toBe("/v1/trades/:tradeId/counter");
   });
+
+  it("defines Sprint 9 contextual conversation routes", () => {
+    expect(apiRoutes.conversations).toBe("/v1/conversations");
+    expect(apiRoutes.conversationMessages).toBe("/v1/conversations/:conversationId/messages");
+    expect(apiRoutes.messageRead).toBe("/v1/messages/:messageId/read");
+    expect(apiRoutes.conversationTyping).toBe("/v1/conversations/typing");
+  });
 });

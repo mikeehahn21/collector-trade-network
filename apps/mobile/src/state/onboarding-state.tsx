@@ -164,10 +164,7 @@ export function OnboardingStateProvider({ children }: PropsWithChildren) {
       dispatch({ type: "setAccess", status, ...options }),
     [],
   );
-  const setProfile = useCallback(
-    (profile: OnboardingProfile) => dispatch({ type: "setProfile", profile }),
-    [],
-  );
+  const setProfile = useCallback((profile: OnboardingProfile) => dispatch({ type: "setProfile", profile }), []);
   const setCollectorType = useCallback(
     (collectorType: CollectorType) => dispatch({ type: "setCollectorType", collectorType }),
     [],

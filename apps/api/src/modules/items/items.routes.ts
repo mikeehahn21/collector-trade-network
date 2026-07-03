@@ -103,12 +103,7 @@ export async function registerItemRoutes(
       });
     }
 
-    const item = await updateItemForOwner(
-      services.db,
-      user.id,
-      itemId,
-      parsed.data as PersistItemInput,
-    );
+    const item = await updateItemForOwner(services.db, user.id, itemId, parsed.data as PersistItemInput);
 
     if (!item) {
       return reply.status(404).send({ code: "ITEM_NOT_FOUND", message: "Item not found." });

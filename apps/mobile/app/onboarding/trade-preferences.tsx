@@ -16,9 +16,7 @@ export default function TradePreferencesScreen() {
   const theme = useTheme();
   const { setTradePreferences, state } = useOnboardingState();
   const [selected, setSelected] = useState<TradeOfferPreference | undefined>(state.tradePreference);
-  const [acceptsCashAdjustments, setAcceptsCashAdjustments] = useState(
-    state.acceptsCashAdjustments,
-  );
+  const [acceptsCashAdjustments, setAcceptsCashAdjustments] = useState(state.acceptsCashAdjustments);
 
   function submit() {
     if (!selected) {

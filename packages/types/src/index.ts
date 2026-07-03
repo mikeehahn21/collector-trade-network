@@ -1,10 +1,21 @@
 export type AccessMode = "invite_only" | "application" | "waitlist" | "public";
 
 export type UserAccessStatus =
-  "waitlisted" | "applied" | "invited" | "approved" | "active" | "suspended" | "rejected";
+  | "waitlisted"
+  | "applied"
+  | "invited"
+  | "approved"
+  | "active"
+  | "suspended"
+  | "rejected";
 
 export type UserRole =
-  "guest" | "applicant" | "active_trader" | "verified_collector" | "verified_seller" | "admin";
+  | "guest"
+  | "applicant"
+  | "active_trader"
+  | "verified_collector"
+  | "verified_seller"
+  | "admin";
 
 export type UserProfile = {
   id: string;
@@ -33,10 +44,80 @@ export type AccessApplication = {
 
 export type ConversationContextType = "item" | "trade" | "system";
 
+export type ConversationMessageType = "text" | "image" | "system_event";
+
+export type ConversationContextSummary = {
+  type: ConversationContextType;
+  id: string;
+  title: string;
+  subtitle?: string | undefined;
+  thumbnailUri?: string | undefined;
+  status?: string | undefined;
+};
+
+export type ConversationParticipant = {
+  userId: string;
+  displayName: string;
+  lastReadMessageId?: string | undefined;
+  lastReadAt?: string | undefined;
+  lastTypingAt?: string | undefined;
+  isTyping: boolean;
+};
+
+export type ConversationMessage = {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  senderDisplayName: string;
+  content: string;
+  type: ConversationMessageType;
+  readAt?: string | undefined;
+  createdAt: string;
+};
+
+export type Conversation = {
+  id: string;
+  contextType: ConversationContextType;
+  contextId: string;
+  context: ConversationContextSummary;
+  participants: ConversationParticipant[];
+  lastMessage?: ConversationMessage | undefined;
+  unreadCount: number;
+  createdAt: string;
+  updatedAt: string;
+  archivedAt?: string | undefined;
+};
+
+export type CreateConversationInput = {
+  contextType: Exclude<ConversationContextType, "system">;
+  contextId: string;
+};
+
+export type SendMessageInput = {
+  content: string;
+  type: Extract<ConversationMessageType, "text" | "image">;
+};
+
+export type MarkMessageReadInput = {
+  readAt?: string | undefined;
+};
+
+export type ConversationTypingInput = {
+  conversationId: string;
+};
+
 export type CollectorType = "collector" | "seller" | "seller_collector" | "new_to_vintage";
 
 export type ShirtSize =
-  "xs" | "s" | "m" | "l" | "xl" | "xxl" | "xxxl" | "one_size" | "measurements_matter";
+  | "xs"
+  | "s"
+  | "m"
+  | "l"
+  | "xl"
+  | "xxl"
+  | "xxxl"
+  | "one_size"
+  | "measurements_matter";
 
 export type VintageCategory =
   | "band"
@@ -54,10 +135,12 @@ export type VintageCategory =
 export type TradeOfferPreference = "all_serious_offers" | "wishlist_only" | "restricted_categories";
 
 export type CommunicationPreference =
-  "approved_traders" | "verified_only" | "completed_trade_users" | "matching_signal_users";
+  | "approved_traders"
+  | "verified_only"
+  | "completed_trade_users"
+  | "matching_signal_users";
 
-export type ItemStatus =
-  "draft" | "tradeable" | "pending_trade" | "reserved" | "traded" | "archived";
+export type ItemStatus = "draft" | "tradeable" | "pending_trade" | "reserved" | "traded" | "archived";
 
 export type ItemCondition = "deadstock" | "excellent" | "very_good" | "good" | "fair" | "project";
 
@@ -178,7 +261,12 @@ export type WishlistSummary = {
   highPriorityItems: number;
 };
 
-export type RecommendationMatchType = "one_way" | "mutual" | "grail" | "exact" | "similar";
+export type RecommendationMatchType =
+  | "one_way"
+  | "mutual"
+  | "grail"
+  | "exact"
+  | "similar";
 
 export type RecommendationConfidence = "low" | "medium" | "high";
 
@@ -252,7 +340,12 @@ export type RecommendationSummary = {
 export type RecommendationFeedbackRating = "helpful" | "not_relevant";
 
 export type RecommendationFeedbackReason =
-  "strong_match" | "wrong_category" | "wrong_size" | "not_interested" | "already_seen" | "other";
+  | "strong_match"
+  | "wrong_category"
+  | "wrong_size"
+  | "not_interested"
+  | "already_seen"
+  | "other";
 
 export type RecommendationFeedback = {
   id: string;
@@ -280,7 +373,12 @@ export type RecommendationFeedbackMetrics = {
 };
 
 export type TradeStatus =
-  "pending" | "accepted" | "declined" | "countered" | "cancelled" | "completed";
+  | "pending"
+  | "accepted"
+  | "declined"
+  | "countered"
+  | "cancelled"
+  | "completed";
 
 export type TradeItemSummary = {
   id: string;

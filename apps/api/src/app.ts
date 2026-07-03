@@ -12,6 +12,7 @@ import {
 } from "./auth/auth-context";
 import { registerAccessRoutes } from "./modules/access/access.routes";
 import { registerHealthRoutes } from "./modules/health/health.routes";
+import { registerConversationRoutes } from "./modules/conversations/conversations.routes";
 import { registerItemRoutes } from "./modules/items/items.routes";
 import { registerRecommendationRoutes } from "./modules/recommendations/recommendations.routes";
 import { registerTradeRoutes } from "./modules/trades/trades.routes";
@@ -54,9 +55,7 @@ export async function buildApp(env: Env) {
     }
 
     app.log.error(error);
-    return reply
-      .status(500)
-      .send({ code: "INTERNAL_SERVER_ERROR", message: "Unexpected server error." });
+    return reply.status(500).send({ code: "INTERNAL_SERVER_ERROR", message: "Unexpected server error." });
   });
 
   const appInstance = app as unknown as FastifyInstance;
@@ -67,6 +66,7 @@ export async function buildApp(env: Env) {
   await registerWishlistRoutes(appInstance, { db, env });
   await registerRecommendationRoutes(appInstance, { db, env });
   await registerTradeRoutes(appInstance, { db, env });
+  await registerConversationRoutes(appInstance, { db, env });
 
   return app;
 }

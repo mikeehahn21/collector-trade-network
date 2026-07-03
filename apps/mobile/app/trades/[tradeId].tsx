@@ -26,6 +26,7 @@ export default function TradeDetailScreen() {
   const [counterNotes, setCounterNotes] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isWorking, setIsWorking] = useState(false);
+  const [isOpeningConversation, setIsOpeningConversation] = useState(false);
   const [error, setError] = useState<string | undefined>();
 
   const counterItems = items.filter((item) => item.status === "tradeable" && isUuid(item.id));
@@ -95,6 +96,27 @@ export default function TradeDetailScreen() {
     }
   }
 
+  async function openTradeConversation() {
+    if (!trade) {
+      return;
+    }
+
+    setIsOpeningConversation(true);
+    setError(undefined);
+
+    try {
+      const response = await apiRef.current.createConversation({
+        contextType: "trade",
+        contextId: trade.id,
+      });
+      router.push(`/conversations/${response.conversation.id}`);
+    } catch {
+      setError("The trade conversation could not be opened.");
+    } finally {
+      setIsOpeningConversation(false);
+    }
+  }
+
   if (isLoading) {
     return (
       <Screen>
@@ -121,9 +143,7 @@ export default function TradeDetailScreen() {
 
   return (
     <Screen>
-      <ScrollView
-        contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}
-      >
+      <ScrollView contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}>
         <View style={{ gap: theme.spacing.sm }}>
           <Text style={{ color: theme.colors.accent, fontSize: 12, fontWeight: "900" }}>
             {tradeStatusLabels[trade.status]}
@@ -132,8 +152,7 @@ export default function TradeDetailScreen() {
             Trade details
           </Text>
           <Text style={{ color: theme.colors.textSecondary, fontSize: 16, lineHeight: 24 }}>
-            Review both sides before taking action. Shipping and disputes are not part of this
-            sprint.
+            Review both sides before taking action. Shipping and disputes are not part of this sprint.
           </Text>
         </View>
 
@@ -227,8 +246,16 @@ export default function TradeDetailScreen() {
         {error ? <Text style={{ color: theme.colors.warning, fontSize: 14 }}>{error}</Text> : null}
 
         <View style={{ gap: theme.spacing.md }}>
-          {trade.viewerRole === "counterparty" &&
-          ["pending", "countered"].includes(trade.status) ? (
+          <AppButton
+            accessibilityLabel="Open trade conversation"
+            loading={isOpeningConversation}
+            onPress={() => void openTradeConversation()}
+            variant="secondary"
+          >
+            Open Trade Conversation
+          </AppButton>
+
+          {trade.viewerRole === "counterparty" && ["pending", "countered"].includes(trade.status) ? (
             <>
               <AppButton
                 accessibilityLabel="Accept trade"
@@ -363,23 +390,14 @@ function DetailPanel({ rows, title }: { rows: [string, string][]; title: string 
         padding: theme.spacing.lg,
       }}
     >
-      <Text style={{ color: theme.colors.textPrimary, fontSize: 18, fontWeight: "900" }}>
-        {title}
-      </Text>
+      <Text style={{ color: theme.colors.textPrimary, fontSize: 18, fontWeight: "900" }}>{title}</Text>
       {rows.map(([label, value]) => (
         <View
           key={label}
           style={{ flexDirection: "row", justifyContent: "space-between", gap: theme.spacing.md }}
         >
           <Text style={{ color: theme.colors.textSecondary, flex: 1 }}>{label}</Text>
-          <Text
-            style={{
-              color: theme.colors.textPrimary,
-              flex: 1,
-              fontWeight: "700",
-              textAlign: "right",
-            }}
-          >
+          <Text style={{ color: theme.colors.textPrimary, flex: 1, fontWeight: "700", textAlign: "right" }}>
             {value}
           </Text>
         </View>

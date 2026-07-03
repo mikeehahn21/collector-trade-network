@@ -1,4 +1,8 @@
 import type {
+  ConversationMessageResponse,
+  ConversationMessagesResponse,
+  ConversationResponse,
+  ConversationsResponse,
   ItemResponse,
   ItemsResponse,
   MeResponse,
@@ -15,6 +19,7 @@ import { apiRoutes } from "@ctn/api-contracts";
 import type {
   CreateTradeInput,
   CounterTradeInput,
+  SendMessageInput,
   RecommendationFeedbackRating,
   TradeStatus,
   TradeableItem,
@@ -24,19 +29,19 @@ import type {
 
 import { getMobileEnv } from "@/config/env";
 
-export type AuthHeaderProvider = () => Promise<
-  | {
-      bearerToken?: string | undefined;
-      clerkUserId?: string | undefined;
-      email?: string | undefined;
-    }
-  | undefined
->;
+export type AuthHeaderProvider = () => Promise<{
+  bearerToken?: string | undefined;
+  clerkUserId?: string | undefined;
+  email?: string | undefined;
+} | undefined>;
 
 export type ApiClient = {
   getMe: () => Promise<MeResponse>;
   upsertMe: (
-    profile: Pick<UserProfile, "bio" | "displayName" | "email" | "locationRegion" | "socialHandle">,
+    profile: Pick<
+      UserProfile,
+      "bio" | "displayName" | "email" | "locationRegion" | "socialHandle"
+    >,
   ) => Promise<MeResponse>;
   listItems: () => Promise<ItemsResponse>;
   createItem: (item: Partial<TradeableItem>) => Promise<ItemResponse>;
@@ -68,13 +73,35 @@ export type ApiClient = {
     tradeId: string,
     status: Extract<TradeStatus, "accepted" | "declined" | "cancelled" | "completed">,
   ) => Promise<TradeResponse>;
-  counterTrade: (tradeId: string, input: CounterTradeInput) => Promise<TradeResponse>;
+  counterTrade: (
+    tradeId: string,
+    input: CounterTradeInput,
+  ) => Promise<TradeResponse>;
+  createConversation: (input: {
+    contextType: "item" | "trade";
+    contextId: string;
+  }) => Promise<ConversationResponse>;
+  listConversations: () => Promise<ConversationsResponse>;
+  getConversation: (conversationId: string) => Promise<ConversationResponse>;
+  listMessages: (
+    conversationId: string,
+    before?: string | undefined,
+  ) => Promise<ConversationMessagesResponse>;
+  sendMessage: (
+    conversationId: string,
+    input: SendMessageInput,
+  ) => Promise<ConversationMessageResponse>;
+  markMessageRead: (messageId: string) => Promise<void>;
+  markConversationTyping: (conversationId: string) => Promise<void>;
 };
 
 export function createApiClient(getAuthHeaders: AuthHeaderProvider): ApiClient {
   const { apiBaseUrl } = getMobileEnv();
 
-  async function request<TResponse>(path: string, options: RequestInit = {}): Promise<TResponse> {
+  async function request<TResponse>(
+    path: string,
+    options: RequestInit = {},
+  ): Promise<TResponse> {
     const auth = await getAuthHeaders();
     const response = await fetchWithRetry(`${apiBaseUrl}${path}`, {
       ...options,
@@ -157,6 +184,33 @@ export function createApiClient(getAuthHeaders: AuthHeaderProvider): ApiClient {
           counterpartyItemId: input.counterpartyItemId,
           counterpartyNotes: input.counterpartyNotes,
         }),
+      }),
+    createConversation: (input) =>
+      request<ConversationResponse>(apiRoutes.conversations, {
+        method: "POST",
+        body: JSON.stringify(input),
+      }),
+    listConversations: () => request<ConversationsResponse>(apiRoutes.conversations),
+    getConversation: (conversationId) =>
+      request<ConversationResponse>(`/v1/conversations/${conversationId}`),
+    listMessages: (conversationId, before) =>
+      request<ConversationMessagesResponse>(
+        `/v1/conversations/${conversationId}/messages${before ? `?before=${encodeURIComponent(before)}` : ""}`,
+      ),
+    sendMessage: (conversationId, input) =>
+      request<ConversationMessageResponse>(`/v1/conversations/${conversationId}/messages`, {
+        method: "POST",
+        body: JSON.stringify(input),
+      }),
+    markMessageRead: (messageId) =>
+      request<void>(`/v1/messages/${messageId}/read`, {
+        method: "PATCH",
+        body: JSON.stringify({}),
+      }),
+    markConversationTyping: (conversationId) =>
+      request<void>(apiRoutes.conversationTyping, {
+        method: "POST",
+        body: JSON.stringify({ conversationId }),
       }),
   };
 }

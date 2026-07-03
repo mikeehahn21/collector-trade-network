@@ -45,10 +45,7 @@ export default function WelcomeScreen() {
         </View>
 
         <View style={{ gap: theme.spacing.md }}>
-          <AppButton
-            accessibilityLabel="Enter invite code"
-            onPress={() => router.push("/invite-code")}
-          >
+          <AppButton accessibilityLabel="Enter invite code" onPress={() => router.push("/invite-code")}>
             Enter invite code
           </AppButton>
           <AppButton
@@ -58,11 +55,7 @@ export default function WelcomeScreen() {
           >
             Apply for access
           </AppButton>
-          <AppButton
-            accessibilityLabel="Log in"
-            onPress={() => router.push("/login")}
-            variant="ghost"
-          >
+          <AppButton accessibilityLabel="Log in" onPress={() => router.push("/login")} variant="ghost">
             I already have access
           </AppButton>
         </View>

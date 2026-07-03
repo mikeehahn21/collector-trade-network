@@ -4,6 +4,26 @@ export const environmentSchema = z.enum(["local", "development", "staging", "pro
 
 export const conversationContextSchema = z.enum(["item", "trade", "system"]);
 
+export const conversationMessageTypeSchema = z.enum(["text", "image", "system_event"]);
+
+export const createConversationSchema = z.object({
+  contextType: z.enum(["item", "trade"]),
+  contextId: z.string().uuid(),
+});
+
+export const sendMessageSchema = z.object({
+  content: z.string().trim().min(1, "Message cannot be empty.").max(2000),
+  type: z.enum(["text", "image"]),
+});
+
+export const markMessageReadSchema = z.object({
+  readAt: z.string().datetime().optional(),
+});
+
+export const conversationTypingSchema = z.object({
+  conversationId: z.string().uuid(),
+});
+
 export const collectorTypeSchema = z.enum([
   "collector",
   "seller",

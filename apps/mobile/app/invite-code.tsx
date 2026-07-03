@@ -48,11 +48,7 @@ export default function InviteCodeScreen() {
           >
             {accepted ? "Create account" : "Verify invite"}
           </AppButton>
-          <AppButton
-            accessibilityLabel="Apply for access"
-            onPress={() => router.push("/apply")}
-            variant="ghost"
-          >
+          <AppButton accessibilityLabel="Apply for access" onPress={() => router.push("/apply")} variant="ghost">
             Need an invite?
           </AppButton>
         </>

@@ -28,7 +28,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 20
           cache: pnpm
 
       - name: Install dependencies
@@ -47,8 +47,7 @@ jobs:
         run: pnpm test
 
       - name: Build
-        # Mobile is built via EAS Build (Expo Application Services), not local expo export
-        run: pnpm build --filter=!@ctn/mobile
+        run: pnpm build
 
   e2e:
     name: E2E Tests
@@ -68,7 +67,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 20
           cache: pnpm
 
       - name: Install dependencies

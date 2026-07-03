@@ -123,9 +123,7 @@ export default function RecommendationDetailScreen() {
 
   return (
     <Screen>
-      <ScrollView
-        contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}
-      >
+      <ScrollView contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}>
         <View style={{ gap: theme.spacing.sm }}>
           <Text style={{ color: theme.colors.accent, fontSize: 12, fontWeight: "900" }}>
             {recommendation.matchTypes.map(formatRecommendationType).join(" / ")}
@@ -134,8 +132,8 @@ export default function RecommendationDetailScreen() {
             Match with {recommendation.counterpartyDisplayName}
           </Text>
           <Text style={{ color: theme.colors.textSecondary, fontSize: 16, lineHeight: 24 }}>
-            {formatRecommendationConfidence(recommendation.confidence)} with a deterministic score
-            of {recommendation.score}.
+            {formatRecommendationConfidence(recommendation.confidence)} with a deterministic score of{" "}
+            {recommendation.score}.
           </Text>
         </View>
 
@@ -239,11 +237,7 @@ export default function RecommendationDetailScreen() {
           >
             View Item
           </AppButton>
-          <AppButton
-            accessibilityLabel="Back to Home"
-            onPress={() => router.back()}
-            variant="ghost"
-          >
+          <AppButton accessibilityLabel="Back to Home" onPress={() => router.back()} variant="ghost">
             Back
           </AppButton>
         </View>
@@ -296,9 +290,7 @@ function DetailRow({ label, value }: { label: string; value: string }) {
   return (
     <View style={{ flexDirection: "row", justifyContent: "space-between", gap: theme.spacing.md }}>
       <Text style={{ color: theme.colors.textSecondary, flex: 1 }}>{label}</Text>
-      <Text
-        style={{ color: theme.colors.textPrimary, flex: 1, fontWeight: "800", textAlign: "right" }}
-      >
+      <Text style={{ color: theme.colors.textPrimary, flex: 1, fontWeight: "800", textAlign: "right" }}>
         {value}
       </Text>
     </View>

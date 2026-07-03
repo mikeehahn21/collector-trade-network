@@ -71,9 +71,7 @@ export default function EditWishlistItemScreen() {
 
   return (
     <Screen>
-      <ScrollView
-        contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}
-      >
+      <ScrollView contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}>
         <View style={{ gap: theme.spacing.sm }}>
           <Text style={{ color: theme.colors.accent, fontSize: 12, fontWeight: "800" }}>
             WISH BUILDER
@@ -93,23 +91,21 @@ export default function EditWishlistItemScreen() {
           value={currentItem.title}
         />
 
-        <Text style={{ color: theme.colors.textPrimary, fontSize: 16, fontWeight: "900" }}>
-          Category
-        </Text>
+        <Text style={{ color: theme.colors.textPrimary, fontSize: 16, fontWeight: "900" }}>Category</Text>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: theme.spacing.sm }}>
           {VINTAGE_CATEGORIES.map((category) => (
             <Chip
               key={category.value}
               label={category.label}
-              onPress={() => updateWishlistItem(currentItem.id, { category: category.value })}
+              onPress={() =>
+                updateWishlistItem(currentItem.id, { category: category.value })
+              }
               selected={currentItem.category === category.value}
             />
           ))}
         </View>
 
-        <Text style={{ color: theme.colors.textPrimary, fontSize: 16, fontWeight: "900" }}>
-          Size
-        </Text>
+        <Text style={{ color: theme.colors.textPrimary, fontSize: 16, fontWeight: "900" }}>Size</Text>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: theme.spacing.sm }}>
           {SHIRT_SIZES.map((size) => (
             <Chip
@@ -157,9 +153,7 @@ export default function EditWishlistItemScreen() {
           />
         ))}
 
-        <Text style={{ color: theme.colors.textPrimary, fontSize: 16, fontWeight: "900" }}>
-          Priority
-        </Text>
+        <Text style={{ color: theme.colors.textPrimary, fontSize: 16, fontWeight: "900" }}>Priority</Text>
         {WISHLIST_PRIORITIES.map((priority) => (
           <ChoiceCard
             description={priority.description}
@@ -222,7 +216,9 @@ export default function EditWishlistItemScreen() {
             description={visibility.description}
             key={visibility.value}
             label={visibility.label}
-            onPress={() => updateWishlistItem(currentItem.id, { visibility: visibility.value })}
+            onPress={() =>
+              updateWishlistItem(currentItem.id, { visibility: visibility.value })
+            }
             selected={currentItem.visibility === visibility.value}
           />
         ))}

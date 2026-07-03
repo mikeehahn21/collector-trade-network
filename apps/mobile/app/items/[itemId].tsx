@@ -25,6 +25,7 @@ export default function PublicItemDetailScreen() {
   const theme = useTheme();
   const [item, setItem] = useState<PublicTradeableItem | undefined>();
   const [isLoading, setIsLoading] = useState(true);
+  const [isStartingConversation, setIsStartingConversation] = useState(false);
   const [error, setError] = useState<string | undefined>();
 
   useEffect(() => {
@@ -64,10 +65,7 @@ export default function PublicItemDetailScreen() {
   if (isLoading) {
     return (
       <Screen>
-        <ScreenState
-          message="Loading item details from the collector network."
-          title="Loading item"
-        />
+        <ScreenState message="Loading item details from the collector network." title="Loading item" />
       </Screen>
     );
   }
@@ -98,11 +96,26 @@ export default function PublicItemDetailScreen() {
     .filter(Boolean)
     .join(" / ");
 
+  async function contactOwner() {
+    setIsStartingConversation(true);
+    setError(undefined);
+
+    try {
+      const response = await apiRef.current.createConversation({
+        contextType: "item",
+        contextId: item.id,
+      });
+      router.push(`/conversations/${response.conversation.id}`);
+    } catch {
+      setError("A conversation could not be started for this item.");
+    } finally {
+      setIsStartingConversation(false);
+    }
+  }
+
   return (
     <Screen>
-      <ScrollView
-        contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}
-      >
+      <ScrollView contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}>
         <View
           style={{
             alignItems: "center",
@@ -158,7 +171,9 @@ export default function PublicItemDetailScreen() {
         {item.flaws.length > 0 ? (
           <DetailPanel
             title="Flaws"
-            rows={item.flaws.map((flaw, index): [string, string] => [`Flaw ${index + 1}`, flaw])}
+            rows={item.flaws.map(
+              (flaw, index): [string, string] => [`Flaw ${index + 1}`, flaw],
+            )}
           />
         ) : null}
 
@@ -168,6 +183,14 @@ export default function PublicItemDetailScreen() {
           variant="secondary"
         >
           Back
+        </AppButton>
+        <AppButton
+          accessibilityLabel="Contact owner"
+          loading={isStartingConversation}
+          onPress={() => void contactOwner()}
+          variant="secondary"
+        >
+          Contact Owner
         </AppButton>
         <AppButton
           accessibilityLabel="Propose trade"
@@ -180,13 +203,7 @@ export default function PublicItemDetailScreen() {
   );
 }
 
-function DetailPanel({
-  rows,
-  title = "Item details",
-}: {
-  rows: [string, string][];
-  title?: string;
-}) {
+function DetailPanel({ rows, title = "Item details" }: { rows: [string, string][]; title?: string }) {
   const theme = useTheme();
 
   return (
@@ -200,23 +217,14 @@ function DetailPanel({
         padding: theme.spacing.lg,
       }}
     >
-      <Text style={{ color: theme.colors.textPrimary, fontSize: 18, fontWeight: "900" }}>
-        {title}
-      </Text>
+      <Text style={{ color: theme.colors.textPrimary, fontSize: 18, fontWeight: "900" }}>{title}</Text>
       {rows.map(([label, value]) => (
         <View
           key={label}
           style={{ flexDirection: "row", justifyContent: "space-between", gap: theme.spacing.md }}
         >
           <Text style={{ color: theme.colors.textSecondary, flex: 1 }}>{label}</Text>
-          <Text
-            style={{
-              color: theme.colors.textPrimary,
-              flex: 1,
-              fontWeight: "700",
-              textAlign: "right",
-            }}
-          >
+          <Text style={{ color: theme.colors.textPrimary, flex: 1, fontWeight: "700", textAlign: "right" }}>
             {value}
           </Text>
         </View>

@@ -16,12 +16,6 @@
       "@ctn/validation": ["../../packages/validation/src/index.ts"]
     }
   },
-  "include": [
-    "next-env.d.ts",
-    "next.config.mjs",
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    ".next/types/**/*.ts"
-  ],
+  "include": ["next-env.d.ts", "next.config.mjs", "src/**/*.ts", "src/**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]
 }

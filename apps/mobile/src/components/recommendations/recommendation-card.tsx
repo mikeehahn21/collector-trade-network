@@ -34,9 +34,7 @@ export function RecommendationCard({ onPress, recommendation }: RecommendationCa
         padding: theme.spacing.lg,
       })}
     >
-      <View
-        style={{ flexDirection: "row", justifyContent: "space-between", gap: theme.spacing.md }}
-      >
+      <View style={{ flexDirection: "row", justifyContent: "space-between", gap: theme.spacing.md }}>
         <View style={{ flex: 1, gap: theme.spacing.xs }}>
           <Text style={{ color: theme.colors.accent, fontSize: 12, fontWeight: "900" }}>
             {recommendation.matchTypes.map(formatRecommendationType).join(" / ")}
@@ -68,8 +66,7 @@ export function RecommendationCard({ onPress, recommendation }: RecommendationCa
       </View>
 
       <Text style={{ color: theme.colors.textSecondary, fontSize: 15, lineHeight: 22 }}>
-        {topReason?.detail ??
-          "This recommendation is based on matching inventory and wishlist signals."}
+        {topReason?.detail ?? "This recommendation is based on matching inventory and wishlist signals."}
       </Text>
 
       <View style={{ gap: theme.spacing.sm }}>

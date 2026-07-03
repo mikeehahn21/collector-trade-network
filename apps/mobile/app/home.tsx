@@ -19,7 +19,7 @@ const checklist = [
   "Invite trusted collectors when invites open",
 ] as const;
 
-const navItems = ["Home", "Inventory", "Wishlist", "Trades", "Profile"] as const;
+const navItems = ["Home", "Inventory", "Wishlist", "Trades", "Messages"] as const;
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -34,9 +34,7 @@ export default function HomeScreen() {
   return (
     <Screen>
       <View style={{ flex: 1, justifyContent: "space-between", gap: theme.spacing.xl }}>
-        <ScrollView
-          contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}
-        >
+        <ScrollView contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}>
           <View style={{ gap: theme.spacing.sm }}>
             <Text style={{ color: theme.colors.accent, fontSize: 12, fontWeight: "800" }}>
               HOME
@@ -78,9 +76,7 @@ export default function HomeScreen() {
                 <Text style={{ color: theme.colors.textPrimary, fontSize: 22, fontWeight: "900" }}>
                   {stat.value}
                 </Text>
-                <Text
-                  style={{ color: theme.colors.textSecondary, fontSize: 12, fontWeight: "700" }}
-                >
+                <Text style={{ color: theme.colors.textSecondary, fontSize: 12, fontWeight: "700" }}>
                   {stat.label}
                 </Text>
               </View>
@@ -108,17 +104,14 @@ export default function HomeScreen() {
                 <View
                   style={{
                     alignItems: "center",
-                    backgroundColor:
-                      index === 0 ? theme.colors.accentMuted : theme.colors.surfaceElevated,
+                    backgroundColor: index === 0 ? theme.colors.accentMuted : theme.colors.surfaceElevated,
                     borderRadius: 999,
                     height: 28,
                     justifyContent: "center",
                     width: 28,
                   }}
                 >
-                  <Text
-                    style={{ color: theme.colors.textPrimary, fontSize: 12, fontWeight: "800" }}
-                  >
+                  <Text style={{ color: theme.colors.textPrimary, fontSize: 12, fontWeight: "800" }}>
                     {index + 1}
                   </Text>
                 </View>
@@ -205,6 +198,9 @@ export default function HomeScreen() {
                   }
                   if (item === "Trades") {
                     router.push("/trades");
+                  }
+                  if (item === "Messages") {
+                    router.push("/conversations");
                   }
                 }}
                 style={{
