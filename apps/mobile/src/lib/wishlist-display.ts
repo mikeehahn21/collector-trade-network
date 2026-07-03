@@ -1,8 +1,4 @@
-import type {
-  WishlistMatchPreference,
-  WishlistPriority,
-  WishlistVisibility,
-} from "@ctn/types";
+import type { WishlistMatchPreference, WishlistPriority, WishlistVisibility } from "@ctn/types";
 
 export const wishlistPriorityLabels: Record<WishlistPriority, string> = {
   high: "High",

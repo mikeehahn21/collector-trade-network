@@ -82,7 +82,9 @@ export default function LoginScreen() {
       />
       <AppButton
         accessibilityLabel="Forgot password"
-        onPress={() => Alert.alert("Password reset", "Password reset should be handled through Clerk.")}
+        onPress={() =>
+          Alert.alert("Password reset", "Password reset should be handled through Clerk.")
+        }
         variant="ghost"
       >
         Forgot password?

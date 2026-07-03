@@ -12,8 +12,8 @@ export default async function AdminHomePage() {
         <p className="eyebrow">Sprint 7</p>
         <h1>Recommendation quality</h1>
         <p>
-          Feedback from collectors helps identify whether the deterministic Trade Graph is
-          producing useful matches before AI ranking is introduced.
+          Feedback from collectors helps identify whether the deterministic Trade Graph is producing
+          useful matches before AI ranking is introduced.
         </p>
         {metrics ? (
           <>
@@ -43,8 +43,8 @@ export default async function AdminHomePage() {
           <div className="subpanel">
             <h2>Metrics unavailable</h2>
             <p className="muted">
-              Connect admin authentication to the API before live recommendation quality metrics
-              can be displayed here.
+              Connect admin authentication to the API before live recommendation quality metrics can
+              be displayed here.
             </p>
           </div>
         )}

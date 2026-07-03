@@ -10,23 +10,28 @@ import type {
   WishlistItemsResponse,
 } from "@ctn/api-contracts";
 import { apiRoutes } from "@ctn/api-contracts";
-import type { RecommendationFeedbackRating, TradeableItem, UserProfile, WishlistItem } from "@ctn/types";
+import type {
+  RecommendationFeedbackRating,
+  TradeableItem,
+  UserProfile,
+  WishlistItem,
+} from "@ctn/types";
 
 import { getMobileEnv } from "@/config/env";
 
-export type AuthHeaderProvider = () => Promise<{
-  bearerToken?: string | undefined;
-  clerkUserId?: string | undefined;
-  email?: string | undefined;
-} | undefined>;
+export type AuthHeaderProvider = () => Promise<
+  | {
+      bearerToken?: string | undefined;
+      clerkUserId?: string | undefined;
+      email?: string | undefined;
+    }
+  | undefined
+>;
 
 export type ApiClient = {
   getMe: () => Promise<MeResponse>;
   upsertMe: (
-    profile: Pick<
-      UserProfile,
-      "bio" | "displayName" | "email" | "locationRegion" | "socialHandle"
-    >,
+    profile: Pick<UserProfile, "bio" | "displayName" | "email" | "locationRegion" | "socialHandle">,
   ) => Promise<MeResponse>;
   listItems: () => Promise<ItemsResponse>;
   createItem: (item: Partial<TradeableItem>) => Promise<ItemResponse>;
@@ -56,10 +61,7 @@ export type ApiClient = {
 export function createApiClient(getAuthHeaders: AuthHeaderProvider): ApiClient {
   const { apiBaseUrl } = getMobileEnv();
 
-  async function request<TResponse>(
-    path: string,
-    options: RequestInit = {},
-  ): Promise<TResponse> {
+  async function request<TResponse>(path: string, options: RequestInit = {}): Promise<TResponse> {
     const auth = await getAuthHeaders();
     const response = await fetchWithRetry(`${apiBaseUrl}${path}`, {
       ...options,

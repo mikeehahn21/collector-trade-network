@@ -41,7 +41,11 @@ export default function VerificationScreen() {
       title="Confirm your account."
       subtitle="Verification is mocked for Sprint 1. Enter 123456 to continue."
       footer={
-        <AppButton accessibilityLabel="Verify account" loading={isLoading} onPress={() => void submit()}>
+        <AppButton
+          accessibilityLabel="Verify account"
+          loading={isLoading}
+          onPress={() => void submit()}
+        >
           Verify account
         </AppButton>
       }

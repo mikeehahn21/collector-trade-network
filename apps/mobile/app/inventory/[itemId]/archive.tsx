@@ -41,7 +41,10 @@ export default function ArchiveItemScreen() {
       deleteItem(currentItem.id);
     } catch {
       deleteItem(currentItem.id);
-      Alert.alert("Deleted locally", "Server sync failed. This delete action may need reconciliation.");
+      Alert.alert(
+        "Deleted locally",
+        "Server sync failed. This delete action may need reconciliation.",
+      );
     }
     router.replace("/inventory");
   }
@@ -63,7 +66,11 @@ export default function ArchiveItemScreen() {
           >
             Delete permanently
           </AppButton>
-          <AppButton accessibilityLabel="Cancel archive" onPress={() => router.back()} variant="ghost">
+          <AppButton
+            accessibilityLabel="Cancel archive"
+            onPress={() => router.back()}
+            variant="ghost"
+          >
             Cancel
           </AppButton>
         </>

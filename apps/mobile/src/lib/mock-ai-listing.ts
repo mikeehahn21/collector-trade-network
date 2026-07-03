@@ -11,9 +11,10 @@ export function getMockAiListingSuggestions(item: TradeableItem): AiListingSugge
     era: item.era ?? "90s",
     condition: item.condition ?? "very_good",
     tag: item.tag ?? "Single stitch tag",
-    estimatedValue: item.estimatedValue.min || item.estimatedValue.max
-      ? item.estimatedValue
-      : { min: 120, max: 220, currency: "USD" },
+    estimatedValue:
+      item.estimatedValue.min || item.estimatedValue.max
+        ? item.estimatedValue
+        : { min: 120, max: 220, currency: "USD" },
     confidence: item.photos.length > 1 ? "medium" : "low",
     generatedAt: now,
   };

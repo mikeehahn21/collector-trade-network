@@ -4,10 +4,10 @@
 
 This project is in active pre-release development. Security fixes are applied to the latest version on `main` only.
 
-| Version | Supported |
-|---------|-----------|
-| Latest (`main`) | Yes |
-| Older commits | No |
+| Version         | Supported |
+| --------------- | --------- |
+| Latest (`main`) | Yes       |
+| Older commits   | No        |
 
 ---
 
@@ -60,14 +60,14 @@ You will receive an acknowledgment within 48 hours and a resolution timeline wit
 
 The following secrets must be configured in the repository before deploying to any environment:
 
-| Secret | Purpose |
-|--------|---------|
-| `CLERK_SECRET_KEY` | Clerk server-side authentication |
-| `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk mobile client key |
-| `DATABASE_URL` | PostgreSQL connection string |
-| `STRIPE_SECRET_KEY` | Payment processing (future) |
-| `CLOUDFLARE_R2_ACCESS_KEY_ID` | Object storage access |
-| `CLOUDFLARE_R2_SECRET_ACCESS_KEY` | Object storage secret |
-| `SENTRY_DSN` | Error monitoring |
-| `POSTHOG_KEY` | Product analytics |
-| `OPENAI_API_KEY` | AI features |
+| Secret                              | Purpose                          |
+| ----------------------------------- | -------------------------------- |
+| `CLERK_SECRET_KEY`                  | Clerk server-side authentication |
+| `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk mobile client key          |
+| `DATABASE_URL`                      | PostgreSQL connection string     |
+| `STRIPE_SECRET_KEY`                 | Payment processing (future)      |
+| `CLOUDFLARE_R2_ACCESS_KEY_ID`       | Object storage access            |
+| `CLOUDFLARE_R2_SECRET_ACCESS_KEY`   | Object storage secret            |
+| `SENTRY_DSN`                        | Error monitoring                 |
+| `POSTHOG_KEY`                       | Product analytics                |
+| `OPENAI_API_KEY`                    | AI features                      |

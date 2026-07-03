@@ -13,7 +13,14 @@ type FormFrameProps = PropsWithChildren<{
   title: string;
 }>;
 
-export function FormFrame({ children, eyebrow, footer, progressLabel, subtitle, title }: FormFrameProps) {
+export function FormFrame({
+  children,
+  eyebrow,
+  footer,
+  progressLabel,
+  subtitle,
+  title,
+}: FormFrameProps) {
   const theme = useTheme();
 
   return (
@@ -23,7 +30,11 @@ export function FormFrame({ children, eyebrow, footer, progressLabel, subtitle, 
         style={{ flex: 1 }}
       >
         <ScrollView
-          contentContainerStyle={{ flexGrow: 1, gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}
+          contentContainerStyle={{
+            flexGrow: 1,
+            gap: theme.spacing.lg,
+            paddingBottom: theme.spacing.xl,
+          }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
@@ -48,7 +59,9 @@ export function FormFrame({ children, eyebrow, footer, progressLabel, subtitle, 
             ) : null}
           </View>
           <View style={{ gap: theme.spacing.md }}>{children}</View>
-          {footer ? <View style={{ marginTop: "auto", gap: theme.spacing.md }}>{footer}</View> : null}
+          {footer ? (
+            <View style={{ marginTop: "auto", gap: theme.spacing.md }}>{footer}</View>
+          ) : null}
         </ScrollView>
       </KeyboardAvoidingView>
     </Screen>

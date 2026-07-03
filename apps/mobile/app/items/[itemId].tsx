@@ -64,7 +64,10 @@ export default function PublicItemDetailScreen() {
   if (isLoading) {
     return (
       <Screen>
-        <ScreenState message="Loading item details from the collector network." title="Loading item" />
+        <ScreenState
+          message="Loading item details from the collector network."
+          title="Loading item"
+        />
       </Screen>
     );
   }
@@ -97,7 +100,9 @@ export default function PublicItemDetailScreen() {
 
   return (
     <Screen>
-      <ScrollView contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}>
+      <ScrollView
+        contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}
+      >
         <View
           style={{
             alignItems: "center",
@@ -140,7 +145,10 @@ export default function PublicItemDetailScreen() {
         <DetailPanel
           title="Trade boundaries"
           rows={[
-            ["Trade preference", item.tradePreference ? tradePreferenceLabels[item.tradePreference] : "Not set"],
+            [
+              "Trade preference",
+              item.tradePreference ? tradePreferenceLabels[item.tradePreference] : "Not set",
+            ],
             ["Conversations", communicationPreferenceLabels[item.communicationPreference]],
             ["Photo requests", item.allowsPhotoRequests ? "Allowed" : "Disabled"],
             ["Measurement requests", item.allowsMeasurementRequests ? "Allowed" : "Disabled"],
@@ -154,7 +162,11 @@ export default function PublicItemDetailScreen() {
           />
         ) : null}
 
-        <AppButton accessibilityLabel="Back to recommendation" onPress={() => router.back()} variant="secondary">
+        <AppButton
+          accessibilityLabel="Back to recommendation"
+          onPress={() => router.back()}
+          variant="secondary"
+        >
           Back
         </AppButton>
       </ScrollView>
@@ -162,7 +174,13 @@ export default function PublicItemDetailScreen() {
   );
 }
 
-function DetailPanel({ rows, title = "Item details" }: { rows: [string, string][]; title?: string }) {
+function DetailPanel({
+  rows,
+  title = "Item details",
+}: {
+  rows: [string, string][];
+  title?: string;
+}) {
   const theme = useTheme();
 
   return (
@@ -176,11 +194,23 @@ function DetailPanel({ rows, title = "Item details" }: { rows: [string, string][
         padding: theme.spacing.lg,
       }}
     >
-      <Text style={{ color: theme.colors.textPrimary, fontSize: 18, fontWeight: "900" }}>{title}</Text>
+      <Text style={{ color: theme.colors.textPrimary, fontSize: 18, fontWeight: "900" }}>
+        {title}
+      </Text>
       {rows.map(([label, value]) => (
-        <View key={label} style={{ flexDirection: "row", justifyContent: "space-between", gap: theme.spacing.md }}>
+        <View
+          key={label}
+          style={{ flexDirection: "row", justifyContent: "space-between", gap: theme.spacing.md }}
+        >
           <Text style={{ color: theme.colors.textSecondary, flex: 1 }}>{label}</Text>
-          <Text style={{ color: theme.colors.textPrimary, flex: 1, fontWeight: "700", textAlign: "right" }}>
+          <Text
+            style={{
+              color: theme.colors.textPrimary,
+              flex: 1,
+              fontWeight: "700",
+              textAlign: "right",
+            }}
+          >
             {value}
           </Text>
         </View>

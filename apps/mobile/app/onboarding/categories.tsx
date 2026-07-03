@@ -53,7 +53,9 @@ export default function CategoryPreferencesScreen() {
           />
         ))}
       </View>
-      <Text style={{ color: isValid ? theme.colors.success : theme.colors.textSecondary, fontSize: 14 }}>
+      <Text
+        style={{ color: isValid ? theme.colors.success : theme.colors.textSecondary, fontSize: 14 }}
+      >
         {categories.length}/8 selected. Minimum 3.
       </Text>
     </FormFrame>

@@ -78,7 +78,12 @@ export async function listItemsByOwner(db: Queryable, ownerId: string): Promise<
     [rows.map((row) => row.id)],
   );
 
-  return rows.map((row) => mapItem(row, photos.filter((photo) => photo.item_id === row.id)));
+  return rows.map((row) =>
+    mapItem(
+      row,
+      photos.filter((photo) => photo.item_id === row.id),
+    ),
+  );
 }
 
 export async function findItemByOwner(
@@ -270,7 +275,10 @@ export async function deleteItemForOwner(
   ownerId: string,
   itemId: string,
 ): Promise<boolean> {
-  const result = await db.query("delete from items where id = $1 and owner_id = $2", [itemId, ownerId]);
+  const result = await db.query("delete from items where id = $1 and owner_id = $2", [
+    itemId,
+    ownerId,
+  ]);
   return result.rowCount === 1;
 }
 

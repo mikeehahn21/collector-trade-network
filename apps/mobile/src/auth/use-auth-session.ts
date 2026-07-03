@@ -19,59 +19,68 @@ export function useAuthSession() {
   const signUp = useSignUp();
   const user = useUser();
 
-  const login = useCallback(async (email: string, password: string): Promise<AuthResult> => {
-    if (!clerkEnabled) {
-      await secureStorage.setItem(LOCAL_SESSION_KEY, email);
-      return { ok: true };
-    }
-
-    try {
-      const result = await signIn.signIn?.create({ identifier: email, password });
-
-      if (result?.status === "complete") {
-        await signIn.setActive?.({ session: result.createdSessionId });
+  const login = useCallback(
+    async (email: string, password: string): Promise<AuthResult> => {
+      if (!clerkEnabled) {
+        await secureStorage.setItem(LOCAL_SESSION_KEY, email);
         return { ok: true };
       }
 
-      return { ok: false, message: "Additional verification is required." };
-    } catch {
-      return { ok: false, message: "Unable to log in with those credentials." };
-    }
-  }, [clerkEnabled, signIn]);
+      try {
+        const result = await signIn.signIn?.create({ identifier: email, password });
 
-  const createAccount = useCallback(async (email: string, password: string): Promise<AuthResult> => {
-    if (!clerkEnabled) {
-      await secureStorage.setItem(LOCAL_SESSION_KEY, email);
-      return { ok: true };
-    }
+        if (result?.status === "complete") {
+          await signIn.setActive?.({ session: result.createdSessionId });
+          return { ok: true };
+        }
 
-    try {
-      await signUp.signUp?.create({ emailAddress: email, password });
-      await signUp.signUp?.prepareEmailAddressVerification({ strategy: "email_code" });
-      return { ok: true };
-    } catch {
-      return { ok: false, message: "Unable to create that account." };
-    }
-  }, [clerkEnabled, signUp]);
+        return { ok: false, message: "Additional verification is required." };
+      } catch {
+        return { ok: false, message: "Unable to log in with those credentials." };
+      }
+    },
+    [clerkEnabled, signIn],
+  );
 
-  const verifyEmail = useCallback(async (code: string): Promise<AuthResult> => {
-    if (!clerkEnabled) {
-      return { ok: /^\d{6}$/.test(code) };
-    }
-
-    try {
-      const result = await signUp.signUp?.attemptEmailAddressVerification({ code });
-
-      if (result?.status === "complete") {
-        await signUp.setActive?.({ session: result.createdSessionId });
+  const createAccount = useCallback(
+    async (email: string, password: string): Promise<AuthResult> => {
+      if (!clerkEnabled) {
+        await secureStorage.setItem(LOCAL_SESSION_KEY, email);
         return { ok: true };
       }
 
-      return { ok: false, message: "Additional verification is required." };
-    } catch {
-      return { ok: false, message: "Invalid verification code." };
-    }
-  }, [clerkEnabled, signUp]);
+      try {
+        await signUp.signUp?.create({ emailAddress: email, password });
+        await signUp.signUp?.prepareEmailAddressVerification({ strategy: "email_code" });
+        return { ok: true };
+      } catch {
+        return { ok: false, message: "Unable to create that account." };
+      }
+    },
+    [clerkEnabled, signUp],
+  );
+
+  const verifyEmail = useCallback(
+    async (code: string): Promise<AuthResult> => {
+      if (!clerkEnabled) {
+        return { ok: /^\d{6}$/.test(code) };
+      }
+
+      try {
+        const result = await signUp.signUp?.attemptEmailAddressVerification({ code });
+
+        if (result?.status === "complete") {
+          await signUp.setActive?.({ session: result.createdSessionId });
+          return { ok: true };
+        }
+
+        return { ok: false, message: "Additional verification is required." };
+      } catch {
+        return { ok: false, message: "Invalid verification code." };
+      }
+    },
+    [clerkEnabled, signUp],
+  );
 
   const logout = useCallback(async (): Promise<void> => {
     if (clerkEnabled) {

@@ -53,7 +53,12 @@ export default function PhotoManagerScreen() {
     const photo: ItemPhoto = {
       id: `photo_${Date.now()}`,
       uri: `mock://photo/${Date.now()}`,
-      kind: currentItem.photos.length === 0 ? "front" : currentItem.photos.length === 1 ? "back" : "detail",
+      kind:
+        currentItem.photos.length === 0
+          ? "front"
+          : currentItem.photos.length === 1
+            ? "back"
+            : "detail",
       sortOrder: currentItem.photos.length,
       createdAt: new Date().toISOString(),
     };
@@ -61,7 +66,9 @@ export default function PhotoManagerScreen() {
   }
 
   function removePhoto(photoId: string) {
-    updateItem(currentItem.id, { photos: currentItem.photos.filter((photo) => photo.id !== photoId) });
+    updateItem(currentItem.id, {
+      photos: currentItem.photos.filter((photo) => photo.id !== photoId),
+    });
   }
 
   return (
@@ -75,7 +82,11 @@ export default function PhotoManagerScreen() {
         </AppButton>
       }
     >
-      <PhotoManager onAddMockPhoto={addMockPhoto} onRemovePhoto={removePhoto} photos={currentItem.photos} />
+      <PhotoManager
+        onAddMockPhoto={addMockPhoto}
+        onRemovePhoto={removePhoto}
+        photos={currentItem.photos}
+      />
     </FormFrame>
   );
 }

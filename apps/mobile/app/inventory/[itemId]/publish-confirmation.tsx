@@ -18,10 +18,17 @@ export default function PublishConfirmationScreen() {
       subtitle={item?.title ? `${item.title} is now tradeable.` : "Your item is now tradeable."}
       footer={
         <>
-          <AppButton accessibilityLabel="View published item" onPress={() => router.replace(`/inventory/${itemId}`)}>
+          <AppButton
+            accessibilityLabel="View published item"
+            onPress={() => router.replace(`/inventory/${itemId}`)}
+          >
             View item
           </AppButton>
-          <AppButton accessibilityLabel="Back to inventory" onPress={() => router.replace("/inventory")} variant="secondary">
+          <AppButton
+            accessibilityLabel="Back to inventory"
+            onPress={() => router.replace("/inventory")}
+            variant="secondary"
+          >
             Back to inventory
           </AppButton>
         </>

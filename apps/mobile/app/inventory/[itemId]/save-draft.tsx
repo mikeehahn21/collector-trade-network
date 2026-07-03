@@ -15,10 +15,17 @@ export default function SaveDraftScreen() {
       subtitle="Come back when you have photos, condition details, or trade boundaries ready."
       footer={
         <>
-          <AppButton accessibilityLabel="Continue editing draft" onPress={() => router.replace(`/inventory/${itemId}/edit`)}>
+          <AppButton
+            accessibilityLabel="Continue editing draft"
+            onPress={() => router.replace(`/inventory/${itemId}/edit`)}
+          >
             Continue editing
           </AppButton>
-          <AppButton accessibilityLabel="Back to inventory" onPress={() => router.replace("/inventory")} variant="secondary">
+          <AppButton
+            accessibilityLabel="Back to inventory"
+            onPress={() => router.replace("/inventory")}
+            variant="secondary"
+          >
             Back to inventory
           </AppButton>
         </>

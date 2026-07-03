@@ -7,8 +7,8 @@ const nextConfig = {
     "@ctn/constants",
     "@ctn/types",
     "@ctn/utils",
-    "@ctn/validation"
-  ]
+    "@ctn/validation",
+  ],
 };
 
 export default nextConfig;

@@ -72,7 +72,7 @@ type CollectionContextValue = {
   clearPublishedCelebration: () => void;
   getItem: (itemId: string) => TradeableItem | undefined;
   replaceItemsFromServer: (items: TradeableItem[]) => void;
-  upsertItemFromServer: (item: TradeableItem, localItemId?: string  ) => void;
+  upsertItemFromServer: (item: TradeableItem, localItemId?: string) => void;
 };
 
 const initialState: State = {
@@ -100,7 +100,9 @@ function reducer(state: State, action: Action): State {
       return {
         ...state,
         items: state.items.map((item) =>
-          item.id === action.itemId ? { ...item, ...action.patch, updatedAt: new Date().toISOString() } : item,
+          item.id === action.itemId
+            ? { ...item, ...action.patch, updatedAt: new Date().toISOString() }
+            : item,
         ),
       };
     case "archive":

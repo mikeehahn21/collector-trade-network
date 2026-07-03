@@ -48,7 +48,9 @@ describe("validation", () => {
   });
 
   it("requires complete tradeable items before publish", () => {
-    expect(() => tradeableItemPublishSchema.parse({ title: "1996 Bulls tee", status: "tradeable" })).toThrow();
+    expect(() =>
+      tradeableItemPublishSchema.parse({ title: "1996 Bulls tee", status: "tradeable" }),
+    ).toThrow();
   });
 
   it("allows sparse wishlist drafts", () => {
@@ -56,7 +58,9 @@ describe("validation", () => {
   });
 
   it("requires title and category for active wishlist wants", () => {
-    expect(() => wishlistItemPublishSchema.parse({ title: "Mosquitohead", priority: "high" })).toThrow();
+    expect(() =>
+      wishlistItemPublishSchema.parse({ title: "Mosquitohead", priority: "high" }),
+    ).toThrow();
   });
 
   it("accepts concise recommendation feedback", () => {
