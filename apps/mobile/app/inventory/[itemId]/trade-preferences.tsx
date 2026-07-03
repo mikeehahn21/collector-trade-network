@@ -2,7 +2,6 @@ import { Switch, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { ITEM_VISIBILITY_OPTIONS, TRADE_OFFER_PREFERENCES } from "@ctn/constants";
-import type { ItemVisibility, TradeOfferPreference } from "@ctn/types";
 
 import { AppButton } from "@/components/app-button";
 import { AppTextField } from "@/components/app-text-field";
@@ -21,6 +20,8 @@ export default function ItemTradePreferencesScreen() {
   if (!item) {
     return null;
   }
+  // Capture narrowed item so closures/JSX see TradeableItem (not TradeableItem | undefined)
+  const currentItem = item;
 
   return (
     <FormFrame
@@ -38,8 +39,8 @@ export default function ItemTradePreferencesScreen() {
           description={preference.description}
           key={preference.value}
           label={preference.label}
-          onPress={() => updateItem(item.id, { tradePreference: preference.value as TradeOfferPreference })}
-          selected={item.tradePreference === preference.value}
+          onPress={() => updateItem(currentItem.id, { tradePreference: preference.value })}
+          selected={currentItem.tradePreference === preference.value}
         />
       ))}
 
@@ -51,8 +52,8 @@ export default function ItemTradePreferencesScreen() {
           description={visibility.description}
           key={visibility.value}
           label={visibility.label}
-          onPress={() => updateItem(item.id, { visibility: visibility.value as ItemVisibility })}
-          selected={item.visibility === visibility.value}
+          onPress={() => updateItem(currentItem.id, { visibility: visibility.value })}
+          selected={currentItem.visibility === visibility.value}
         />
       ))}
 
@@ -60,10 +61,10 @@ export default function ItemTradePreferencesScreen() {
         label="Trade notes"
         multiline
         numberOfLines={4}
-        onChangeText={(tradeNotes) => updateItem(item.id, { tradeNotes })}
+        onChangeText={(tradeNotes) => updateItem(currentItem.id, { tradeNotes })}
         placeholder="Open to rap tees, XL Harley, or cash-balancing around strong trades."
         style={{ minHeight: 104, textAlignVertical: "top" }}
-        value={item.tradeNotes ?? ""}
+        value={currentItem.tradeNotes ?? ""}
       />
 
       <View
@@ -87,9 +88,9 @@ export default function ItemTradePreferencesScreen() {
           </Text>
         </View>
         <Switch
-          onValueChange={(enabled) => updateItem(item.id, { status: enabled ? "reserved" : "draft" })}
-          thumbColor={item.status === "reserved" ? theme.colors.accent : theme.colors.textSecondary}
-          value={item.status === "reserved"}
+          onValueChange={(enabled) => updateItem(currentItem.id, { status: enabled ? "reserved" : "draft" })}
+          thumbColor={currentItem.status === "reserved" ? theme.colors.accent : theme.colors.textSecondary}
+          value={currentItem.status === "reserved"}
         />
       </View>
     </FormFrame>

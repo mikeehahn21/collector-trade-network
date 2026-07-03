@@ -1,8 +1,12 @@
-import type { PropsWithChildren } from "react";
+import type { ComponentType, PropsWithChildren } from "react";
 import { View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
+import type { SafeAreaViewProps } from "react-native-safe-area-context";
 
 import { useTheme } from "@/theme/theme-provider";
+
+// Cast needed: @types/react 18.3 ReactNode includes bigint, causing TS2786 with RN components
+const SafeAreaView = RNSafeAreaView as unknown as ComponentType<SafeAreaViewProps>;
 
 export function Screen({ children }: PropsWithChildren) {
   const theme = useTheme();

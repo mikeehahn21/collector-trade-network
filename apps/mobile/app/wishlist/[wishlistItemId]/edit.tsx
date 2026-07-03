@@ -10,14 +10,6 @@ import {
   WISHLIST_PRIORITIES,
   WISHLIST_VISIBILITY_OPTIONS,
 } from "@ctn/constants";
-import type {
-  ItemCondition,
-  ShirtSize,
-  VintageCategory,
-  WishlistMatchPreference,
-  WishlistPriority,
-  WishlistVisibility,
-} from "@ctn/types";
 
 import { AppButton } from "@/components/app-button";
 import { AppTextField } from "@/components/app-text-field";
@@ -27,6 +19,7 @@ import { Screen } from "@/components/screen";
 import { getWishlistPublishCheck } from "@/lib/wishlist-validation";
 import { useWishlistState } from "@/state/wishlist-state";
 import { useTheme } from "@/theme/theme-provider";
+import { useApiClient } from "@/api/use-api-client";
 
 export default function EditWishlistItemScreen() {
   const { wishlistItemId } = useLocalSearchParams<{ wishlistItemId: string }>();
@@ -43,16 +36,18 @@ export default function EditWishlistItemScreen() {
       </Screen>
     );
   }
+  // Capture narrowed item in a const so closures and JSX see WishlistItem (not WishlistItem | undefined)
+  const currentItem = item;
 
   function updateGrail(isGrail: boolean) {
-    const result = updateWishlistItem(item.id, { isGrail });
+    const result = updateWishlistItem(currentItem.id, { isGrail });
     if (!result.ok) {
       Alert.alert("Grail limit reached", result.message);
     }
   }
 
   async function save() {
-    const check = getWishlistPublishCheck(item);
+    const check = getWishlistPublishCheck(currentItem);
 
     if (!check.isValid) {
       Alert.alert("Before saving", `Complete: ${check.missing.join(", ")}`);
@@ -60,17 +55,17 @@ export default function EditWishlistItemScreen() {
     }
 
     try {
-      const response = item.id.startsWith("wish_")
-        ? await api.publishWishlistItem(item)
-        : await api.updateWishlistItem(item.id, item);
-      upsertWishlistItemFromServer(response.wishlistItem, item.id);
+      const response = currentItem.id.startsWith("wish_")
+        ? await api.publishWishlistItem(currentItem)
+        : await api.updateWishlistItem(currentItem.id, currentItem);
+      upsertWishlistItemFromServer(response.wishlistItem, currentItem.id);
       router.push(`/wishlist/${response.wishlistItem.id}/save`);
     } catch {
       Alert.alert(
         "Saved locally",
         "We could not reach the server. This want remains cached and can sync later.",
       );
-      router.push(`/wishlist/${item.id}/save`);
+      router.push(`/wishlist/${currentItem.id}/save`);
     }
   }
 
@@ -91,9 +86,9 @@ export default function EditWishlistItemScreen() {
 
         <AppTextField
           label="Wanted item"
-          onChangeText={(title) => updateWishlistItem(item.id, { title })}
+          onChangeText={(title) => updateWishlistItem(currentItem.id, { title })}
           placeholder="Mosquitohead Soundgarden"
-          value={item.title}
+          value={currentItem.title}
         />
 
         <Text style={{ color: theme.colors.textPrimary, fontSize: 16, fontWeight: "900" }}>Category</Text>
@@ -103,9 +98,9 @@ export default function EditWishlistItemScreen() {
               key={category.value}
               label={category.label}
               onPress={() =>
-                updateWishlistItem(item.id, { category: category.value as VintageCategory })
+                updateWishlistItem(currentItem.id, { category: category.value })
               }
-              selected={item.category === category.value}
+              selected={currentItem.category === category.value}
             />
           ))}
         </View>
@@ -116,8 +111,8 @@ export default function EditWishlistItemScreen() {
             <Chip
               key={size.value}
               label={size.label}
-              onPress={() => updateWishlistItem(item.id, { size: size.value as ShirtSize })}
-              selected={item.size === size.value}
+              onPress={() => updateWishlistItem(currentItem.id, { size: size.value })}
+              selected={currentItem.size === size.value}
             />
           ))}
         </View>
@@ -130,17 +125,17 @@ export default function EditWishlistItemScreen() {
             <Chip
               key={era}
               label={era}
-              onPress={() => updateWishlistItem(item.id, { preferredEra: era })}
-              selected={item.preferredEra === era}
+              onPress={() => updateWishlistItem(currentItem.id, { preferredEra: era })}
+              selected={currentItem.preferredEra === era}
             />
           ))}
         </View>
 
         <AppTextField
           label="Preferred tag"
-          onChangeText={(preferredTag) => updateWishlistItem(item.id, { preferredTag })}
+          onChangeText={(preferredTag) => updateWishlistItem(currentItem.id, { preferredTag })}
           placeholder="Giant, Brockum, Screen Stars, any"
-          value={item.preferredTag ?? ""}
+          value={currentItem.preferredTag ?? ""}
         />
 
         <Text style={{ color: theme.colors.textPrimary, fontSize: 16, fontWeight: "900" }}>
@@ -152,9 +147,9 @@ export default function EditWishlistItemScreen() {
             key={condition.value}
             label={condition.label}
             onPress={() =>
-              updateWishlistItem(item.id, { preferredCondition: condition.value as ItemCondition })
+              updateWishlistItem(currentItem.id, { preferredCondition: condition.value })
             }
-            selected={item.preferredCondition === condition.value}
+            selected={currentItem.preferredCondition === condition.value}
           />
         ))}
 
@@ -164,8 +159,8 @@ export default function EditWishlistItemScreen() {
             description={priority.description}
             key={priority.value}
             label={priority.label}
-            onPress={() => updateWishlistItem(item.id, { priority: priority.value as WishlistPriority })}
-            selected={item.priority === priority.value}
+            onPress={() => updateWishlistItem(currentItem.id, { priority: priority.value })}
+            selected={currentItem.priority === priority.value}
           />
         ))}
 
@@ -173,7 +168,7 @@ export default function EditWishlistItemScreen() {
           style={{
             alignItems: "center",
             backgroundColor: theme.colors.surface,
-            borderColor: item.isGrail ? theme.colors.accent : theme.colors.border,
+            borderColor: currentItem.isGrail ? theme.colors.accent : theme.colors.border,
             borderRadius: theme.radius.md,
             borderWidth: 1,
             flexDirection: "row",
@@ -191,8 +186,8 @@ export default function EditWishlistItemScreen() {
           </View>
           <Switch
             onValueChange={updateGrail}
-            thumbColor={item.isGrail ? theme.colors.accent : theme.colors.textSecondary}
-            value={item.isGrail}
+            thumbColor={currentItem.isGrail ? theme.colors.accent : theme.colors.textSecondary}
+            value={currentItem.isGrail}
           />
         </View>
 
@@ -205,11 +200,11 @@ export default function EditWishlistItemScreen() {
             key={preference.value}
             label={preference.label}
             onPress={() =>
-              updateWishlistItem(item.id, {
-                matchPreference: preference.value as WishlistMatchPreference,
+              updateWishlistItem(currentItem.id, {
+                matchPreference: preference.value,
               })
             }
-            selected={item.matchPreference === preference.value}
+            selected={currentItem.matchPreference === preference.value}
           />
         ))}
 
@@ -222,9 +217,9 @@ export default function EditWishlistItemScreen() {
             key={visibility.value}
             label={visibility.label}
             onPress={() =>
-              updateWishlistItem(item.id, { visibility: visibility.value as WishlistVisibility })
+              updateWishlistItem(currentItem.id, { visibility: visibility.value })
             }
-            selected={item.visibility === visibility.value}
+            selected={currentItem.visibility === visibility.value}
           />
         ))}
 
@@ -232,10 +227,10 @@ export default function EditWishlistItemScreen() {
           label="Notes"
           multiline
           numberOfLines={4}
-          onChangeText={(notes) => updateWishlistItem(item.id, { notes })}
+          onChangeText={(notes) => updateWishlistItem(currentItem.id, { notes })}
           placeholder="What details matter? Print, year, condition tolerance, or why this is important."
           style={{ minHeight: 104, textAlignVertical: "top" }}
-          value={item.notes ?? ""}
+          value={currentItem.notes ?? ""}
         />
 
         <View style={{ gap: theme.spacing.md }}>
@@ -244,7 +239,7 @@ export default function EditWishlistItemScreen() {
           </AppButton>
           <AppButton
             accessibilityLabel="Archive wishlist item"
-            onPress={() => router.push(`/wishlist/${item.id}/archive`)}
+            onPress={() => router.push(`/wishlist/${currentItem.id}/archive`)}
             variant="secondary"
           >
             Archive or delete
@@ -254,4 +249,3 @@ export default function EditWishlistItemScreen() {
     </Screen>
   );
 }
-import { useApiClient } from "@/api/use-api-client";

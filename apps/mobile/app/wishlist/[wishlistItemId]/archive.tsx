@@ -17,15 +17,17 @@ export default function ArchiveWishlistItemScreen() {
   if (!item) {
     return null;
   }
+  // Capture narrowed item so closures/JSX see the non-undefined type
+  const currentItem = item;
 
   async function archive() {
     try {
-      if (!item.id.startsWith("wish_")) {
-        await api.updateWishlistItem(item.id, { isArchived: true });
+      if (!currentItem.id.startsWith("wish_")) {
+        await api.updateWishlistItem(currentItem.id, { isArchived: true });
       }
-      archiveWishlistItem(item.id);
+      archiveWishlistItem(currentItem.id);
     } catch {
-      archiveWishlistItem(item.id);
+      archiveWishlistItem(currentItem.id);
       Alert.alert("Archived locally", "Server sync failed. This archive action is cached locally.");
     }
     router.replace("/wishlist");
@@ -33,12 +35,12 @@ export default function ArchiveWishlistItemScreen() {
 
   async function deleteForever() {
     try {
-      if (!item.id.startsWith("wish_")) {
-        await api.deleteWishlistItem(item.id);
+      if (!currentItem.id.startsWith("wish_")) {
+        await api.deleteWishlistItem(currentItem.id);
       }
-      deleteWishlistItem(item.id);
+      deleteWishlistItem(currentItem.id);
     } catch {
-      deleteWishlistItem(item.id);
+      deleteWishlistItem(currentItem.id);
       Alert.alert("Deleted locally", "Server sync failed. This delete action may need reconciliation.");
     }
     router.replace("/wishlist");
@@ -48,7 +50,7 @@ export default function ArchiveWishlistItemScreen() {
     <FormFrame
       eyebrow="Archive or delete"
       title="Retire this want."
-      subtitle={item.title || "Untitled want"}
+      subtitle={currentItem.title || "Untitled want"}
       footer={
         <>
           <AppButton accessibilityLabel="Archive wishlist item" onPress={() => void archive()}>

@@ -2,8 +2,6 @@ import { Switch, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { COMMUNICATION_PREFERENCES } from "@ctn/constants";
-import type { CommunicationPreference } from "@ctn/types";
-
 import { AppButton } from "@/components/app-button";
 import { ChoiceCard } from "@/components/choice-card";
 import { FormFrame } from "@/components/form-frame";
@@ -38,7 +36,7 @@ export default function ItemCommunicationSettingsScreen() {
           key={preference.value}
           label={preference.label}
           onPress={() =>
-            updateItem(item.id, { communicationPreference: preference.value as CommunicationPreference })
+            updateItem(item.id, { communicationPreference: preference.value })
           }
           selected={item.communicationPreference === preference.value}
         />

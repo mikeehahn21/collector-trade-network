@@ -12,6 +12,7 @@ import {
   findWishlistItemByOwner,
   listWishlistByOwner,
   updateWishlistItemForOwner,
+  type PersistWishlistInput,
 } from "../../db/repositories/wishlist.repository";
 import { findUserByClerkId } from "../../db/repositories/users.repository";
 import type { AppServices } from "../services";
@@ -107,7 +108,7 @@ export async function registerWishlistRoutes(
       services.db,
       user.id,
       wishlistItemId,
-      parsed.data,
+      parsed.data as PersistWishlistInput,
     );
 
     if (!wishlistItem) {

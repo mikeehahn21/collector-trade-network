@@ -1,6 +1,6 @@
 import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
-import Fastify from "fastify";
+import Fastify, { type FastifyInstance } from "fastify";
 
 import type { Env } from "./config/env";
 import { createDatabasePool } from "./db/pool";
@@ -56,12 +56,13 @@ export async function buildApp(env: Env) {
     return reply.status(500).send({ code: "INTERNAL_SERVER_ERROR", message: "Unexpected server error." });
   });
 
-  await registerHealthRoutes(app);
-  await registerUserRoutes(app, { db, env });
-  await registerAccessRoutes(app, { db, env });
-  await registerItemRoutes(app, { db, env });
-  await registerWishlistRoutes(app, { db, env });
-  await registerRecommendationRoutes(app, { db, env });
+  const appInstance = app as unknown as FastifyInstance;
+  await registerHealthRoutes(appInstance);
+  await registerUserRoutes(appInstance, { db, env });
+  await registerAccessRoutes(appInstance, { db, env });
+  await registerItemRoutes(appInstance, { db, env });
+  await registerWishlistRoutes(appInstance, { db, env });
+  await registerRecommendationRoutes(appInstance, { db, env });
 
   return app;
 }

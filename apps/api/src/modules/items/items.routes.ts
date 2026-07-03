@@ -15,6 +15,7 @@ import {
   findItemByOwner,
   listItemsByOwner,
   updateItemForOwner,
+  type PersistItemInput,
 } from "../../db/repositories/items.repository";
 import { findUserByClerkId } from "../../db/repositories/users.repository";
 import type { AppServices } from "../services";
@@ -86,7 +87,7 @@ export async function registerItemRoutes(
       });
     }
 
-    const item = await updateItemForOwner(services.db, user.id, itemId, parsed.data);
+    const item = await updateItemForOwner(services.db, user.id, itemId, parsed.data as PersistItemInput);
 
     if (!item) {
       return reply.status(404).send({ code: "ITEM_NOT_FOUND", message: "Item not found." });

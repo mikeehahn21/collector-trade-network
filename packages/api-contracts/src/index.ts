@@ -1,4 +1,4 @@
-import type { ApiHealth } from "@ctn/types";
+import type { ApiHealth, TradeableItem, TradeRecommendation, RecommendationSummary, UserProfile, WishlistItem } from "@ctn/types";
 
 import {
   accessRequestSchema,
@@ -85,30 +85,30 @@ export const wishlistItemPublishContract = {
 } as const;
 
 export type MeResponse = {
-  user: import("@ctn/types").UserProfile;
+  user: UserProfile;
 };
 
 export type ItemsResponse = {
-  items: import("@ctn/types").TradeableItem[];
+  items: TradeableItem[];
 };
 
 export type ItemResponse = {
-  item: import("@ctn/types").TradeableItem;
+  item: TradeableItem;
 };
 
 export type WishlistItemsResponse = {
-  wishlistItems: import("@ctn/types").WishlistItem[];
+  wishlistItems: WishlistItem[];
 };
 
 export type WishlistItemResponse = {
-  wishlistItem: import("@ctn/types").WishlistItem;
+  wishlistItem: WishlistItem;
 };
 
 export type RecommendationsResponse = {
-  recommendations: import("@ctn/types").TradeRecommendation[];
-  summary: import("@ctn/types").RecommendationSummary;
+  recommendations: TradeRecommendation[];
+  summary: RecommendationSummary;
 };
 
 export type RecommendationResponse = {
-  recommendation: import("@ctn/types").TradeRecommendation;
+  recommendation: TradeRecommendation;
 };

@@ -39,17 +39,19 @@ export default function ItemDetailScreen() {
       </Screen>
     );
   }
+  // Capture narrowed item so closures and JSX see TradeableItem (not TradeableItem | undefined)
+  const currentItem = item;
 
-  const publishCheck = getPublishCheck(item);
+  const publishCheck = getPublishCheck(currentItem);
   const value =
-    item.estimatedValue.min || item.estimatedValue.max
-      ? `$${item.estimatedValue.min ?? "?"} - $${item.estimatedValue.max ?? "?"}`
+    currentItem.estimatedValue.min || currentItem.estimatedValue.max
+      ? `$${currentItem.estimatedValue.min ?? "?"} - $${currentItem.estimatedValue.max ?? "?"}`
       : "Not estimated";
   const measurements = [
-    item.measurements.chest ? `Chest ${item.measurements.chest}` : undefined,
-    item.measurements.length ? `Length ${item.measurements.length}` : undefined,
-    item.measurements.shoulder ? `Shoulder ${item.measurements.shoulder}` : undefined,
-    item.measurements.sleeve ? `Sleeve ${item.measurements.sleeve}` : undefined,
+    currentItem.measurements.chest ? `Chest ${currentItem.measurements.chest}` : undefined,
+    currentItem.measurements.length ? `Length ${currentItem.measurements.length}` : undefined,
+    currentItem.measurements.shoulder ? `Shoulder ${currentItem.measurements.shoulder}` : undefined,
+    currentItem.measurements.sleeve ? `Sleeve ${currentItem.measurements.sleeve}` : undefined,
   ]
     .filter(Boolean)
     .join(" · ");
@@ -61,18 +63,18 @@ export default function ItemDetailScreen() {
     }
 
     try {
-      const response = item.id.startsWith("item_")
-        ? await api.publishItem({ ...item, status: "tradeable" })
-        : await api.updateItem(item.id, { ...item, status: "tradeable" });
-      upsertItemFromServer(response.item, item.id);
+      const response = currentItem.id.startsWith("item_")
+        ? await api.publishItem({ ...currentItem, status: "tradeable" })
+        : await api.updateItem(currentItem.id, { ...currentItem, status: "tradeable" });
+      upsertItemFromServer(response.item, currentItem.id);
       router.push(`/inventory/${response.item.id}/publish-confirmation`);
     } catch {
-      publishItem(item.id);
+      publishItem(currentItem.id);
       Alert.alert(
         "Published locally",
         "Server sync failed. The item remains cached and should be synced before recommendations use it.",
       );
-      router.push(`/inventory/${item.id}/publish-confirmation`);
+      router.push(`/inventory/${currentItem.id}/publish-confirmation`);
     }
   }
 
@@ -89,65 +91,65 @@ export default function ItemDetailScreen() {
           }}
         >
           <Text style={{ color: theme.colors.textSecondary, fontSize: 16, fontWeight: "800" }}>
-            {item.photos.length > 0 ? `${item.photos.length} photos` : "No photos yet"}
+            {currentItem.photos.length > 0 ? `${currentItem.photos.length} photos` : "No photos yet"}
           </Text>
         </View>
 
         <View style={{ gap: theme.spacing.sm }}>
           <Text style={{ color: theme.colors.accent, fontSize: 12, fontWeight: "800" }}>
-            {statusLabels[item.status]}
+            {statusLabels[currentItem.status]}
           </Text>
           <Text style={{ color: theme.colors.textPrimary, fontSize: 32, fontWeight: "900" }}>
-            {item.title || "Untitled draft"}
+            {currentItem.title || "Untitled draft"}
           </Text>
           <Text style={{ color: theme.colors.textSecondary, fontSize: 16 }}>
-            {item.category ? categoryLabels[item.category] : "No category"} ·{" "}
-            {item.size ? sizeLabels[item.size] : "No size"}
+            {currentItem.category ? categoryLabels[currentItem.category] : "No category"} ·{" "}
+            {currentItem.size ? sizeLabels[currentItem.size] : "No size"}
           </Text>
         </View>
 
         <DetailPanel
           rows={[
-            ["Condition", item.condition ? conditionLabels[item.condition] : "Not set"],
-            ["Tag", item.tag || "Not set"],
-            ["Era", item.era || "Not set"],
+            ["Condition", currentItem.condition ? conditionLabels[currentItem.condition] : "Not set"],
+            ["Tag", currentItem.tag || "Not set"],
+            ["Era", currentItem.era || "Not set"],
             ["Measurements", measurements || "Not set"],
             ["Value", value],
-            ["Visibility", visibilityLabels[item.visibility]],
+            ["Visibility", visibilityLabels[currentItem.visibility]],
           ]}
         />
 
         <DetailPanel
           title="Trade and communication"
           rows={[
-            ["Trade preference", item.tradePreference ? tradePreferenceLabels[item.tradePreference] : "Not set"],
-            ["Conversations", communicationPreferenceLabels[item.communicationPreference]],
-            ["Photo requests", item.allowsPhotoRequests ? "Allowed" : "Disabled"],
-            ["Measurement requests", item.allowsMeasurementRequests ? "Allowed" : "Disabled"],
+            ["Trade preference", currentItem.tradePreference ? tradePreferenceLabels[currentItem.tradePreference] : "Not set"],
+            ["Conversations", communicationPreferenceLabels[currentItem.communicationPreference]],
+            ["Photo requests", currentItem.allowsPhotoRequests ? "Allowed" : "Disabled"],
+            ["Measurement requests", currentItem.allowsMeasurementRequests ? "Allowed" : "Disabled"],
           ]}
         />
 
-        {item.flaws.length > 0 ? (
+        {currentItem.flaws.length > 0 ? (
           <DetailPanel
             title="Flaws"
-            rows={item.flaws.map((flaw, index): [string, string] => [`Flaw ${index + 1}`, flaw])}
+            rows={currentItem.flaws.map((flaw, index): [string, string] => [`Flaw ${index + 1}`, flaw])}
           />
         ) : null}
 
         <View style={{ gap: theme.spacing.md }}>
-          <AppButton accessibilityLabel="Edit item" onPress={() => router.push(`/inventory/${item.id}/edit`)}>
+          <AppButton accessibilityLabel="Edit item" onPress={() => router.push(`/inventory/${currentItem.id}/edit`)}>
             Edit item
           </AppButton>
           <AppButton
             accessibilityLabel="Manage photos"
-            onPress={() => router.push(`/inventory/${item.id}/photos`)}
+            onPress={() => router.push(`/inventory/${currentItem.id}/photos`)}
             variant="secondary"
           >
             Manage photos
           </AppButton>
           <AppButton
             accessibilityLabel="Publish item"
-            disabled={item.status === "tradeable"}
+            disabled={currentItem.status === "tradeable"}
             onPress={() => void publish()}
             variant="secondary"
           >
@@ -155,7 +157,7 @@ export default function ItemDetailScreen() {
           </AppButton>
           <AppButton
             accessibilityLabel="Archive item"
-            onPress={() => router.push(`/inventory/${item.id}/archive`)}
+            onPress={() => router.push(`/inventory/${currentItem.id}/archive`)}
             variant="ghost"
           >
             Archive or delete

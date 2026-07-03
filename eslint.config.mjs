@@ -13,7 +13,9 @@ export default tseslint.config(
       "facebook-video-frames/**",
       "facebook-video-frames-winrt/**",
       "thumb-check/**",
-      "thumb-check-final/**"
+      "thumb-check-final/**",
+      "packages/*/src/*.d.ts",
+      "packages/*/src/*.js"
     ]
   },
   js.configs.recommended,
@@ -21,7 +23,21 @@ export default tseslint.config(
   {
     languageOptions: {
       parserOptions: {
-        projectService: true,
+        projectService: {
+          // Allow files not explicitly listed in tsconfig (migrations, vitest configs, etc.)
+          allowDefaultProject: [
+            "apps/api/migrations/*.ts",
+            "apps/api/vitest.config.ts",
+            "apps/api/vitest.integration.config.ts",
+            "packages/types/src/*.js",
+            "packages/types/src/*.d.ts",
+            "packages/validation/src/*.js",
+            "packages/validation/src/*.d.ts",
+            "eslint.config.mjs",
+            "lint-staged.config.cjs",
+            "commitlint.config.cjs"
+          ]
+        },
         tsconfigRootDir: import.meta.dirname
       }
     },
@@ -31,7 +47,15 @@ export default tseslint.config(
         { "prefer": "type-imports" }
       ],
       "@typescript-eslint/no-floating-promises": "error",
-      "@typescript-eslint/no-misused-promises": "error"
+      "@typescript-eslint/no-misused-promises": "error",
+      // Fastify route handlers must be async for the reply/lifecycle system even when
+      // they don't explicitly await — disable this rule project-wide.
+      "@typescript-eslint/require-await": "off",
+      // Allow underscore-prefixed parameters to indicate intentionally unused args
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_", "caughtErrorsIgnorePattern": "^_" }
+      ]
     }
   },
   eslintConfigPrettier

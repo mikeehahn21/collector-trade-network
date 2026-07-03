@@ -4,8 +4,8 @@ import type { KeyboardTypeOptions, TextInputProps } from "react-native";
 import { useTheme } from "@/theme/theme-provider";
 
 type AppTextFieldProps = TextInputProps & {
-  error?: string;
-  keyboardType?: KeyboardTypeOptions;
+  error?: string | undefined;
+  keyboardType?: KeyboardTypeOptions | undefined;
   label: string;
 };
 

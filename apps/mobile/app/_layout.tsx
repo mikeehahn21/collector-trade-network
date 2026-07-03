@@ -1,4 +1,5 @@
-import { Stack } from "expo-router";
+import type { ComponentType } from "react";
+import { Stack as ExpoStack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 
 import { AppErrorBoundary } from "@/components/error-boundary";
@@ -9,6 +10,10 @@ import { OnboardingStateProvider } from "@/state/onboarding-state";
 import { WishlistStateProvider } from "@/state/wishlist-state";
 import { DataSyncBootstrap } from "@/sync/data-sync-bootstrap";
 import { ThemeProvider, useTheme } from "@/theme/theme-provider";
+
+// Cast needed: @types/react 18.3 ReactNode includes bigint, causing TS2786 with expo-router components
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const Stack = ExpoStack as unknown as ComponentType<any>;
 
 function RootNavigator() {
   const theme = useTheme();

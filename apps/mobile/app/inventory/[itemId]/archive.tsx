@@ -17,15 +17,17 @@ export default function ArchiveItemScreen() {
   if (!item) {
     return null;
   }
+  // Capture narrowed item so closures/JSX see the non-undefined type
+  const currentItem = item;
 
   async function archive() {
     try {
-      if (!item.id.startsWith("item_")) {
-        await api.updateItem(item.id, { status: "archived" });
+      if (!currentItem.id.startsWith("item_")) {
+        await api.updateItem(currentItem.id, { status: "archived" });
       }
-      archiveItem(item.id);
+      archiveItem(currentItem.id);
     } catch {
-      archiveItem(item.id);
+      archiveItem(currentItem.id);
       Alert.alert("Archived locally", "Server sync failed. This archive action is cached locally.");
     }
     router.replace("/inventory");
@@ -33,12 +35,12 @@ export default function ArchiveItemScreen() {
 
   async function deleteForever() {
     try {
-      if (!item.id.startsWith("item_")) {
-        await api.deleteItem(item.id);
+      if (!currentItem.id.startsWith("item_")) {
+        await api.deleteItem(currentItem.id);
       }
-      deleteItem(item.id);
+      deleteItem(currentItem.id);
     } catch {
-      deleteItem(item.id);
+      deleteItem(currentItem.id);
       Alert.alert("Deleted locally", "Server sync failed. This delete action may need reconciliation.");
     }
     router.replace("/inventory");
@@ -48,7 +50,7 @@ export default function ArchiveItemScreen() {
     <FormFrame
       eyebrow="Archive or delete"
       title="Take this item out of circulation."
-      subtitle={item.title || "Untitled draft"}
+      subtitle={currentItem.title || "Untitled draft"}
       footer={
         <>
           <AppButton accessibilityLabel="Archive item" onPress={() => void archive()}>

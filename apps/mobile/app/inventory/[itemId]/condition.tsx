@@ -3,8 +3,6 @@ import { Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { ITEM_CONDITIONS } from "@ctn/constants";
-import type { ItemCondition } from "@ctn/types";
-
 import { AppButton } from "@/components/app-button";
 import { AppTextField } from "@/components/app-text-field";
 import { ChoiceCard } from "@/components/choice-card";
@@ -23,13 +21,15 @@ export default function ConditionEditorScreen() {
   if (!item) {
     return null;
   }
+  // Capture narrowed item so closures/JSX see the non-undefined type
+  const currentItem = item;
 
   function addFlaw() {
     const flaw = flawDraft.trim();
     if (!flaw) {
       return;
     }
-    updateItem(item.id, { flaws: [...item.flaws, flaw] });
+    updateItem(currentItem.id, { flaws: [...currentItem.flaws, flaw] });
     setFlawDraft("");
   }
 
@@ -49,8 +49,8 @@ export default function ConditionEditorScreen() {
           description={condition.description}
           key={condition.value}
           label={condition.label}
-          onPress={() => updateItem(item.id, { condition: condition.value as ItemCondition })}
-          selected={item.condition === condition.value}
+          onPress={() => updateItem(currentItem.id, { condition: condition.value })}
+          selected={currentItem.condition === condition.value}
         />
       ))}
       <View style={{ flexDirection: "row", gap: theme.spacing.sm }}>
@@ -68,7 +68,7 @@ export default function ConditionEditorScreen() {
           </AppButton>
         </View>
       </View>
-      {item.flaws.map((flaw, index) => (
+      {currentItem.flaws.map((flaw, index) => (
         <View
           key={`${flaw}-${index}`}
           style={{
@@ -87,7 +87,7 @@ export default function ConditionEditorScreen() {
           <AppButton
             accessibilityLabel={`Remove flaw ${index + 1}`}
             onPress={() =>
-              updateItem(item.id, { flaws: item.flaws.filter((_, flawIndex) => flawIndex !== index) })
+              updateItem(currentItem.id, { flaws: currentItem.flaws.filter((_, flawIndex) => flawIndex !== index) })
             }
             variant="ghost"
           >

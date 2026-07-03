@@ -52,7 +52,7 @@ export function PhotoManager({ onAddMockPhoto, onRemovePhoto, photos }: PhotoMan
           </View>
         ))}
       </View>
-      <AppButton accessibilityLabel="Add mock photo" onPress={onAddMockPhoto} variant="secondary">
+      <AppButton accessibilityLabel="Add mock photo" onPress={() => { void onAddMockPhoto(); }} variant="secondary">
         Add photo
       </AppButton>
       <Text style={{ color: theme.colors.textSecondary, fontSize: 13, lineHeight: 20 }}>

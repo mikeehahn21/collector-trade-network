@@ -2,10 +2,10 @@ import Constants from "expo-constants";
 
 type MobileEnv = {
   apiBaseUrl: string;
-  clerkPublishableKey?: string;
-  sentryDsn?: string;
-  posthogApiKey?: string;
-  oneSignalAppId?: string;
+  clerkPublishableKey?: string | undefined;
+  sentryDsn?: string | undefined;
+  posthogApiKey?: string | undefined;
+  oneSignalAppId?: string | undefined;
 };
 
 export function getMobileEnv(): MobileEnv {

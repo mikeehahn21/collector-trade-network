@@ -66,7 +66,7 @@ type WishlistContextValue = {
   clearGrailCelebration: () => void;
   getWishlistItem: (itemId: string) => WishlistItem | undefined;
   replaceWishlistFromServer: (items: WishlistItem[]) => void;
-  upsertWishlistItemFromServer: (item: WishlistItem, localItemId?: string | undefined) => void;
+  upsertWishlistItemFromServer: (item: WishlistItem, localItemId?: string  ) => void;
 };
 
 const initialState: State = {

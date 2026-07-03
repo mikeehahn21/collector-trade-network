@@ -72,7 +72,7 @@ type CollectionContextValue = {
   clearPublishedCelebration: () => void;
   getItem: (itemId: string) => TradeableItem | undefined;
   replaceItemsFromServer: (items: TradeableItem[]) => void;
-  upsertItemFromServer: (item: TradeableItem, localItemId?: string | undefined) => void;
+  upsertItemFromServer: (item: TradeableItem, localItemId?: string  ) => void;
 };
 
 const initialState: State = {

@@ -3,9 +3,9 @@ import { ActivityIndicator, Text, View } from "react-native";
 import { useTheme } from "@/theme/theme-provider";
 
 type ScreenStateProps = {
-  message?: string;
+  message?: string | undefined;
   title: string;
-  tone?: "neutral" | "success" | "warning";
+  tone?: "neutral" | "success" | "warning" | undefined;
 };
 
 export function LoadingState({ title, message }: Pick<ScreenStateProps, "message" | "title">) {

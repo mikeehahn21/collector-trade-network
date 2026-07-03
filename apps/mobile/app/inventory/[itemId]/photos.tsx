@@ -17,6 +17,8 @@ export default function PhotoManagerScreen() {
   if (!item) {
     return null;
   }
+  // Capture narrowed item so closures/JSX see the non-undefined type
+  const currentItem = item;
 
   async function addMockPhoto() {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -39,27 +41,27 @@ export default function PhotoManagerScreen() {
     const photos: ItemPhoto[] = result.assets.map((asset, index) => ({
       id: `photo_${Date.now()}_${index}`,
       uri: asset.uri,
-      kind: item.photos.length === 0 && index === 0 ? "front" : "detail",
-      sortOrder: item.photos.length + index,
+      kind: currentItem.photos.length === 0 && index === 0 ? "front" : "detail",
+      sortOrder: currentItem.photos.length + index,
       createdAt: new Date().toISOString(),
     }));
 
-    updateItem(item.id, { photos: [...item.photos, ...photos] });
+    updateItem(currentItem.id, { photos: [...currentItem.photos, ...photos] });
   }
 
   function addFallbackPhoto() {
     const photo: ItemPhoto = {
       id: `photo_${Date.now()}`,
       uri: `mock://photo/${Date.now()}`,
-      kind: item.photos.length === 0 ? "front" : item.photos.length === 1 ? "back" : "detail",
-      sortOrder: item.photos.length,
+      kind: currentItem.photos.length === 0 ? "front" : currentItem.photos.length === 1 ? "back" : "detail",
+      sortOrder: currentItem.photos.length,
       createdAt: new Date().toISOString(),
     };
-    updateItem(item.id, { photos: [...item.photos, photo] });
+    updateItem(currentItem.id, { photos: [...currentItem.photos, photo] });
   }
 
   function removePhoto(photoId: string) {
-    updateItem(item.id, { photos: item.photos.filter((photo) => photo.id !== photoId) });
+    updateItem(currentItem.id, { photos: currentItem.photos.filter((photo) => photo.id !== photoId) });
   }
 
   return (
@@ -73,7 +75,7 @@ export default function PhotoManagerScreen() {
         </AppButton>
       }
     >
-      <PhotoManager onAddMockPhoto={addMockPhoto} onRemovePhoto={removePhoto} photos={item.photos} />
+      <PhotoManager onAddMockPhoto={addMockPhoto} onRemovePhoto={removePhoto} photos={currentItem.photos} />
     </FormFrame>
   );
 }
