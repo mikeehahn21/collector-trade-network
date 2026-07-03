@@ -212,7 +212,12 @@ export const tradeStatusSchema = z.enum([
   "countered",
   "cancelled",
   "completed",
+  "disputed",
 ]);
+
+export const tradeShippingStatusSchema = z.enum(["pending", "shipped", "delivered"]);
+
+export const tradeCarrierSchema = z.enum(["ups", "usps", "fedex", "dhl", "other"]);
 
 export const createTradeSchema = z.object({
   proposerItemId: z.string().uuid(),
@@ -221,13 +226,22 @@ export const createTradeSchema = z.object({
 });
 
 export const updateTradeStatusSchema = z.object({
-  status: z.enum(["accepted", "declined", "cancelled", "completed"]),
+  status: z.enum(["accepted", "declined", "cancelled"]),
 });
 
 export const counterTradeSchema = z.object({
   proposerItemId: z.string().uuid(),
   counterpartyItemId: z.string().uuid(),
   counterpartyNotes: z.string().trim().max(500).optional(),
+});
+
+export const shipTradeSchema = z.object({
+  trackingNumber: z.string().trim().min(1, "Tracking number is required.").max(255),
+  carrier: tradeCarrierSchema,
+});
+
+export const disputeTradeSchema = z.object({
+  reason: z.string().trim().min(10, "Explain the issue before opening a dispute.").max(2000),
 });
 
 export const accessRequestSchema = z.object({

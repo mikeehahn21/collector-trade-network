@@ -4,8 +4,10 @@ import {
   accessRequestSchema,
   conversationContextSchema,
   createConversationSchema,
+  disputeTradeSchema,
   onboardingPreferencesSchema,
   sendMessageSchema,
+  shipTradeSchema,
   createTradeSchema,
   recommendationFeedbackSchema,
   tradeableItemDraftSchema,
@@ -101,5 +103,12 @@ describe("validation", () => {
       }),
     ).not.toThrow();
     expect(() => updateTradeStatusSchema.parse({ status: "pending" })).toThrow();
+    expect(() => updateTradeStatusSchema.parse({ status: "completed" })).toThrow();
+  });
+
+  it("validates trade execution inputs", () => {
+    expect(() => shipTradeSchema.parse({ trackingNumber: "9400 1000 0000", carrier: "usps" })).not.toThrow();
+    expect(() => shipTradeSchema.parse({ trackingNumber: "", carrier: "usps" })).toThrow();
+    expect(() => disputeTradeSchema.parse({ reason: "Tag does not match the agreed item." })).not.toThrow();
   });
 });

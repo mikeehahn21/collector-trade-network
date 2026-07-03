@@ -1,4 +1,4 @@
-import type { Trade, TradeStatus } from "@ctn/types";
+import type { Trade, TradeCarrier, TradeShippingStatus, TradeStatus } from "@ctn/types";
 
 import type { Queryable } from "../types";
 import { queryMany, queryOne } from "../types";
@@ -20,8 +20,17 @@ type TradeRow = {
   counterparty_item_size: Trade["counterpartyItem"]["size"] | null;
   counterparty_item_status: Trade["counterpartyItem"]["status"];
   status: TradeStatus;
+  shipping_status_proposer: TradeShippingStatus;
+  shipping_status_counterparty: TradeShippingStatus;
+  tracking_number_proposer: string | null;
+  tracking_number_counterparty: string | null;
+  carrier_proposer: TradeCarrier | null;
+  carrier_counterparty: TradeCarrier | null;
   proposer_notes: string | null;
   counterparty_notes: string | null;
+  completed_at: Date | null;
+  disputed_at: Date | null;
+  dispute_reason: string | null;
   created_at: Date;
   updated_at: Date;
 };
@@ -45,6 +54,19 @@ export type CounterTradeRepositoryInput = {
   proposerItemId: string;
   counterpartyItemId: string;
   counterpartyNotes?: string | undefined;
+};
+
+export type ShipTradeRepositoryInput = {
+  tradeId: string;
+  userId: string;
+  trackingNumber: string;
+  carrier: TradeCarrier;
+};
+
+export type DisputeTradeRepositoryInput = {
+  tradeId: string;
+  userId: string;
+  reason: string;
 };
 
 export async function createTrade(
@@ -126,7 +148,7 @@ export async function updateTradeStatusForUser(
   db: Queryable,
   tradeId: string,
   userId: string,
-  status: Extract<TradeStatus, "accepted" | "declined" | "cancelled" | "completed">,
+  status: Extract<TradeStatus, "accepted" | "declined" | "cancelled">,
 ): Promise<Trade | undefined> {
   const trade = await findTradeByParticipant(db, tradeId, userId);
 
@@ -142,13 +164,117 @@ export async function updateTradeStatusForUser(
     ]);
   }
 
-  if (status === "completed") {
-    await db.query("update items set status = 'traded', updated_at = now() where id = any($1::uuid[])", [
-      [trade.proposerItemId, trade.counterpartyItemId],
-    ]);
+  return findTradeByParticipant(db, tradeId, userId);
+}
+
+export async function shipTradeForUser(
+  db: Queryable,
+  input: ShipTradeRepositoryInput,
+): Promise<Trade | undefined> {
+  const trade = await findTradeByParticipant(db, input.tradeId, input.userId);
+
+  if (!trade || !canShipTrade(trade, input.userId)) {
+    return undefined;
   }
 
+  const isProposer = trade.proposerId === input.userId;
+  const shippingColumn = isProposer ? "shipping_status_proposer" : "shipping_status_counterparty";
+  const trackingColumn = isProposer ? "tracking_number_proposer" : "tracking_number_counterparty";
+  const carrierColumn = isProposer ? "carrier_proposer" : "carrier_counterparty";
+
+  await db.query(
+    `
+      update trades set
+        ${shippingColumn} = 'shipped',
+        ${trackingColumn} = $2,
+        ${carrierColumn} = $3,
+        updated_at = now()
+      where id = $1
+    `,
+    [input.tradeId, input.trackingNumber, input.carrier],
+  );
+
+  return findTradeByParticipant(db, input.tradeId, input.userId);
+}
+
+export async function receiveTradeForUser(
+  db: Queryable,
+  tradeId: string,
+  userId: string,
+): Promise<Trade | undefined> {
+  const trade = await findTradeByParticipant(db, tradeId, userId);
+
+  if (!trade || !canReceiveTrade(trade, userId)) {
+    return undefined;
+  }
+
+  const shippingColumn =
+    trade.proposerId === userId ? "shipping_status_counterparty" : "shipping_status_proposer";
+
+  await db.query(
+    `
+      update trades set
+        ${shippingColumn} = 'delivered',
+        updated_at = now()
+      where id = $1
+    `,
+    [tradeId],
+  );
+
   return findTradeByParticipant(db, tradeId, userId);
+}
+
+export async function completeTradeForUser(
+  db: Queryable,
+  tradeId: string,
+  userId: string,
+): Promise<Trade | undefined> {
+  const trade = await findTradeByParticipant(db, tradeId, userId);
+
+  if (!trade || !canCompleteTrade(trade)) {
+    return undefined;
+  }
+
+  await db.query(
+    `
+      update trades set
+        status = 'completed',
+        completed_at = now(),
+        updated_at = now()
+      where id = $1
+    `,
+    [tradeId],
+  );
+  await db.query("update items set status = 'traded', updated_at = now() where id = any($1::uuid[])", [
+    [trade.proposerItemId, trade.counterpartyItemId],
+  ]);
+
+  return findTradeByParticipant(db, tradeId, userId);
+}
+
+export async function disputeTradeForUser(
+  db: Queryable,
+  input: DisputeTradeRepositoryInput,
+): Promise<Trade | undefined> {
+  const trade = await findTradeByParticipant(db, input.tradeId, input.userId);
+
+  if (!trade || !canDisputeTrade(trade, input.userId)) {
+    return undefined;
+  }
+
+  await db.query(
+    `
+      update trades set
+        status = 'disputed',
+        disputed_at = now(),
+        dispute_reason = $2,
+        updated_at = now()
+      where id = $1
+    `,
+    [input.tradeId, input.reason],
+  );
+
+  return findTradeByParticipant(db, input.tradeId, input.userId);
 }
 
 export async function counterTradeForUser(
@@ -190,7 +316,7 @@ export async function counterTradeForUser(
 export function canUpdateTradeStatus(
   trade: Trade,
   userId: string,
-  status: Extract<TradeStatus, "accepted" | "declined" | "cancelled" | "completed">,
+  status: Extract<TradeStatus, "accepted" | "declined" | "cancelled">,
 ): boolean {
   if (status === "accepted" || status === "declined") {
     return trade.counterpartyId === userId && ["pending", "countered"].includes(trade.status);
@@ -200,10 +326,57 @@ export function canUpdateTradeStatus(
     return trade.proposerId === userId && ["pending", "countered"].includes(trade.status);
   }
 
+  return false;
+}
+
+export function canShipTrade(trade: Trade, userId: string): boolean {
+  if (trade.status !== "accepted") {
+    return false;
+  }
+
+  if (trade.proposerId === userId) {
+    return trade.proposerShipping.status === "pending";
+  }
+
+  if (trade.counterpartyId === userId) {
+    return trade.counterpartyShipping.status === "pending";
+  }
+
+  return false;
+}
+
+export function canReceiveTrade(trade: Trade, userId: string): boolean {
+  if (trade.status !== "accepted") {
+    return false;
+  }
+
+  if (trade.proposerId === userId) {
+    return trade.counterpartyShipping.status === "shipped";
+  }
+
+  if (trade.counterpartyId === userId) {
+    return trade.proposerShipping.status === "shipped";
+  }
+
+  return false;
+}
+
+export function canCompleteTrade(trade: Trade): boolean {
   return (
-    status === "completed" &&
     trade.status === "accepted" &&
-    (trade.proposerId === userId || trade.counterpartyId === userId)
+    trade.proposerShipping.status === "delivered" &&
+    trade.counterpartyShipping.status === "delivered"
+  );
+}
+
+export function canDisputeTrade(trade: Trade, userId: string): boolean {
+  return (
+    trade.status === "accepted" &&
+    (trade.proposerId === userId || trade.counterpartyId === userId) &&
+    (trade.proposerShipping.status === "delivered" ||
+      trade.counterpartyShipping.status === "delivered" ||
+      trade.proposerShipping.status === "shipped" ||
+      trade.counterpartyShipping.status === "shipped")
   );
 }
 
@@ -241,8 +414,17 @@ const tradeSelectSql = `
     counterparty_item.size as counterparty_item_size,
     counterparty_item.status as counterparty_item_status,
     trades.status,
+    trades.shipping_status_proposer,
+    trades.shipping_status_counterparty,
+    trades.tracking_number_proposer,
+    trades.tracking_number_counterparty,
+    trades.carrier_proposer,
+    trades.carrier_counterparty,
     trades.proposer_notes,
     trades.counterparty_notes,
+    trades.completed_at,
+    trades.disputed_at,
+    trades.dispute_reason,
     trades.created_at,
     trades.updated_at
   from trades
@@ -280,8 +462,21 @@ function mapTrade(row: TradeRow, viewerId: string): Trade {
       status: row.counterparty_item_status,
     },
     status: row.status,
+    proposerShipping: {
+      status: row.shipping_status_proposer,
+      trackingNumber: row.tracking_number_proposer ?? undefined,
+      carrier: row.carrier_proposer ?? undefined,
+    },
+    counterpartyShipping: {
+      status: row.shipping_status_counterparty,
+      trackingNumber: row.tracking_number_counterparty ?? undefined,
+      carrier: row.carrier_counterparty ?? undefined,
+    },
     proposerNotes: row.proposer_notes ?? undefined,
     counterpartyNotes: row.counterparty_notes ?? undefined,
+    completedAt: row.completed_at?.toISOString(),
+    disputedAt: row.disputed_at?.toISOString(),
+    disputeReason: row.dispute_reason ?? undefined,
     viewerRole: row.proposer_id === viewerId ? "proposer" : "counterparty",
     createdAt: row.created_at.toISOString(),
     updatedAt: row.updated_at.toISOString(),

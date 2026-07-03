@@ -378,7 +378,18 @@ export type TradeStatus =
   | "declined"
   | "countered"
   | "cancelled"
-  | "completed";
+  | "completed"
+  | "disputed";
+
+export type TradeShippingStatus = "pending" | "shipped" | "delivered";
+
+export type TradeCarrier = "ups" | "usps" | "fedex" | "dhl" | "other";
+
+export type TradeShippingSide = {
+  status: TradeShippingStatus;
+  trackingNumber?: string | undefined;
+  carrier?: TradeCarrier | undefined;
+};
 
 export type TradeItemSummary = {
   id: string;
@@ -401,8 +412,13 @@ export type Trade = {
   proposerItem: TradeItemSummary;
   counterpartyItem: TradeItemSummary;
   status: TradeStatus;
+  proposerShipping: TradeShippingSide;
+  counterpartyShipping: TradeShippingSide;
   proposerNotes?: string | undefined;
   counterpartyNotes?: string | undefined;
+  completedAt?: string | undefined;
+  disputedAt?: string | undefined;
+  disputeReason?: string | undefined;
   viewerRole: "proposer" | "counterparty";
   createdAt: string;
   updatedAt: string;
@@ -415,13 +431,22 @@ export type CreateTradeInput = {
 };
 
 export type UpdateTradeStatusInput = {
-  status: Extract<TradeStatus, "accepted" | "declined" | "cancelled" | "completed">;
+  status: Extract<TradeStatus, "accepted" | "declined" | "cancelled">;
 };
 
 export type CounterTradeInput = {
   proposerItemId: string;
   counterpartyItemId: string;
   counterpartyNotes?: string | undefined;
+};
+
+export type ShipTradeInput = {
+  trackingNumber: string;
+  carrier: TradeCarrier;
+};
+
+export type DisputeTradeInput = {
+  reason: string;
 };
 
 export type TradeSummary = {

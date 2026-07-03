@@ -205,6 +205,35 @@ export async function createMessageForConversation(
   return row ? mapMessage(row) : undefined;
 }
 
+export async function createTradeSystemMessage(
+  db: Queryable,
+  tradeId: string,
+  actorUserId: string,
+  content: string,
+): Promise<ConversationMessage | undefined> {
+  const context = await findTradeConversationContext(db, tradeId, actorUserId);
+  if (!context) {
+    return undefined;
+  }
+
+  const conversationId = await createOrFindConversation(db, context);
+  const row = await queryOne<MessageRow>(
+    db,
+    `
+      insert into messages (conversation_id, sender_id, content, type)
+      values ($1, $2, $3, 'system_event')
+      returning
+        messages.*,
+        (select display_name from users where users.id = messages.sender_id) as sender_display_name
+    `,
+    [conversationId, actorUserId, content],
+  );
+
+  await db.query("update conversations set updated_at = now() where id = $1", [conversationId]);
+
+  return row ? mapMessage(row) : undefined;
+}
+
 export async function markMessageReadForUser(
   db: Queryable,
   messageId: string,

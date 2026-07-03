@@ -19,7 +19,9 @@ import { apiRoutes } from "@ctn/api-contracts";
 import type {
   CreateTradeInput,
   CounterTradeInput,
+  DisputeTradeInput,
   SendMessageInput,
+  ShipTradeInput,
   RecommendationFeedbackRating,
   TradeStatus,
   TradeableItem,
@@ -71,12 +73,16 @@ export type ApiClient = {
   getTrade: (tradeId: string) => Promise<TradeResponse>;
   updateTradeStatus: (
     tradeId: string,
-    status: Extract<TradeStatus, "accepted" | "declined" | "cancelled" | "completed">,
+    status: Extract<TradeStatus, "accepted" | "declined" | "cancelled">,
   ) => Promise<TradeResponse>;
   counterTrade: (
     tradeId: string,
     input: CounterTradeInput,
   ) => Promise<TradeResponse>;
+  shipTrade: (tradeId: string, input: ShipTradeInput) => Promise<TradeResponse>;
+  receiveTrade: (tradeId: string) => Promise<TradeResponse>;
+  completeTrade: (tradeId: string) => Promise<TradeResponse>;
+  disputeTrade: (tradeId: string, input: DisputeTradeInput) => Promise<TradeResponse>;
   createConversation: (input: {
     contextType: "item" | "trade";
     contextId: string;
@@ -184,6 +190,26 @@ export function createApiClient(getAuthHeaders: AuthHeaderProvider): ApiClient {
           counterpartyItemId: input.counterpartyItemId,
           counterpartyNotes: input.counterpartyNotes,
         }),
+      }),
+    shipTrade: (tradeId, input) =>
+      request<TradeResponse>(`/v1/trades/${tradeId}/ship`, {
+        method: "PATCH",
+        body: JSON.stringify(input),
+      }),
+    receiveTrade: (tradeId) =>
+      request<TradeResponse>(`/v1/trades/${tradeId}/receive`, {
+        method: "PATCH",
+        body: JSON.stringify({}),
+      }),
+    completeTrade: (tradeId) =>
+      request<TradeResponse>(`/v1/trades/${tradeId}/complete`, {
+        method: "PATCH",
+        body: JSON.stringify({}),
+      }),
+    disputeTrade: (tradeId, input) =>
+      request<TradeResponse>(`/v1/trades/${tradeId}/dispute`, {
+        method: "POST",
+        body: JSON.stringify(input),
       }),
     createConversation: (input) =>
       request<ConversationResponse>(apiRoutes.conversations, {

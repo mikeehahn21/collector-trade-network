@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { Trade } from "@ctn/types";
 
-import { canUpdateTradeStatus } from "./trades.repository";
+import { canCompleteTrade, canReceiveTrade, canShipTrade, canUpdateTradeStatus } from "./trades.repository";
 
 const baseTrade: Trade = {
   id: "trade_1",
@@ -27,6 +27,12 @@ const baseTrade: Trade = {
     status: "tradeable",
   },
   status: "pending",
+  proposerShipping: {
+    status: "pending",
+  },
+  counterpartyShipping: {
+    status: "pending",
+  },
   viewerRole: "counterparty",
   createdAt: "2026-07-03T00:00:00.000Z",
   updatedAt: "2026-07-03T00:00:00.000Z",
@@ -43,10 +49,39 @@ describe("canUpdateTradeStatus", () => {
     expect(canUpdateTradeStatus(baseTrade, "user_counterparty", "cancelled")).toBe(false);
   });
 
-  it("allows either participant to complete accepted offers", () => {
+  it("allows each participant to ship only their own pending side", () => {
     const acceptedTrade = { ...baseTrade, status: "accepted" as const };
 
-    expect(canUpdateTradeStatus(acceptedTrade, "user_proposer", "completed")).toBe(true);
-    expect(canUpdateTradeStatus(acceptedTrade, "user_counterparty", "completed")).toBe(true);
+    expect(canShipTrade(acceptedTrade, "user_proposer")).toBe(true);
+    expect(canShipTrade(acceptedTrade, "user_counterparty")).toBe(true);
+    expect(
+      canShipTrade(
+        { ...acceptedTrade, proposerShipping: { status: "shipped" as const } },
+        "user_proposer",
+      ),
+    ).toBe(false);
+  });
+
+  it("allows a participant to receive only the shipped counterparty side", () => {
+    const acceptedTrade = {
+      ...baseTrade,
+      status: "accepted" as const,
+      proposerShipping: { status: "shipped" as const, trackingNumber: "1Z", carrier: "ups" as const },
+    };
+
+    expect(canReceiveTrade(acceptedTrade, "user_counterparty")).toBe(true);
+    expect(canReceiveTrade(acceptedTrade, "user_proposer")).toBe(false);
+  });
+
+  it("allows completion only after both sides are delivered", () => {
+    const deliveredTrade = {
+      ...baseTrade,
+      status: "accepted" as const,
+      proposerShipping: { status: "delivered" as const },
+      counterpartyShipping: { status: "delivered" as const },
+    };
+
+    expect(canCompleteTrade(deliveredTrade)).toBe(true);
+    expect(canCompleteTrade({ ...deliveredTrade, counterpartyShipping: { status: "shipped" as const } })).toBe(false);
   });
 });

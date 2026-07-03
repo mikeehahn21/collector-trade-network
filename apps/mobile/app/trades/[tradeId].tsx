@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Linking, Pressable, ScrollView, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
-import type { Trade, TradeStatus, TradeableItem } from "@ctn/types";
+import type { Trade, TradeCarrier, TradeShippingSide, TradeStatus, TradeableItem } from "@ctn/types";
 
 import { useApiClient } from "@/api/use-api-client";
 import { AppButton } from "@/components/app-button";
@@ -14,6 +14,22 @@ import { tradeStatusLabels } from "@/lib/trade-display";
 import { useCollectionState } from "@/state/collection-state";
 import { useTheme } from "@/theme/theme-provider";
 
+const carrierOptions: TradeCarrier[] = ["usps", "ups", "fedex", "dhl", "other"];
+
+const carrierLabels: Record<TradeCarrier, string> = {
+  dhl: "DHL",
+  fedex: "FedEx",
+  other: "Other",
+  ups: "UPS",
+  usps: "USPS",
+};
+
+const shippingStatusLabels: Record<TradeShippingSide["status"], string> = {
+  delivered: "Delivered",
+  pending: "Pending",
+  shipped: "Shipped",
+};
+
 export default function TradeDetailScreen() {
   const { tradeId } = useLocalSearchParams<{ tradeId: string }>();
   const api = useApiClient();
@@ -24,6 +40,9 @@ export default function TradeDetailScreen() {
   const [trade, setTrade] = useState<Trade | undefined>();
   const [selectedCounterItemId, setSelectedCounterItemId] = useState<string | undefined>();
   const [counterNotes, setCounterNotes] = useState("");
+  const [trackingNumber, setTrackingNumber] = useState("");
+  const [carrier, setCarrier] = useState<TradeCarrier>("usps");
+  const [disputeReason, setDisputeReason] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isWorking, setIsWorking] = useState(false);
   const [isOpeningConversation, setIsOpeningConversation] = useState(false);
@@ -54,7 +73,7 @@ export default function TradeDetailScreen() {
   }, [refresh]);
 
   async function updateStatus(
-    status: Extract<TradeStatus, "accepted" | "declined" | "cancelled" | "completed">,
+    status: Extract<TradeStatus, "accepted" | "declined" | "cancelled">,
   ) {
     if (!trade) {
       return;
@@ -117,6 +136,82 @@ export default function TradeDetailScreen() {
     }
   }
 
+  async function shipMyItem() {
+    if (!trade) {
+      return;
+    }
+
+    setIsWorking(true);
+    setError(undefined);
+
+    try {
+      const response = await apiRef.current.shipTrade(trade.id, {
+        trackingNumber,
+        carrier,
+      });
+      setTrade(response.trade);
+      setTrackingNumber("");
+    } catch {
+      setError("Shipping details could not be saved.");
+    } finally {
+      setIsWorking(false);
+    }
+  }
+
+  async function confirmReceipt() {
+    if (!trade) {
+      return;
+    }
+
+    setIsWorking(true);
+    setError(undefined);
+
+    try {
+      const response = await apiRef.current.receiveTrade(trade.id);
+      setTrade(response.trade);
+    } catch {
+      setError("Receipt could not be confirmed yet.");
+    } finally {
+      setIsWorking(false);
+    }
+  }
+
+  async function completeTrade() {
+    if (!trade) {
+      return;
+    }
+
+    setIsWorking(true);
+    setError(undefined);
+
+    try {
+      const response = await apiRef.current.completeTrade(trade.id);
+      setTrade(response.trade);
+    } catch {
+      setError("Both sides must confirm receipt before completion.");
+    } finally {
+      setIsWorking(false);
+    }
+  }
+
+  async function openDispute() {
+    if (!trade) {
+      return;
+    }
+
+    setIsWorking(true);
+    setError(undefined);
+
+    try {
+      const response = await apiRef.current.disputeTrade(trade.id, { reason: disputeReason });
+      setTrade(response.trade);
+    } catch {
+      setError("Dispute could not be opened with that reason.");
+    } finally {
+      setIsWorking(false);
+    }
+  }
+
   if (isLoading) {
     return (
       <Screen>
@@ -140,6 +235,19 @@ export default function TradeDetailScreen() {
 
   const canCounter =
     trade.viewerRole === "counterparty" && ["pending", "countered"].includes(trade.status);
+  const myShipping =
+    trade.viewerRole === "proposer" ? trade.proposerShipping : trade.counterpartyShipping;
+  const theirShipping =
+    trade.viewerRole === "proposer" ? trade.counterpartyShipping : trade.proposerShipping;
+  const canShip = trade.status === "accepted" && myShipping.status === "pending";
+  const canReceive = trade.status === "accepted" && theirShipping.status === "shipped";
+  const canComplete =
+    trade.status === "accepted" &&
+    trade.proposerShipping.status === "delivered" &&
+    trade.counterpartyShipping.status === "delivered";
+  const canDispute =
+    trade.status === "accepted" &&
+    (trade.proposerShipping.status !== "pending" || trade.counterpartyShipping.status !== "pending");
 
   return (
     <Screen>
@@ -152,7 +260,7 @@ export default function TradeDetailScreen() {
             Trade details
           </Text>
           <Text style={{ color: theme.colors.textSecondary, fontSize: 16, lineHeight: 24 }}>
-            Review both sides before taking action. Shipping and disputes are not part of this sprint.
+            Track shipping, confirm receipt, and complete the trade only after both sides arrive.
           </Text>
         </View>
 
@@ -199,6 +307,66 @@ export default function TradeDetailScreen() {
             ]}
             title="Notes"
           />
+        ) : null}
+
+        {["accepted", "completed", "disputed"].includes(trade.status) ? (
+          <View
+            style={{
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border,
+              borderRadius: theme.radius.lg,
+              borderWidth: 1,
+              gap: theme.spacing.md,
+              padding: theme.spacing.lg,
+            }}
+          >
+            <Text style={{ color: theme.colors.textPrimary, fontSize: 20, fontWeight: "900" }}>
+              Shipping tracker
+            </Text>
+            <ShippingProgress label="Your item" shipping={myShipping} />
+            <ShippingProgress label="Their item" shipping={theirShipping} />
+          </View>
+        ) : null}
+
+        {canShip ? (
+          <View
+            style={{
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border,
+              borderRadius: theme.radius.lg,
+              borderWidth: 1,
+              gap: theme.spacing.md,
+              padding: theme.spacing.lg,
+            }}
+          >
+            <Text style={{ color: theme.colors.textPrimary, fontSize: 19, fontWeight: "900" }}>
+              Add tracking
+            </Text>
+            <AppTextField
+              label="Tracking number"
+              onChangeText={setTrackingNumber}
+              placeholder="Enter the carrier tracking number."
+              value={trackingNumber}
+            />
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: theme.spacing.sm }}>
+              {carrierOptions.map((option) => (
+                <CarrierChoice
+                  carrier={option}
+                  isSelected={carrier === option}
+                  key={option}
+                  onPress={() => setCarrier(option)}
+                />
+              ))}
+            </View>
+            <AppButton
+              accessibilityLabel="I've shipped my item"
+              disabled={!trackingNumber.trim()}
+              loading={isWorking}
+              onPress={() => void shipMyItem()}
+            >
+              I've Shipped My Item
+            </AppButton>
+          </View>
         ) : null}
 
         {canCounter ? (
@@ -255,6 +423,48 @@ export default function TradeDetailScreen() {
             Open Trade Conversation
           </AppButton>
 
+          {canReceive ? (
+            <AppButton
+              accessibilityLabel="I've received the item"
+              loading={isWorking}
+              onPress={() => void confirmReceipt()}
+            >
+              I've Received the Item
+            </AppButton>
+          ) : null}
+
+          {canComplete ? (
+            <AppButton
+              accessibilityLabel="Complete trade"
+              loading={isWorking}
+              onPress={() => void completeTrade()}
+            >
+              Complete Trade
+            </AppButton>
+          ) : null}
+
+          {canDispute ? (
+            <View style={{ gap: theme.spacing.md }}>
+              <AppTextField
+                label="Dispute reason"
+                multiline
+                onChangeText={setDisputeReason}
+                placeholder="Describe the issue clearly."
+                style={{ minHeight: 92, textAlignVertical: "top" }}
+                value={disputeReason}
+              />
+              <AppButton
+                accessibilityLabel="Report an issue"
+                disabled={disputeReason.trim().length < 10}
+                loading={isWorking}
+                onPress={() => void openDispute()}
+                variant="secondary"
+              >
+                Report an Issue
+              </AppButton>
+            </View>
+          ) : null}
+
           {trade.viewerRole === "counterparty" && ["pending", "countered"].includes(trade.status) ? (
             <>
               <AppButton
@@ -283,16 +493,6 @@ export default function TradeDetailScreen() {
               variant="secondary"
             >
               Cancel Offer
-            </AppButton>
-          ) : null}
-
-          {trade.status === "accepted" ? (
-            <AppButton
-              accessibilityLabel="Mark trade completed"
-              loading={isWorking}
-              onPress={() => void updateStatus("completed")}
-            >
-              Mark Completed
             </AppButton>
           ) : null}
 
@@ -374,6 +574,103 @@ function CounterItemChoice({
       </Text>
     </Pressable>
   );
+}
+
+function ShippingProgress({ label, shipping }: { label: string; shipping: TradeShippingSide }) {
+  const theme = useTheme();
+  const steps: TradeShippingSide["status"][] = ["pending", "shipped", "delivered"];
+  const activeIndex = steps.indexOf(shipping.status);
+
+  return (
+    <View style={{ gap: theme.spacing.sm }}>
+      <View style={{ flexDirection: "row", justifyContent: "space-between", gap: theme.spacing.md }}>
+        <Text style={{ color: theme.colors.textPrimary, fontSize: 16, fontWeight: "900" }}>{label}</Text>
+        <Text style={{ color: theme.colors.accent, fontSize: 13, fontWeight: "900" }}>
+          {shippingStatusLabels[shipping.status]}
+        </Text>
+      </View>
+      <View style={{ flexDirection: "row", gap: theme.spacing.sm }}>
+        {steps.map((step, index) => (
+          <View
+            key={step}
+            style={{
+              backgroundColor: index <= activeIndex ? theme.colors.accent : theme.colors.surfaceElevated,
+              borderRadius: 999,
+              flex: 1,
+              height: 8,
+            }}
+          />
+        ))}
+      </View>
+      {shipping.trackingNumber ? (
+        <Pressable
+          accessibilityLabel={`Open ${carrierLabels[shipping.carrier ?? "other"]} tracking`}
+          accessibilityRole="link"
+          onPress={() => {
+            void Linking.openURL(getTrackingUrl(shipping.carrier ?? "other", shipping.trackingNumber ?? ""));
+          }}
+        >
+          <Text style={{ color: theme.colors.textSecondary, fontSize: 13, textDecorationLine: "underline" }}>
+            {carrierLabels[shipping.carrier ?? "other"]}: {shipping.trackingNumber}
+          </Text>
+        </Pressable>
+      ) : null}
+    </View>
+  );
+}
+
+function CarrierChoice({
+  carrier,
+  isSelected,
+  onPress,
+}: {
+  carrier: TradeCarrier;
+  isSelected: boolean;
+  onPress: () => void;
+}) {
+  const theme = useTheme();
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ selected: isSelected }}
+      onPress={onPress}
+      style={{
+        backgroundColor: isSelected ? theme.colors.accentMuted : theme.colors.surfaceElevated,
+        borderColor: isSelected ? theme.colors.accent : theme.colors.border,
+        borderRadius: theme.radius.md,
+        borderWidth: 1,
+        paddingHorizontal: theme.spacing.md,
+        paddingVertical: theme.spacing.sm,
+      }}
+    >
+      <Text style={{ color: theme.colors.textPrimary, fontSize: 13, fontWeight: "800" }}>
+        {carrierLabels[carrier]}
+      </Text>
+    </Pressable>
+  );
+}
+
+function getTrackingUrl(carrier: TradeCarrier, trackingNumber: string): string {
+  const encoded = encodeURIComponent(trackingNumber);
+
+  if (carrier === "ups") {
+    return `https://www.ups.com/track?tracknum=${encoded}`;
+  }
+
+  if (carrier === "fedex") {
+    return `https://www.fedex.com/fedextrack/?trknbr=${encoded}`;
+  }
+
+  if (carrier === "dhl") {
+    return `https://www.dhl.com/us-en/home/tracking.html?tracking-id=${encoded}`;
+  }
+
+  if (carrier === "usps") {
+    return `https://tools.usps.com/go/TrackConfirmAction?tLabels=${encoded}`;
+  }
+
+  return `https://www.google.com/search?q=${encoded}+tracking`;
 }
 
 function DetailPanel({ rows, title }: { rows: [string, string][]; title: string }) {

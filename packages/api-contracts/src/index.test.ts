@@ -40,6 +40,13 @@ describe("api contracts", () => {
     expect(apiRoutes.tradeCounter).toBe("/v1/trades/:tradeId/counter");
   });
 
+  it("defines Sprint 10 trade execution routes", () => {
+    expect(apiRoutes.tradeShip).toBe("/v1/trades/:tradeId/ship");
+    expect(apiRoutes.tradeReceive).toBe("/v1/trades/:tradeId/receive");
+    expect(apiRoutes.tradeComplete).toBe("/v1/trades/:tradeId/complete");
+    expect(apiRoutes.tradeDispute).toBe("/v1/trades/:tradeId/dispute");
+  });
+
   it("defines Sprint 9 contextual conversation routes", () => {
     expect(apiRoutes.conversations).toBe("/v1/conversations");
     expect(apiRoutes.conversationMessages).toBe("/v1/conversations/:conversationId/messages");

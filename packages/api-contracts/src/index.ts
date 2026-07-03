@@ -27,6 +27,8 @@ import {
   conversationTypingSchema,
   counterTradeSchema,
   createTradeSchema,
+  disputeTradeSchema,
+  shipTradeSchema,
   updateTradeStatusSchema,
   wishlistItemDraftSchema,
   wishlistItemPublishSchema,
@@ -51,6 +53,10 @@ export const apiRoutes = {
   tradeById: "/v1/trades/:tradeId",
   tradeStatus: "/v1/trades/:tradeId/status",
   tradeCounter: "/v1/trades/:tradeId/counter",
+  tradeShip: "/v1/trades/:tradeId/ship",
+  tradeReceive: "/v1/trades/:tradeId/receive",
+  tradeComplete: "/v1/trades/:tradeId/complete",
+  tradeDispute: "/v1/trades/:tradeId/dispute",
   conversations: "/v1/conversations",
   conversationMessages: "/v1/conversations/:conversationId/messages",
   messageRead: "/v1/messages/:messageId/read",
@@ -127,6 +133,28 @@ export const counterTradeContract = {
   method: "POST",
   path: apiRoutes.tradeCounter,
   body: counterTradeSchema,
+} as const;
+
+export const shipTradeContract = {
+  method: "PATCH",
+  path: apiRoutes.tradeShip,
+  body: shipTradeSchema,
+} as const;
+
+export const receiveTradeContract = {
+  method: "PATCH",
+  path: apiRoutes.tradeReceive,
+} as const;
+
+export const completeTradeContract = {
+  method: "PATCH",
+  path: apiRoutes.tradeComplete,
+} as const;
+
+export const disputeTradeContract = {
+  method: "POST",
+  path: apiRoutes.tradeDispute,
+  body: disputeTradeSchema,
 } as const;
 
 export const createConversationContract = {

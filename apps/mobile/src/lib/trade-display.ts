@@ -6,9 +6,10 @@ export const tradeStatusLabels: Record<TradeStatus, string> = {
   completed: "Completed",
   countered: "Countered",
   declined: "Declined",
+  disputed: "Disputed",
   pending: "Pending",
 };
 
 export function isTradeHistorical(status: TradeStatus): boolean {
-  return ["cancelled", "completed", "declined"].includes(status);
+  return ["cancelled", "completed", "declined", "disputed"].includes(status);
 }
