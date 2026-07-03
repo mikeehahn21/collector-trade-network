@@ -1,8 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { Alert, ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
-import type { RecommendationItemSummary, TradeRecommendation } from "@ctn/types";
+import type {
+  RecommendationFeedbackRating,
+  RecommendationItemSummary,
+  TradeRecommendation,
+} from "@ctn/types";
 
 import { useApiClient } from "@/api/use-api-client";
 import { AppButton } from "@/components/app-button";
@@ -24,8 +28,11 @@ export default function RecommendationDetailScreen() {
   const router = useRouter();
   const theme = useTheme();
   const [recommendation, setRecommendation] = useState<TradeRecommendation | undefined>();
+  const [feedbackRating, setFeedbackRating] = useState<RecommendationFeedbackRating | undefined>();
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | undefined>();
+  const [feedbackError, setFeedbackError] = useState<string | undefined>();
 
   useEffect(() => {
     apiRef.current = api;
@@ -85,20 +92,33 @@ export default function RecommendationDetailScreen() {
     );
   }
 
-  const primaryItem = recommendation.yourMatchingItems[0] ?? recommendation.theirMatchingItems[0];
+  const primaryItem = recommendation.theirMatchingItems[0] ?? recommendation.yourMatchingItems[0];
 
   function viewItem() {
-    const ownItem = recommendation?.yourMatchingItems[0];
+    if (primaryItem) {
+      router.push(`/items/${primaryItem.id}`);
+    }
+  }
 
-    if (ownItem) {
-      router.push(`/inventory/${ownItem.id}`);
+  async function submitFeedback(rating: RecommendationFeedbackRating) {
+    if (!recommendation) {
       return;
     }
 
-    Alert.alert(
-      "Public item view coming next",
-      "This match is based on another collector's item. Public item detail should ship before offers.",
-    );
+    setIsSubmittingFeedback(true);
+    setFeedbackError(undefined);
+
+    try {
+      await apiRef.current.submitRecommendationFeedback(recommendation.id, {
+        rating,
+        targetItemId: primaryItem?.id,
+      });
+      setFeedbackRating(rating);
+    } catch {
+      setFeedbackError("We could not save that feedback. Try again shortly.");
+    } finally {
+      setIsSubmittingFeedback(false);
+    }
   }
 
   return (
@@ -168,6 +188,45 @@ export default function RecommendationDetailScreen() {
             Why this exists
           </Text>
           <ReasonList reasons={recommendation.reasons} />
+        </View>
+
+        <View
+          style={{
+            backgroundColor: theme.colors.surface,
+            borderColor: theme.colors.border,
+            borderRadius: theme.radius.lg,
+            borderWidth: 1,
+            gap: theme.spacing.md,
+            padding: theme.spacing.lg,
+          }}
+        >
+          <Text style={{ color: theme.colors.textPrimary, fontSize: 19, fontWeight: "900" }}>
+            Recommendation quality
+          </Text>
+          <Text style={{ color: theme.colors.textSecondary, fontSize: 15, lineHeight: 22 }}>
+            Your feedback helps tune future matches without changing this recommendation.
+          </Text>
+          <View style={{ flexDirection: "row", gap: theme.spacing.md }}>
+            <AppButton
+              accessibilityLabel="Mark recommendation helpful"
+              disabled={isSubmittingFeedback}
+              onPress={() => void submitFeedback("helpful")}
+              variant={feedbackRating === "helpful" ? "primary" : "secondary"}
+            >
+              Helpful
+            </AppButton>
+            <AppButton
+              accessibilityLabel="Mark recommendation not relevant"
+              disabled={isSubmittingFeedback}
+              onPress={() => void submitFeedback("not_relevant")}
+              variant={feedbackRating === "not_relevant" ? "primary" : "secondary"}
+            >
+              Not relevant
+            </AppButton>
+          </View>
+          {feedbackError ? (
+            <Text style={{ color: theme.colors.warning, fontSize: 14 }}>{feedbackError}</Text>
+          ) : null}
         </View>
 
         <View style={{ gap: theme.spacing.md }}>

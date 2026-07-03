@@ -1,4 +1,14 @@
-import type { ApiHealth, TradeableItem, TradeRecommendation, RecommendationSummary, UserProfile, WishlistItem } from "@ctn/types";
+import type {
+  ApiHealth,
+  PublicTradeableItem,
+  RecommendationFeedback,
+  RecommendationFeedbackMetrics,
+  RecommendationSummary,
+  TradeableItem,
+  TradeRecommendation,
+  UserProfile,
+  WishlistItem,
+} from "@ctn/types";
 
 import {
   accessRequestSchema,
@@ -6,6 +16,7 @@ import {
   inviteCodeSchema,
   tradeableItemDraftSchema,
   tradeableItemPublishSchema,
+  recommendationFeedbackSchema,
   wishlistItemDraftSchema,
   wishlistItemPublishSchema,
 } from "@ctn/validation";
@@ -16,12 +27,15 @@ export const apiRoutes = {
   inviteCode: "/v1/access/invite-code",
   items: "/v1/items",
   itemById: "/v1/items/:itemId",
+  publicItemById: "/v1/public/items/:itemId",
   itemAiSuggestions: "/v1/items/ai-suggestions",
   wishlistItems: "/v1/wishlist-items",
   wishlistItemById: "/v1/wishlist-items/:wishlistItemId",
   me: "/v1/me",
   recommendations: "/v1/recommendations",
   recommendationById: "/v1/recommendations/:recommendationId",
+  recommendationFeedback: "/v1/recommendations/:recommendationId/feedback",
+  recommendationFeedbackMetrics: "/v1/admin/recommendation-feedback/metrics",
 } as const;
 
 export const healthContract = {
@@ -72,6 +86,12 @@ export const itemAiSuggestionContract = {
   body: tradeableItemDraftSchema.pick({ photos: true, title: true, category: true, size: true }),
 } as const;
 
+export const recommendationFeedbackContract = {
+  method: "POST",
+  path: apiRoutes.recommendationFeedback,
+  body: recommendationFeedbackSchema,
+} as const;
+
 export const wishlistItemDraftContract = {
   method: "POST",
   path: apiRoutes.wishlistItems,
@@ -96,6 +116,10 @@ export type ItemResponse = {
   item: TradeableItem;
 };
 
+export type PublicItemResponse = {
+  item: PublicTradeableItem;
+};
+
 export type WishlistItemsResponse = {
   wishlistItems: WishlistItem[];
 };
@@ -111,4 +135,12 @@ export type RecommendationsResponse = {
 
 export type RecommendationResponse = {
   recommendation: TradeRecommendation;
+};
+
+export type RecommendationFeedbackResponse = {
+  feedback: RecommendationFeedback;
+};
+
+export type RecommendationFeedbackMetricsResponse = {
+  metrics: RecommendationFeedbackMetrics;
 };

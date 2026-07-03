@@ -135,6 +135,17 @@ export type TradeableItem = {
   archivedAt?: string | undefined;
 };
 
+export type PublicCollectorSummary = {
+  id: string;
+  displayName: string;
+  locationRegion?: string | undefined;
+  roles: UserRole[];
+};
+
+export type PublicTradeableItem = TradeableItem & {
+  owner: PublicCollectorSummary;
+};
+
 export type AiListingSuggestions = {
   title?: string | undefined;
   category?: VintageCategory | undefined;
@@ -262,6 +273,41 @@ export type RecommendationSummary = {
   grailMatches: number;
   mutualMatches: number;
   newMatches: number;
+};
+
+export type RecommendationFeedbackRating = "helpful" | "not_relevant";
+
+export type RecommendationFeedbackReason =
+  | "strong_match"
+  | "wrong_category"
+  | "wrong_size"
+  | "not_interested"
+  | "already_seen"
+  | "other";
+
+export type RecommendationFeedback = {
+  id: string;
+  userId: string;
+  recommendationId: string;
+  counterpartyId: string;
+  targetItemId?: string | undefined;
+  rating: RecommendationFeedbackRating;
+  reason?: RecommendationFeedbackReason | undefined;
+  notes?: string | undefined;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type RecommendationFeedbackMetrics = {
+  totalFeedback: number;
+  helpfulCount: number;
+  notRelevantCount: number;
+  helpfulRate: number;
+  topNegativeReasons: Array<{
+    reason: RecommendationFeedbackReason;
+    count: number;
+  }>;
+  latestFeedbackAt?: string | undefined;
 };
 
 export type OnboardingProfile = {

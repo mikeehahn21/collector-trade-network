@@ -4,6 +4,7 @@ import {
   accessRequestSchema,
   conversationContextSchema,
   onboardingPreferencesSchema,
+  recommendationFeedbackSchema,
   tradeableItemDraftSchema,
   tradeableItemPublishSchema,
   wishlistItemDraftSchema,
@@ -56,5 +57,14 @@ describe("validation", () => {
 
   it("requires title and category for active wishlist wants", () => {
     expect(() => wishlistItemPublishSchema.parse({ title: "Mosquitohead", priority: "high" })).toThrow();
+  });
+
+  it("accepts concise recommendation feedback", () => {
+    expect(() =>
+      recommendationFeedbackSchema.parse({
+        rating: "not_relevant",
+        reason: "wrong_size",
+      }),
+    ).not.toThrow();
   });
 });

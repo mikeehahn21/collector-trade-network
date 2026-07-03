@@ -24,4 +24,12 @@ describe("api contracts", () => {
   it("defines Sprint 6 recommendation routes", () => {
     expect(apiRoutes.recommendations).toBe("/v1/recommendations");
   });
+
+  it("defines Sprint 7 item inspection and feedback routes", () => {
+    expect(apiRoutes.publicItemById).toBe("/v1/public/items/:itemId");
+    expect(apiRoutes.recommendationFeedback).toBe("/v1/recommendations/:recommendationId/feedback");
+    expect(apiRoutes.recommendationFeedbackMetrics).toBe(
+      "/v1/admin/recommendation-feedback/metrics",
+    );
+  });
 });

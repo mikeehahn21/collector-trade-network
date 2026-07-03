@@ -2,13 +2,15 @@ import type {
   ItemResponse,
   ItemsResponse,
   MeResponse,
+  PublicItemResponse,
+  RecommendationFeedbackResponse,
   RecommendationResponse,
   RecommendationsResponse,
   WishlistItemResponse,
   WishlistItemsResponse,
 } from "@ctn/api-contracts";
 import { apiRoutes } from "@ctn/api-contracts";
-import type { TradeableItem, UserProfile, WishlistItem } from "@ctn/types";
+import type { RecommendationFeedbackRating, TradeableItem, UserProfile, WishlistItem } from "@ctn/types";
 
 import { getMobileEnv } from "@/config/env";
 
@@ -31,6 +33,7 @@ export type ApiClient = {
   publishItem: (item: Partial<TradeableItem>) => Promise<ItemResponse>;
   updateItem: (itemId: string, item: Partial<TradeableItem>) => Promise<ItemResponse>;
   deleteItem: (itemId: string) => Promise<void>;
+  getPublicItem: (itemId: string) => Promise<PublicItemResponse>;
   listWishlistItems: () => Promise<WishlistItemsResponse>;
   createWishlistItem: (item: Partial<WishlistItem>) => Promise<WishlistItemResponse>;
   publishWishlistItem: (item: Partial<WishlistItem>) => Promise<WishlistItemResponse>;
@@ -41,6 +44,13 @@ export type ApiClient = {
   deleteWishlistItem: (wishlistItemId: string) => Promise<void>;
   listRecommendations: () => Promise<RecommendationsResponse>;
   getRecommendation: (recommendationId: string) => Promise<RecommendationResponse>;
+  submitRecommendationFeedback: (
+    recommendationId: string,
+    input: {
+      rating: RecommendationFeedbackRating;
+      targetItemId?: string | undefined;
+    },
+  ) => Promise<RecommendationFeedbackResponse>;
 };
 
 export function createApiClient(getAuthHeaders: AuthHeaderProvider): ApiClient {
@@ -88,6 +98,7 @@ export function createApiClient(getAuthHeaders: AuthHeaderProvider): ApiClient {
     updateItem: (itemId, item) =>
       request<ItemResponse>(`/v1/items/${itemId}`, { method: "PUT", body: JSON.stringify(item) }),
     deleteItem: (itemId) => request<void>(`/v1/items/${itemId}`, { method: "DELETE" }),
+    getPublicItem: (itemId) => request<PublicItemResponse>(`/v1/public/items/${itemId}`),
     listWishlistItems: () => request<WishlistItemsResponse>(apiRoutes.wishlistItems),
     createWishlistItem: (item) =>
       request<WishlistItemResponse>(apiRoutes.wishlistItems, {
@@ -109,6 +120,11 @@ export function createApiClient(getAuthHeaders: AuthHeaderProvider): ApiClient {
     listRecommendations: () => request<RecommendationsResponse>(apiRoutes.recommendations),
     getRecommendation: (recommendationId) =>
       request<RecommendationResponse>(`/v1/recommendations/${recommendationId}`),
+    submitRecommendationFeedback: (recommendationId, input) =>
+      request<RecommendationFeedbackResponse>(`/v1/recommendations/${recommendationId}/feedback`, {
+        method: "POST",
+        body: JSON.stringify(input),
+      }),
   };
 }
 

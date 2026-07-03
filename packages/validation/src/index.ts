@@ -167,6 +167,24 @@ export const wishlistItemPublishSchema = wishlistItemDraftSchema.extend({
   category: vintageCategorySchema,
 });
 
+export const recommendationFeedbackRatingSchema = z.enum(["helpful", "not_relevant"]);
+
+export const recommendationFeedbackReasonSchema = z.enum([
+  "strong_match",
+  "wrong_category",
+  "wrong_size",
+  "not_interested",
+  "already_seen",
+  "other",
+]);
+
+export const recommendationFeedbackSchema = z.object({
+  rating: recommendationFeedbackRatingSchema,
+  reason: recommendationFeedbackReasonSchema.optional(),
+  notes: z.string().trim().max(500).optional(),
+  targetItemId: z.string().uuid().optional(),
+});
+
 export const accessRequestSchema = z.object({
   name: z.string().trim().min(2).max(80),
   email: z.string().trim().email(),

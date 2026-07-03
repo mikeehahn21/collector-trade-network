@@ -4,6 +4,7 @@ import type {
   ItemPhoto,
   ItemStatus,
   ItemVisibility,
+  PublicTradeableItem,
   ShirtSize,
   TradeOfferPreference,
   TradeableItem,
@@ -47,6 +48,12 @@ type ItemPhotoRow = {
   kind: ItemPhoto["kind"];
   sort_order: number;
   created_at: Date;
+};
+
+type PublicItemRow = ItemRow & {
+  owner_display_name: string;
+  owner_location_region: string | null;
+  owner_roles: PublicTradeableItem["owner"]["roles"];
 };
 
 export type PersistItemInput = Omit<
@@ -95,6 +102,51 @@ export async function findItemByOwner(
   );
 
   return mapItem(row, photos);
+}
+
+export async function findVisiblePublicItem(
+  db: Queryable,
+  itemId: string,
+  viewer: { id: string; roles: PublicTradeableItem["owner"]["roles"] },
+): Promise<PublicTradeableItem | undefined> {
+  const row = await queryOne<PublicItemRow>(
+    db,
+    `
+      select
+        items.*,
+        users.display_name as owner_display_name,
+        users.location_region as owner_location_region,
+        users.roles as owner_roles
+      from items
+      join users on users.id = items.owner_id
+      where items.id = $1
+        and items.status = 'tradeable'
+        and items.archived_at is null
+        and users.access_status = 'active'
+    `,
+    [itemId],
+  );
+
+  if (!row || !canViewItem(row, viewer)) {
+    return undefined;
+  }
+
+  const photos = await queryMany<ItemPhotoRow>(
+    db,
+    "select * from item_photos where item_id = $1 order by sort_order asc",
+    [itemId],
+  );
+  const item = mapItem(row, photos);
+
+  return {
+    ...item,
+    owner: {
+      id: row.owner_id,
+      displayName: row.owner_display_name,
+      locationRegion: row.owner_location_region ?? undefined,
+      roles: row.owner_roles,
+    },
+  };
 }
 
 export async function createItemForOwner(
@@ -255,4 +307,25 @@ function mapItem(row: ItemRow, photos: ItemPhotoRow[]): TradeableItem {
     publishedAt: row.published_at?.toISOString(),
     archivedAt: row.archived_at?.toISOString(),
   };
+}
+
+function canViewItem(
+  item: Pick<ItemRow, "owner_id" | "visibility">,
+  viewer: { id: string; roles: PublicTradeableItem["owner"]["roles"] },
+): boolean {
+  if (item.owner_id === viewer.id) {
+    return true;
+  }
+
+  if (item.visibility === "approved_members") {
+    return true;
+  }
+
+  if (item.visibility === "verified_members") {
+    return viewer.roles.some((role) =>
+      ["admin", "verified_collector", "verified_seller"].includes(role),
+    );
+  }
+
+  return false;
 }

@@ -13,6 +13,7 @@ import {
   createItemForOwner,
   deleteItemForOwner,
   findItemByOwner,
+  findVisiblePublicItem,
   listItemsByOwner,
   updateItemForOwner,
   type PersistItemInput,
@@ -70,6 +71,21 @@ export async function registerItemRoutes(
 
     if (!item) {
       return reply.status(404).send({ code: "ITEM_NOT_FOUND", message: "Item not found." });
+    }
+
+    return reply.status(200).send({ item });
+  });
+
+  app.get("/v1/public/items/:itemId", async (request, reply) => {
+    const user = await requireCurrentUser(request, services);
+    const itemId = (request.params as { itemId: string }).itemId;
+    const item = await findVisiblePublicItem(services.db, itemId, {
+      id: user.id,
+      roles: user.roles,
+    });
+
+    if (!item) {
+      return reply.status(404).send({ code: "PUBLIC_ITEM_NOT_FOUND", message: "Item not found." });
     }
 
     return reply.status(200).send({ item });
