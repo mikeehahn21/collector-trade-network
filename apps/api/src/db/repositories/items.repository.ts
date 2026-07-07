@@ -61,6 +61,8 @@ type PublicItemRow = ItemRow & {
   owner_display_name: string;
   owner_location_region: string | null;
   owner_roles: PublicTradeableItem["owner"]["roles"];
+  owner_trust_score: number;
+  owner_is_elite: boolean;
 };
 
 export type PersistItemInput = Omit<
@@ -138,7 +140,9 @@ export async function findVisiblePublicItem(
         items.*,
         users.display_name as owner_display_name,
         users.location_region as owner_location_region,
-        users.roles as owner_roles
+        users.roles as owner_roles,
+        users.trust_score as owner_trust_score,
+        users.is_elite as owner_is_elite
       from items
       join users on users.id = items.owner_id
       where items.id = $1
@@ -168,6 +172,8 @@ export async function findVisiblePublicItem(
       displayName: row.owner_display_name,
       locationRegion: row.owner_location_region ?? undefined,
       roles: row.owner_roles,
+      trustScore: row.owner_trust_score ?? 50,
+      isElite: row.owner_is_elite ?? false,
     },
   };
 }

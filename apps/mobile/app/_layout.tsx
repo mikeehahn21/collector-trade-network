@@ -7,6 +7,7 @@ import { MobileAuthProvider } from "@/auth/clerk-provider";
 import { ProtectedRouteGuard } from "@/auth/protected-route-guard";
 import { CollectionStateProvider } from "@/state/collection-state";
 import { OnboardingStateProvider } from "@/state/onboarding-state";
+import { UserProfileProvider } from "@/state/user-profile-state";
 import { WishlistStateProvider } from "@/state/wishlist-state";
 import { DataSyncBootstrap } from "@/sync/data-sync-bootstrap";
 import { ThemeProvider, useTheme } from "@/theme/theme-provider";
@@ -38,11 +39,13 @@ export default function RootLayout() {
         <MobileAuthProvider>
           <OnboardingStateProvider>
             <CollectionStateProvider>
-              <WishlistStateProvider>
-                <ProtectedRouteGuard />
-                <DataSyncBootstrap />
-                <RootNavigator />
-              </WishlistStateProvider>
+              <UserProfileProvider>
+                <WishlistStateProvider>
+                  <ProtectedRouteGuard />
+                  <DataSyncBootstrap />
+                  <RootNavigator />
+                </WishlistStateProvider>
+              </UserProfileProvider>
             </CollectionStateProvider>
           </OnboardingStateProvider>
         </MobileAuthProvider>

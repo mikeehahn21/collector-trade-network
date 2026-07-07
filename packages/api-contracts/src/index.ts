@@ -56,6 +56,8 @@ export const apiRoutes = {
   recommendationById: "/v1/recommendations/:recommendationId",
   recommendationFeedback: "/v1/recommendations/:recommendationId/feedback",
   recommendationFeedbackMetrics: "/v1/admin/recommendation-feedback/metrics",
+  reputationMetrics: "/v1/admin/reputation/metrics",
+  reputationRecalculate: "/v1/admin/reputation/recalculate",
   trades: "/v1/trades",
   tradeById: "/v1/trades/:tradeId",
   tradeStatus: "/v1/trades/:tradeId/status",
@@ -293,4 +295,24 @@ export type ConversationMessagesResponse = {
 
 export type ConversationMessageResponse = {
   message: ConversationMessage;
+};
+
+import type { ReputationMetrics } from "@ctn/types";
+
+export const reputationMetricsContract = {
+  method: "GET",
+  path: apiRoutes.reputationMetrics,
+} as const;
+
+export const reputationRecalculateContract = {
+  method: "POST",
+  path: apiRoutes.reputationRecalculate,
+} as const;
+
+export type ReputationMetricsResponse = {
+  metrics: ReputationMetrics;
+};
+
+export type ReputationRecalculateResponse = {
+  status: "queued";
 };

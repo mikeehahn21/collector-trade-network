@@ -13,6 +13,9 @@ type UserRow = {
   social_handle: string | null;
   access_status: UserAccessStatus;
   roles: UserRole[];
+  trust_score: number;
+  is_elite: boolean;
+  reputation_updated_at: Date;
   created_at: Date;
   updated_at: Date;
 };
@@ -92,6 +95,9 @@ export function mapUser(row: UserRow): UserProfile {
     socialHandle: row.social_handle ?? undefined,
     accessStatus: row.access_status,
     roles: row.roles,
+    trustScore: row.trust_score ?? 50,
+    isElite: row.is_elite ?? false,
+    reputationUpdatedAt: (row.reputation_updated_at ?? new Date()).toISOString(),
     createdAt: row.created_at.toISOString(),
     updatedAt: row.updated_at.toISOString(),
   };

@@ -12,6 +12,8 @@ import type {
   RecommendationFeedbackResponse,
   RecommendationResponse,
   RecommendationsResponse,
+  ReputationMetricsResponse,
+  ReputationRecalculateResponse,
   TradeResponse,
   TradesResponse,
   WishlistItemResponse,
@@ -100,6 +102,8 @@ export type ApiClient = {
   ) => Promise<ConversationMessageResponse>;
   markMessageRead: (messageId: string) => Promise<void>;
   markConversationTyping: (conversationId: string) => Promise<void>;
+  getReputationMetrics: () => Promise<ReputationMetricsResponse>;
+  recalculateReputation: () => Promise<ReputationRecalculateResponse>;
 };
 
 export function createApiClient(getAuthHeaders: AuthHeaderProvider): ApiClient {
@@ -242,6 +246,12 @@ export function createApiClient(getAuthHeaders: AuthHeaderProvider): ApiClient {
       request<void>(apiRoutes.conversationTyping, {
         method: "POST",
         body: JSON.stringify({ conversationId }),
+      }),
+    getReputationMetrics: () => request<ReputationMetricsResponse>(apiRoutes.reputationMetrics),
+    recalculateReputation: () =>
+      request<ReputationRecalculateResponse>(apiRoutes.reputationRecalculate, {
+        method: "POST",
+        body: JSON.stringify({}),
       }),
   };
 }

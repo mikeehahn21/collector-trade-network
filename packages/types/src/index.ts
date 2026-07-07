@@ -16,6 +16,9 @@ export type UserProfile = {
   socialHandle?: string | undefined;
   accessStatus: UserAccessStatus;
   roles: UserRole[];
+  trustScore: number;
+  isElite: boolean;
+  reputationUpdatedAt: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -197,6 +200,8 @@ export type PublicCollectorSummary = {
   displayName: string;
   locationRegion?: string | undefined;
   roles: UserRole[];
+  trustScore: number;
+  isElite: boolean;
 };
 
 export type PublicTradeableItem = TradeableItem & {
@@ -477,4 +482,11 @@ export type AiReviewWebhookInput = {
   status: Extract<ItemVerificationStatus, "verified" | "failed">;
   verificationFailedReason?: string | undefined;
   aiMetadata?: ItemAiMetadata | undefined;
+};
+
+export type ReputationMetrics = {
+  averageTrustScore: number;
+  eliteUserCount: number;
+  totalUsers: number;
+  lastRecalculatedAt: string;
 };

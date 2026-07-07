@@ -8,6 +8,7 @@ import { useApiClient } from "@/api/use-api-client";
 import { AppButton } from "@/components/app-button";
 import { Screen } from "@/components/screen";
 import { ScreenState } from "@/components/screen-state";
+import { TrustScoreBadge } from "@/components/trust-score-badge";
 import {
   categoryLabels,
   communicationPreferenceLabels,
@@ -140,6 +141,9 @@ export default function PublicItemDetailScreen() {
           <Text style={{ color: theme.colors.accent, fontSize: 12, fontWeight: "900" }}>
             {item.owner.displayName}
           </Text>
+          <View style={{ marginBottom: theme.spacing.xs }}>
+            <TrustScoreBadge score={item.owner.trustScore} isElite={item.owner.isElite} size="sm" />
+          </View>
           <View
             style={{
               alignSelf: "flex-start",

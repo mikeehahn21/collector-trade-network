@@ -11,6 +11,8 @@ import { useOnboardingState } from "@/state/onboarding-state";
 import { useRecommendations } from "@/state/recommendation-state";
 import { useWishlistState } from "@/state/wishlist-state";
 import { useTheme } from "@/theme/theme-provider";
+import { TrustScoreBadge } from "@/components/trust-score-badge";
+import { useUserProfile } from "@/state/user-profile-state";
 
 const checklist = [
   "Add 3 tradeable vintage tees",
@@ -27,6 +29,7 @@ export default function HomeScreen() {
   const theme = useTheme();
   const { summary: collectionSummary } = useCollectionState();
   const { reset, state } = useOnboardingState();
+  const { profile: userProfile } = useUserProfile();
   const recommendationState = useRecommendations();
   const { summary: wishlistSummary } = useWishlistState();
   const name = state.profile?.displayName ?? "Collector";
@@ -48,6 +51,11 @@ export default function HomeScreen() {
               Your trade network is reading inventory and wishlist signals to surface explainable
               opportunities.
             </Text>
+            {userProfile && (
+              <View style={{ marginTop: theme.spacing.xs }}>
+                <TrustScoreBadge score={userProfile.trustScore} isElite={userProfile.isElite} />
+              </View>
+            )}
           </View>
 
           <View
