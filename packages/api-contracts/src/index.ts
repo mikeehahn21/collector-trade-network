@@ -42,6 +42,8 @@ export const apiRoutes = {
   health: "/health",
   accessRequests: "/v1/access-requests",
   inviteCode: "/v1/access/invite-code",
+  waitlistStatus: "/v1/access/waitlist",
+  systemConfig: "/v1/admin/system-config",
   items: "/v1/items",
   itemById: "/v1/items/:itemId",
   publicItemById: "/v1/public/items/:itemId",
@@ -100,6 +102,29 @@ export const inviteCodeContract = {
 export type InviteCodeResponse = {
   status: "accepted";
   accessStatus: "invited";
+};
+
+export const waitlistStatusContract = {
+  method: "GET",
+  path: apiRoutes.waitlistStatus,
+} as const;
+
+export type WaitlistStatusResponse = {
+  position: number;
+  totalWaitlisted: number;
+  estimatedWaitDays?: number | undefined;
+};
+
+export const systemConfigContract = {
+  method: "GET",
+  path: apiRoutes.systemConfig,
+} as const;
+
+export type SystemConfigResponse = {
+  config: {
+    accessMode: "invite_only" | "application" | "waitlist" | "public";
+    dailyInviteLimit: number;
+  };
 };
 
 export const itemDraftContract = {

@@ -1,15 +1,45 @@
 import { auth } from "@clerk/nextjs/server";
 
 import { AdminShell } from "@/components/admin-shell";
-import { getRecommendationFeedbackMetrics, getReputationMetrics } from "@/lib/api-client";
+import {
+  getRecommendationFeedbackMetrics,
+  getReputationMetrics,
+  getSystemConfig,
+} from "@/lib/api-client";
 import { RecalculateButton } from "./recalculate-button";
 
 export default async function AdminHomePage() {
   const metrics = await getMetricsSafely();
   const repMetrics = await getReputationMetricsSafely();
+  const systemConfig = await getSystemConfigSafely();
 
   return (
     <AdminShell>
+      <section className="panel" style={{ marginBottom: "2rem" }}>
+        <p className="eyebrow">Sprint 13</p>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <h1>Access & Waitlist Control</h1>
+        </div>
+        <p>Manage the network's onboarding flow and waitlist throttle.</p>
+
+        {systemConfig ? (
+          <div className="metric-grid">
+            <MetricCard
+              label="Access Mode"
+              value={systemConfig.config.accessMode.replace("_", " ")}
+            />
+            <MetricCard label="Daily Invite Limit" value={systemConfig.config.dailyInviteLimit} />
+          </div>
+        ) : (
+          <div className="subpanel">
+            <h2>Config unavailable</h2>
+            <p className="muted">
+              Connect admin authentication to the API before live system config can be displayed.
+            </p>
+          </div>
+        )}
+      </section>
+
       <section className="panel" style={{ marginBottom: "2rem" }}>
         <p className="eyebrow">Sprint 12</p>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -110,6 +140,16 @@ async function getReputationMetricsSafely() {
     const token = await getAdminBearerTokenSafely();
     const response = await getReputationMetrics(token ?? undefined);
     return response.metrics;
+  } catch {
+    return undefined;
+  }
+}
+
+async function getSystemConfigSafely() {
+  try {
+    const token = await getAdminBearerTokenSafely();
+    const response = await getSystemConfig(token ?? undefined);
+    return response;
   } catch {
     return undefined;
   }

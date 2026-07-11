@@ -4,6 +4,7 @@ import type {
   RecommendationFeedbackMetricsResponse,
   ReputationMetricsResponse,
   ReputationRecalculateResponse,
+  SystemConfigResponse,
 } from "@ctn/api-contracts";
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000";
@@ -76,4 +77,20 @@ export async function recalculateReputation(
   }
 
   return (await response.json()) as ReputationRecalculateResponse;
+}
+
+export async function getSystemConfig(bearerToken?: string): Promise<SystemConfigResponse> {
+  const response = await fetch(`${apiBaseUrl}${apiRoutes.systemConfig}`, {
+    headers: {
+      accept: "application/json",
+      ...(bearerToken ? { authorization: `Bearer ${bearerToken}` } : {}),
+    },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error(`System config request failed with status ${response.status}`);
+  }
+
+  return (await response.json()) as SystemConfigResponse;
 }

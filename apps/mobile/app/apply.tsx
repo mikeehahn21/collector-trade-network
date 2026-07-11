@@ -33,8 +33,10 @@ export default function ApplyForAccessScreen() {
 
     setError(undefined);
     setIsLoading(true);
+    // In a real app we'd call the API to create the application
+    // and the backend would determine if it's "applied" or "waitlisted"
     setTimeout(() => {
-      setAccess("applied", { email });
+      setAccess("waitlisted", { email });
       setIsLoading(false);
       router.replace("/waitlist-confirmation");
     }, 550);

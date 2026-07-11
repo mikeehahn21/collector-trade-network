@@ -18,6 +18,8 @@ import type {
   TradesResponse,
   WishlistItemResponse,
   WishlistItemsResponse,
+  WaitlistStatusResponse,
+  SystemConfigResponse,
 } from "@ctn/api-contracts";
 import { apiRoutes } from "@ctn/api-contracts";
 import type {
@@ -104,6 +106,8 @@ export type ApiClient = {
   markConversationTyping: (conversationId: string) => Promise<void>;
   getReputationMetrics: () => Promise<ReputationMetricsResponse>;
   recalculateReputation: () => Promise<ReputationRecalculateResponse>;
+  getWaitlistStatus: (email: string) => Promise<WaitlistStatusResponse>;
+  getSystemConfig: () => Promise<SystemConfigResponse>;
 };
 
 export function createApiClient(getAuthHeaders: AuthHeaderProvider): ApiClient {
@@ -253,6 +257,11 @@ export function createApiClient(getAuthHeaders: AuthHeaderProvider): ApiClient {
         method: "POST",
         body: JSON.stringify({}),
       }),
+    getWaitlistStatus: (email: string) =>
+      request<WaitlistStatusResponse>(
+        `${apiRoutes.waitlistStatus}?email=${encodeURIComponent(email)}`,
+      ),
+    getSystemConfig: () => request<SystemConfigResponse>(apiRoutes.systemConfig),
   };
 }
 

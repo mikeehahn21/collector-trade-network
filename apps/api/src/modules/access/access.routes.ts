@@ -1,8 +1,18 @@
 import type { FastifyInstance } from "fastify";
 
-import { accessRequestContract, inviteCodeContract } from "@ctn/api-contracts";
+import {
+  accessRequestContract,
+  inviteCodeContract,
+  waitlistStatusContract,
+  systemConfigContract,
+} from "@ctn/api-contracts";
 
-import { createAccessApplication, findInviteCode } from "../../db/repositories/access.repository";
+import {
+  createAccessApplication,
+  findInviteCode,
+  getWaitlistStatus,
+  getSystemConfig,
+} from "../../db/repositories/access.repository";
 import type { AppServices } from "../services";
 
 export async function registerAccessRoutes(
@@ -25,6 +35,26 @@ export async function registerAccessRoutes(
       status: "received",
       applicationId: application.id,
       message: "Application received for manual review.",
+    });
+  });
+
+  app.get(waitlistStatusContract.path, async (request, reply) => {
+    const email = (request.query as { email?: string }).email ?? "unknown";
+
+    const status = await getWaitlistStatus(services.db, email);
+
+    return reply.status(200).send({
+      position: status.position,
+      totalWaitlisted: status.totalWaitlisted,
+      estimatedWaitDays: Math.ceil(status.position / 50),
+    });
+  });
+
+  app.get(systemConfigContract.path, async (request, reply) => {
+    const config = await getSystemConfig(services.db);
+
+    return reply.status(200).send({
+      config,
     });
   });
 

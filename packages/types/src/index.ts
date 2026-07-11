@@ -30,8 +30,15 @@ export type AccessApplication = {
   socialHandle?: string | undefined;
   reason: string;
   status: "received" | "approved" | "rejected";
+  waitlistPosition?: number | undefined;
+  invitedAt?: string | undefined;
   createdAt: string;
   updatedAt: string;
+};
+
+export type SystemConfig = {
+  accessMode: AccessMode;
+  dailyInviteLimit: number;
 };
 
 export type ConversationContextType = "item" | "trade" | "system";
