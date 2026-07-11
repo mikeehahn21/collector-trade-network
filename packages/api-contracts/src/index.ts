@@ -80,7 +80,9 @@ export const healthContract = {
   response: healthResponseSchema,
 } as const;
 
-export type HealthResponse = ApiHealth;
+export type HealthResponse = ApiHealth & {
+  database?: string;
+};
 
 export const accessRequestContract = {
   method: "POST",

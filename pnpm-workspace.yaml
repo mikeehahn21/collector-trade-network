@@ -3,6 +3,7 @@ packages:
   - "packages/*"
 allowBuilds:
   "@clerk/shared": true
+  "@sentry/cli": set this to true or false
   browser-tabs-lock: true
   bufferutil: true
   core-js: true

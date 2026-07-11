@@ -42,5 +42,10 @@
     "*.{js,jsx,ts,tsx,mjs,cjs}": [
       "eslint --fix"
     ]
+  },
+  "dependencies": {
+    "@fastify/rate-limit": "^11.1.0",
+    "@sentry/node": "^10.65.0",
+    "@sentry/react-native": "^8.18.0"
   }
 }
