@@ -39,15 +39,18 @@
       "expo-router",
       "expo-secure-store",
       [
-        "@sentry/react-native/expo",
+        "expo-build-properties",
         {
-          "url": "https://sentry.io/",
-          "project": "collector-trade-mobile",
-          "organization": "collector-trade"
+          "android": {
+            "kotlinVersion": "1.9.25"
+          }
         }
       ]
     ],
     "extra": {
+      "eas": {
+        "projectId": "ccaa9437-aa3a-4cb9-ac09-bc8d96bbd10a"
+      },
       "router": {
         "origin": false
       },
