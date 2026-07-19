@@ -1,6 +1,5 @@
 /* eslint-disable no-undef */
- 
- 
+
 // Dynamic Expo config — overrides app.json at build time.
 // For the preview-apk (production) build, APP_ENV=production is set by eas.json,
 // so we default apiBaseUrl to the live Railway URL when the env var is not set.
@@ -54,11 +53,11 @@ module.exports = {
       "expo-router",
       "expo-secure-store",
       [
-        "@sentry/react-native/expo",
+        "expo-build-properties",
         {
-          url: "https://sentry.io/",
-          project: "collector-trade-mobile",
-          organization: "collector-trade",
+          android: {
+            kotlinVersion: "1.9.25",
+          },
         },
       ],
     ],
