@@ -34,6 +34,7 @@ export default tseslint.config(
             "eslint.config.mjs",
             "lint-staged.config.cjs",
             "commitlint.config.cjs",
+            "apps/mobile/app.config.js",
           ],
         },
         tsconfigRootDir: import.meta.dirname,
