@@ -1,15 +1,9 @@
 /* eslint-disable no-undef */
-
-// Dynamic Expo config — overrides app.json at build time.
-// For the preview-apk (production) build, APP_ENV=production is set by eas.json,
-// so we default apiBaseUrl to the live Railway URL when the env var is not set.
 const IS_PRODUCTION = process.env.APP_ENV === "production";
-
 const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_BASE_URL ??
   (IS_PRODUCTION ? "https://ctnapi-production-cb44.up.railway.app" : "http://localhost:4000");
 
-/** @type {import('@expo/config').ExpoConfig} */
 module.exports = {
   expo: {
     name: "Konnesor",
@@ -24,7 +18,7 @@ module.exports = {
       resizeMode: "contain",
       backgroundColor: "#0F1115",
     },
-    newArchEnabled: true,
+    newArchEnabled: false,
     ios: {
       supportsTablet: false,
       bundleIdentifier: "com.konnesor.mobile",
@@ -45,8 +39,8 @@ module.exports = {
       },
       permissions: [
         "android.permission.CAMERA",
-        "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_VIDEO",
       ],
     },
     plugins: [
@@ -70,7 +64,7 @@ module.exports = {
       },
       apiBaseUrl: API_BASE_URL,
       clerkPublishableKey: process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "",
-      sentryDsn: process.env.EXPO_PUBLIC_SENTRY_DSN ?? "",
+      sentryDsn: "",
       posthogApiKey: process.env.EXPO_PUBLIC_POSTHOG_API_KEY ?? "",
       oneSignalAppId: process.env.EXPO_PUBLIC_ONESIGNAL_APP_ID ?? "",
     },

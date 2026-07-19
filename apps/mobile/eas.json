@@ -7,28 +7,44 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "node": "22.13.0",
+      "pnpm": "11.13.1",
       "env": {
-        "APP_ENV": "development"
+        "APP_ENV": "development",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true",
+        "SENTRY_ALLOW_FAILURE": "true"
       }
     },
     "preview": {
       "distribution": "internal",
+      "node": "22.13.0",
+      "pnpm": "11.13.1",
       "env": {
-        "APP_ENV": "staging"
+        "APP_ENV": "staging",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true",
+        "SENTRY_ALLOW_FAILURE": "true"
       }
     },
     "preview-apk": {
       "distribution": "internal",
+      "node": "22.13.0",
+      "pnpm": "11.13.1",
       "android": {
         "buildType": "apk"
       },
       "env": {
-        "APP_ENV": "production"
+        "APP_ENV": "production",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true",
+        "SENTRY_ALLOW_FAILURE": "true"
       }
     },
     "production": {
+      "node": "22.13.0",
+      "pnpm": "11.13.1",
       "env": {
-        "APP_ENV": "production"
+        "APP_ENV": "production",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true",
+        "SENTRY_ALLOW_FAILURE": "true"
       }
     }
   },
