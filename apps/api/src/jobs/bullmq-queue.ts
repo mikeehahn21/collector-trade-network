@@ -4,6 +4,9 @@ import type { Env } from "../config/env";
 import type { BackgroundJob, JobQueue } from "./queue";
 
 export function createBullMqQueue(env: Pick<Env, "REDIS_URL">): JobQueue {
+  if (!env.REDIS_URL) {
+    throw new Error("REDIS_URL is not defined but is required for BullMQ.");
+  }
   const redisUrl = new URL(env.REDIS_URL);
   const queue = new Queue("collector-trade-background", {
     connection: {
