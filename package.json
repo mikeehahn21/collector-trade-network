@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "description": "AI-powered trusted social trading network for collectors.",
-  "packageManager": "pnpm@11.7.0",
+  "packageManager": "pnpm@11.13.1",
   "engines": {
     "node": ">=20.11.0",
     "pnpm": ">=9.0.0"
