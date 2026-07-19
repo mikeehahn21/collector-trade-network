@@ -44,6 +44,7 @@
     ]
   },
   "dependencies": {
+    "sqlite3": "^5.1.7",
     "@fastify/rate-limit": "^11.1.0",
     "@sentry/node": "^10.65.0",
     "@sentry/react-native": "^8.18.0"
