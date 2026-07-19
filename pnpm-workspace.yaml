@@ -1,13 +1,14 @@
 packages:
   - "apps/*"
   - "packages/*"
+
 allowBuilds:
   "@clerk/shared": true
-  "@sentry/cli": set this to true or false
+  "@sentry/cli@3.6.0": true
   browser-tabs-lock: true
   bufferutil: true
   core-js: true
   esbuild: true
   msgpackr-extract: true
-  sharp: true
+  "sharp": true
   utf-8-validate: true

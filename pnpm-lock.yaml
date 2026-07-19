@@ -12,10 +12,10 @@ importers:
         version: 11.1.0
       "@sentry/node":
         specifier: ^10.65.0
-        version: 10.65.0(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1))
+        version: 10.66.0(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1))
       "@sentry/react-native":
         specifier: ^8.18.0
-        version: 8.18.0(@expo/env@2.4.0)(dotenv@16.6.1)(expo@52.0.49(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@expo/metro-runtime@4.0.1(react-native@0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@19.2.7)))(bufferutil@4.1.0)(react-native@0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@19.2.7))(react@19.2.7))(react-native@0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@19.2.7))(react@19.2.7)
+        version: 8.19.0(@expo/env@2.4.0)(dotenv@16.6.1)(expo@52.0.49(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@expo/metro-runtime@4.0.1(react-native@0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@19.2.7)))(bufferutil@4.1.0)(react-native@0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@19.2.7))(react@19.2.7))(react-native@0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@19.2.7))(react@19.2.7)
     devDependencies:
       "@commitlint/cli":
         specifier: ^19.5.0
@@ -168,7 +168,7 @@ importers:
     dependencies:
       "@clerk/clerk-expo":
         specifier: ^2.3.0
-        version: 2.19.31(cd11cd2e7dab5ae55c3aa84fde9c5e78)
+        version: 2.19.31(57a20cf1c251851b7928193c5c7999a5)
       "@ctn/api-contracts":
         specifier: workspace:*
         version: link:../../packages/api-contracts
@@ -198,7 +198,7 @@ importers:
         version: 7.0.5(expo@52.0.49(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@expo/metro-runtime@4.0.1(react-native@0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6)))(bufferutil@4.1.0)(react-native@0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6))(react@18.3.1)(utf-8-validate@6.0.6))(react-native@0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6))(react@18.3.1)
       expo-router:
         specifier: ~4.0.0
-        version: 4.0.22(c2540d3c954fce2e9270e701659ae3f2)
+        version: 4.0.22(5ad7a21367b599e2fdd3254068fa8cdd)
       expo-secure-store:
         specifier: ~14.0.0
         version: 14.0.1(expo@52.0.49(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@expo/metro-runtime@4.0.1(react-native@0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6)))(bufferutil@4.1.0)(react-native@0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6))(react@18.3.1)(utf-8-validate@6.0.6))
@@ -308,24 +308,24 @@ packages:
         integrity: sha512-nhCBV3quEgesuf7c7KYfperqSS14T8bYuvJ8PcLJp6znkZpFc0AuW4qBtr8eKVyPPe/8RSr7sglCWPU5eaxwKQ==,
       }
 
-  "@apm-js-collab/code-transformer-bundler-plugins@0.5.0":
+  "@apm-js-collab/code-transformer-bundler-plugins@0.6.2":
     resolution:
       {
-        integrity: sha512-YxLBY5nGlurL7QeJLq6e5g0ouBpAp0pwgyA/5rHXEXwhiPLn9ZHbT+Y2LlP90GT872cSocfjWRYu/fnpuBudNQ==,
+        integrity: sha512-5vBrtIEL+UVbO0YWWoyYG4QMgR+ZfnIL3xlteIkAmU7YaAPhc28k3md/NM14tnkfXKjKOn9yUzEA9AYUmNpvJg==,
       }
     engines: { node: ">=18.0.0" }
 
-  "@apm-js-collab/code-transformer@0.15.0":
+  "@apm-js-collab/code-transformer@0.18.0":
     resolution:
       {
-        integrity: sha512-XmXYVs8CzJ1Aj79noVbn2weUO/XWtRyURpGqx7aU7DOXlUQhR0WKOQNF0okh7PCeY37vxf7kU3v57OAkEPm3ww==,
+        integrity: sha512-aN3Oq8r1J3gPJtCwErP664gM0+HhM1I1lujPr9TMTCcEl/joQQbpGpeMdts9B1+W2wHMsvioDMv5F4PvMWE6gw==,
       }
     hasBin: true
 
-  "@apm-js-collab/tracing-hooks@0.10.1":
+  "@apm-js-collab/tracing-hooks@0.13.0":
     resolution:
       {
-        integrity: sha512-w2OWXR7FWrKqSziuE9+QclaZrStxO/8+OwbXM635s/zs0Eez1Qo3ivSPdB2WsaPY/iznKTytONPx/PitD7IXcA==,
+        integrity: sha512-mTvWz9rnQwx1U3h0XPTHaX7bgfkpipLLTQyjlC2cdhQpQEuoLT0AGzoydeoq2NxfEVv6fWOOETcSbb2nptleyw==,
       }
 
   "@babel/code-frame@7.10.4":
@@ -3719,17 +3719,17 @@ packages:
       }
     engines: { node: ">= 18" }
 
-  "@sentry/browser-utils@10.64.0":
+  "@sentry/browser-utils@10.65.0":
     resolution:
       {
-        integrity: sha512-qXvUpsZdE0+6SovhDZvjN4JkqQEpzeYsrOF5g63wMsqJWWv2vW/pQZIlJs0F6C0t4q5AHZL4fl5rNkvpVqFdKA==,
+        integrity: sha512-4J0mkfNJAGUOkpg1ZggizyftFTn9N20b+Jl87UnWsDUkNG0Ic1l/FIzMPTVxXrAnhBGu0ULO0TFWMoQ5s3QtZw==,
       }
     engines: { node: ">=18" }
 
-  "@sentry/browser@10.64.0":
+  "@sentry/browser@10.65.0":
     resolution:
       {
-        integrity: sha512-CHZ7+79evh8knBtVHjW/XqV3mRaWs2TdjX7i55zpFe9vcNngQHV++0ss8ird/xfMY1mfCDtbyAN+Z6XY2o5aJA==,
+        integrity: sha512-XUDDsx0qxzeIlcOu1fDEqTcDl0eiOqghsgV+ReuuNP4jYjZ9kUQxE3rXWM5mlT1pBi4VaQ4FHqvQZZrRXy+oDw==,
       }
     engines: { node: ">=18" }
 
@@ -3819,12 +3819,12 @@ packages:
       }
     engines: { node: ">=14" }
 
-  "@sentry/core@10.64.0":
+  "@sentry/conventions@0.16.0":
     resolution:
       {
-        integrity: sha512-HjojJcXD1l2qZ1AXje2s0XY/nYsaUt00wsM1HMBImA8vAClyPisFE/CC0/UD6pEvsGFhVgi8Dcxo7EN41uyeFw==,
+        integrity: sha512-fO9PLmHdVURcSPUpWCItWAtgKiMwGdJHbovoSEyLplX5sxs2ugvI4CBPTrkkgqhObnZOD0CnWBKDzSVQYBKEyQ==,
       }
-    engines: { node: ">=18" }
+    engines: { node: ">=14" }
 
   "@sentry/core@10.65.0":
     resolution:
@@ -3833,10 +3833,17 @@ packages:
       }
     engines: { node: ">=18" }
 
-  "@sentry/expo-upload-sourcemaps@8.18.0":
+  "@sentry/core@10.66.0":
     resolution:
       {
-        integrity: sha512-yJCJcG+gdGhYL11E6B59Upt0Txxb1RHTJ9df2CqfukNS723KRzg+kESEhUKHz9BQzYmvE8vnRvqobA3xA4j7Yw==,
+        integrity: sha512-9UbgSvds7bMJsP561eWmeyMLcfOmnwxtnx2QuW3yLobzP2Ob7CyJCOzP4tGzlTAGDrzShkFEZhiyuBUKiEK2oQ==,
+      }
+    engines: { node: ">=18" }
+
+  "@sentry/expo-upload-sourcemaps@8.19.0":
+    resolution:
+      {
+        integrity: sha512-9Dc2lZTt9177cXwdCdS4DjkERVfgGQyj0zk+AIKV2aRFWwO11uJ06UW7fl2VKXnWvcA+eFp8TVtKLfF5okTD8A==,
       }
     engines: { node: ">=18" }
     hasBin: true
@@ -3849,17 +3856,17 @@ packages:
       dotenv:
         optional: true
 
-  "@sentry/feedback@10.64.0":
+  "@sentry/feedback@10.65.0":
     resolution:
       {
-        integrity: sha512-YrmKwRoAto+nwo26DoAhnpNmhkrVkuQFIAXqlTD8ipERjhcSNUYJAkAB+nH4w1KIgm9QQZE1sTq3iNQdPl1XMQ==,
+        integrity: sha512-ck8h7wgd3F3bYNk0v1OgohmyLBeXcKxqlfBJRtQq4k6KZUq+pXimOG7ckNguVMYjCo3PEfuG+ckKc21yqotKug==,
       }
     engines: { node: ">=18" }
 
-  "@sentry/node-core@10.65.0":
+  "@sentry/node-core@10.66.0":
     resolution:
       {
-        integrity: sha512-U01X9mPT+jZnsLPmPWfBU67Ka+t/Sdd9RGAuvGoKdrI6N47a/9PDkM9oCW+kj0fmZwogZHTgSnzJU5oi3pImgA==,
+        integrity: sha512-SUnXHROqSdSetKgZC1goDEKCuMz3OmQ1h4rxzWeexLyqan+pensZXfLouP6jzZXlA8e/HP7uQg78LnfqYDcZlQ==,
       }
     engines: { node: ">=18" }
     peerDependencies:
@@ -3880,17 +3887,17 @@ packages:
       "@opentelemetry/sdk-trace-base":
         optional: true
 
-  "@sentry/node@10.65.0":
+  "@sentry/node@10.66.0":
     resolution:
       {
-        integrity: sha512-t35dcdyksysVch/m/XdLgGJqGKJhr9eMD30Ctn3TeQ8yMB0wNXySfjPR5Yg93fpjmfaHtzc6iYIXRAvgNVfrvA==,
+        integrity: sha512-5Ow7iQiRjaSaEOmqEIkYV368hFFzShIZCXPoj+wX3JtOmKFrsNu6lr8/VJlQs7cyjFS6tzE50PrLrD8iAPS/8w==,
       }
     engines: { node: ">=18" }
 
-  "@sentry/opentelemetry@10.65.0":
+  "@sentry/opentelemetry@10.66.0":
     resolution:
       {
-        integrity: sha512-8C6FPvm3XBvUrkM52dX3Gz0p2H0Ij8t4sahUA+GTiCz0WM0fnyPeQPGC/b6I4jamV9UXyCZRnE1UEEGCoD+c7A==,
+        integrity: sha512-K5Y9IettN9yIOnpqCs40HRLGqaGUoaQ50+ZsLqX2kPCk3TzJVpKZ9icKwaJ4Nxm72QgGVT5Ovfr/9FXbgd3b/Q==,
       }
     engines: { node: ">=18" }
     peerDependencies:
@@ -3898,10 +3905,10 @@ packages:
       "@opentelemetry/core": ^1.30.1 || ^2.1.0
       "@opentelemetry/sdk-trace-base": ^1.30.1 || ^2.1.0
 
-  "@sentry/react-native@8.18.0":
+  "@sentry/react-native@8.19.0":
     resolution:
       {
-        integrity: sha512-W9jrTort+0LEkcezXRpIRMUaWXxbgvzEXlsuvCRU14n7yQiTfzKgFeSACpkzgqoW4iqJKphXoI9l4AVb54AdZg==,
+        integrity: sha512-XiHMJ1Yx8y3CCR7kvAO/LXowBrnz0e0UGFX614btawPu7tXG3b6Ob0NSIl7rR0FNeDjKmNx/862fBN+k4jnPng==,
       }
     hasBin: true
     peerDependencies:
@@ -3912,33 +3919,33 @@ packages:
       expo:
         optional: true
 
-  "@sentry/react@10.64.0":
+  "@sentry/react@10.65.0":
     resolution:
       {
-        integrity: sha512-oShEKcosBKdm0kgan8suFb6Jj8poccEyDz2qiflonq/5/hUDyzdVeKfFzf0b1MmdjWSn9k3hfrLNFfPNCuEt7Q==,
+        integrity: sha512-fvHxpuvid0wt9/1N3itcKDyKOjqmYHw3MBSt5Pki3Iz4CL2CmgQp9ZFv/CA7UhMnEvn2Gd+Qc2UKxujZWd8FLg==,
       }
     engines: { node: ">=18" }
     peerDependencies:
       react: ^16.14.0 || 17.x || 18.x || 19.x
 
-  "@sentry/replay-canvas@10.64.0":
+  "@sentry/replay-canvas@10.65.0":
     resolution:
       {
-        integrity: sha512-EioBwcnnhtPiXzTZJTbZKaMEg3qNM5YZlX1VanoXomPATqfJD62cb/M27zhgiWXXJ7e8/NGVHvwNDYGrqsN39g==,
+        integrity: sha512-A7X3RVk1Gk+knK8Ip/2EjejckNCLgCfRZo6eGlsy6qyz904KBpYmys1a0o7QkzFRjhIndjHAfcVxwt6jSLJlrQ==,
       }
     engines: { node: ">=18" }
 
-  "@sentry/replay@10.64.0":
+  "@sentry/replay@10.65.0":
     resolution:
       {
-        integrity: sha512-q8nke2GDSwEiu1zYoctDDvnSNTjHWoVAKo2JXTleD0nwOO6IlAgUYmsm3qEQiSW7BVla9W1TRbW6ChFAUXYZbw==,
+        integrity: sha512-aW988CcQBNArbOMzOFOziipHz6uQyXSa4i5CPWsu+nhVPTJHafosi5Lv9n6NM/icDX5e23VdnX6mZd8SyJuo8A==,
       }
     engines: { node: ">=18" }
 
-  "@sentry/server-utils@10.65.0":
+  "@sentry/server-utils@10.66.0":
     resolution:
       {
-        integrity: sha512-80toEFD6s+0Le7jrYB6pHWLF703WSg0WyavAWqrBGWG8JkREHgedAxzFYgoY5GlMI756qk6Ea7UzhJTHd2zAXA==,
+        integrity: sha512-h9EM9Wz9Mc6w2Vn7Fyh6ozjy4JC2UbUvWf9Ra1HYA4KMeYqjFA5/o0oB4pg4w/TF+rb+9OF/HNqxjuczxpudpA==,
       }
     engines: { node: ">=18" }
 
@@ -6622,10 +6629,10 @@ packages:
         integrity: sha512-jEQoCwk8hyb2AZziIOLhDqpm5+2ww5uIE6lkO/6jcOCusfk6LhMHpXXfBLXTZ7Ydyt0j4VoUQv6uGNYbdW+kBA==,
       }
 
-  es-module-lexer@2.3.0:
+  es-module-lexer@2.3.1:
     resolution:
       {
-        integrity: sha512-KLdwQm2NvGLDkQDCGvmiQrhkd0JbMzXthwQAUgWjQuQdBLFa3eiBP5arXZyA+f8x+x7OXgud6bq2rxjGtHV2tw==,
+        integrity: sha512-shc1dbU90Yl/xq1QrC7QRtfcwURZuVRfPhZbDoldJ1cn1gzDvBaBWlv0eFolj5+0znnPJz5TXLxsN77X/12KTA==,
       }
 
   es-object-atoms@1.1.2:
@@ -9940,6 +9947,14 @@ packages:
         integrity: sha512-crr9HkVrDiJ0A4zot89oS0Cgv0Oa4OG1Em4jit3P3ZxZSKPMYyMjfwMqgcJna9o625g8oN87rBm8SWWrSTBZxg==,
       }
 
+  react-dom@18.3.1:
+    resolution:
+      {
+        integrity: sha512-5m4nQKp+rZRb09LNH59GM4BxTh9251/ylbKIbpe7TpGxfJ+9kv6BLkLBXIjjspbgbnIBNqlI23tRnTWT0snUIw==,
+      }
+    peerDependencies:
+      react: ^18.3.1
+
   react-dom@19.2.7:
     resolution:
       {
@@ -10346,6 +10361,12 @@ packages:
         integrity: sha512-6R3J5M4AcbtLUdZmRv2SygeVaM7IhrLXu9BmnOGmmACak8fiUtOsYNWUS4uK7upbmHIBbLBeFeI//477BKLBzA==,
       }
     engines: { node: ">=11.0.0" }
+
+  scheduler@0.23.2:
+    resolution:
+      {
+        integrity: sha512-UOShsPwz7NrMUqhR6t0hWjFduvOzbtv7toDH1/hIrfRNIDBnnBWd0CwJTGvTpngVlmwGCdP9/Zl/tVrDqcuYzQ==,
+      }
 
   scheduler@0.24.0-canary-efb381bbf-20230505:
     resolution:
@@ -11856,14 +11877,14 @@ snapshots:
 
   "@adraffy/ens-normalize@1.11.1": {}
 
-  "@apm-js-collab/code-transformer-bundler-plugins@0.5.0":
+  "@apm-js-collab/code-transformer-bundler-plugins@0.6.2":
     dependencies:
-      "@apm-js-collab/code-transformer": 0.15.0
-      es-module-lexer: 2.3.0
+      "@apm-js-collab/code-transformer": 0.18.0
+      es-module-lexer: 2.3.1
       magic-string: 0.30.21
       module-details-from-path: 1.0.4
 
-  "@apm-js-collab/code-transformer@0.15.0":
+  "@apm-js-collab/code-transformer@0.18.0":
     dependencies:
       "@types/estree": 1.0.9
       astring: 1.9.0
@@ -11872,9 +11893,9 @@ snapshots:
       semifies: 1.0.0
       source-map: 0.6.1
 
-  "@apm-js-collab/tracing-hooks@0.10.1":
+  "@apm-js-collab/tracing-hooks@0.13.0":
     dependencies:
-      "@apm-js-collab/code-transformer": 0.15.0
+      "@apm-js-collab/code-transformer": 0.18.0
       debug: 4.4.3
       module-details-from-path: 1.0.4
     transitivePeerDependencies:
@@ -12839,17 +12860,17 @@ snapshots:
       - react
       - react-dom
 
-  "@clerk/clerk-expo@2.19.31(cd11cd2e7dab5ae55c3aa84fde9c5e78)":
+  "@clerk/clerk-expo@2.19.31(57a20cf1c251851b7928193c5c7999a5)":
     dependencies:
-      "@clerk/clerk-js": 5.127.0(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6))(@types/react@18.3.31)(bs58@6.0.0)(bufferutil@4.1.0)(react-dom@19.2.7(react@18.3.1))(react-native@0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6))(react@18.3.1)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@18.3.1))(utf-8-validate@6.0.6)(zod@3.25.76)
-      "@clerk/clerk-react": 5.61.3(react-dom@19.2.7(react@18.3.1))(react@18.3.1)
-      "@clerk/shared": 3.47.7(react-dom@19.2.7(react@18.3.1))(react@18.3.1)
-      "@clerk/types": 4.101.20(react-dom@19.2.7(react@18.3.1))(react@18.3.1)
+      "@clerk/clerk-js": 5.127.0(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6))(@types/react@18.3.31)(bs58@6.0.0)(bufferutil@4.1.0)(react-dom@18.3.1(react@18.3.1))(react-native@0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6))(react@18.3.1)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@18.3.1))(utf-8-validate@6.0.6)(zod@3.25.76)
+      "@clerk/clerk-react": 5.61.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@clerk/shared": 3.47.7(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@clerk/types": 4.101.20(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       base-64: 1.0.0
       expo-auth-session: 57.0.1(expo@52.0.49(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@expo/metro-runtime@4.0.1(react-native@0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6)))(bufferutil@4.1.0)(react-native@0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6))(react@18.3.1)(utf-8-validate@6.0.6))(react-native@0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6))(react@18.3.1)
       expo-web-browser: 57.0.0(expo@52.0.49(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@expo/metro-runtime@4.0.1(react-native@0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6)))(bufferutil@4.1.0)(react-native@0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6))(react@18.3.1)(utf-8-validate@6.0.6))(react-native@0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6))
       react: 18.3.1
-      react-dom: 19.2.7(react@18.3.1)
+      react-dom: 18.3.1(react@18.3.1)
       react-native: 0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6)
       react-native-url-polyfill: 2.0.0(react-native@0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6))
       tslib: 2.8.1
@@ -12869,16 +12890,16 @@ snapshots:
       - utf-8-validate
       - zod
 
-  "@clerk/clerk-js@5.127.0(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6))(@types/react@18.3.31)(bs58@6.0.0)(bufferutil@4.1.0)(react-dom@19.2.7(react@18.3.1))(react-native@0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6))(react@18.3.1)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@18.3.1))(utf-8-validate@6.0.6)(zod@3.25.76)":
+  "@clerk/clerk-js@5.127.0(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6))(@types/react@18.3.31)(bs58@6.0.0)(bufferutil@4.1.0)(react-dom@18.3.1(react@18.3.1))(react-native@0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6))(react@18.3.1)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@18.3.1))(utf-8-validate@6.0.6)(zod@3.25.76)":
     dependencies:
       "@base-org/account": 2.0.1(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@18.3.1))(utf-8-validate@6.0.6)(zod@3.25.76)
-      "@clerk/localizations": 3.37.7(react-dom@19.2.7(react@18.3.1))(react@18.3.1)
-      "@clerk/shared": 3.47.7(react-dom@19.2.7(react@18.3.1))(react@18.3.1)
+      "@clerk/localizations": 3.37.7(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@clerk/shared": 3.47.7(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@coinbase/wallet-sdk": 4.3.0
       "@emotion/cache": 11.11.0
       "@emotion/react": 11.11.1(@types/react@18.3.31)(react@18.3.1)
-      "@floating-ui/react": 0.27.12(react-dom@19.2.7(react@18.3.1))(react@18.3.1)
-      "@floating-ui/react-dom": 2.1.8(react-dom@19.2.7(react@18.3.1))(react@18.3.1)
+      "@floating-ui/react": 0.27.12(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      "@floating-ui/react-dom": 2.1.8(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@formkit/auto-animate": 0.8.4
       "@solana/wallet-adapter-base": 0.9.27(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6))
       "@solana/wallet-adapter-react": 0.15.39(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6))(bs58@6.0.0)(bufferutil@4.1.0)(react-native@0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6))(react@18.3.1)(typescript@5.9.3)(utf-8-validate@6.0.6)
@@ -12895,10 +12916,10 @@ snapshots:
       core-js: 3.41.0
       crypto-js: 4.2.0
       dequal: 2.0.3
-      input-otp: 1.4.2(react-dom@19.2.7(react@18.3.1))(react@18.3.1)
+      input-otp: 1.4.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       qrcode.react: 4.2.0(react@18.3.1)
       react: 18.3.1
-      react-dom: 19.2.7(react@18.3.1)
+      react-dom: 18.3.1(react@18.3.1)
       regenerator-runtime: 0.14.1
     transitivePeerDependencies:
       - "@solana/web3.js"
@@ -12914,11 +12935,11 @@ snapshots:
       - utf-8-validate
       - zod
 
-  "@clerk/clerk-react@5.61.3(react-dom@19.2.7(react@18.3.1))(react@18.3.1)":
+  "@clerk/clerk-react@5.61.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)":
     dependencies:
-      "@clerk/shared": 3.47.7(react-dom@19.2.7(react@18.3.1))(react@18.3.1)
+      "@clerk/shared": 3.47.7(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
-      react-dom: 19.2.7(react@18.3.1)
+      react-dom: 18.3.1(react@18.3.1)
       tslib: 2.8.1
 
   "@clerk/clerk-react@5.61.8(react-dom@19.2.7(react@19.2.7))(react@19.2.7)":
@@ -12928,9 +12949,9 @@ snapshots:
       react-dom: 19.2.7(react@19.2.7)
       tslib: 2.8.1
 
-  "@clerk/localizations@3.37.7(react-dom@19.2.7(react@18.3.1))(react@18.3.1)":
+  "@clerk/localizations@3.37.7(react-dom@18.3.1(react@18.3.1))(react@18.3.1)":
     dependencies:
-      "@clerk/types": 4.101.25(react-dom@19.2.7(react@18.3.1))(react@18.3.1)
+      "@clerk/types": 4.101.25(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
     transitivePeerDependencies:
       - react
       - react-dom
@@ -12947,7 +12968,7 @@ snapshots:
       server-only: 0.0.1
       tslib: 2.8.1
 
-  "@clerk/shared@3.47.7(react-dom@19.2.7(react@18.3.1))(react@18.3.1)":
+  "@clerk/shared@3.47.7(react-dom@18.3.1(react@18.3.1))(react@18.3.1)":
     dependencies:
       csstype: 3.1.3
       dequal: 2.0.3
@@ -12957,7 +12978,7 @@ snapshots:
       swr: 2.3.4(react@18.3.1)
     optionalDependencies:
       react: 18.3.1
-      react-dom: 19.2.7(react@18.3.1)
+      react-dom: 18.3.1(react@18.3.1)
 
   "@clerk/shared@3.47.7(react-dom@19.2.7(react@19.2.7))(react@19.2.7)":
     dependencies:
@@ -12971,9 +12992,9 @@ snapshots:
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
 
-  "@clerk/types@4.101.20(react-dom@19.2.7(react@18.3.1))(react@18.3.1)":
+  "@clerk/types@4.101.20(react-dom@18.3.1(react@18.3.1))(react@18.3.1)":
     dependencies:
-      "@clerk/shared": 3.47.7(react-dom@19.2.7(react@18.3.1))(react@18.3.1)
+      "@clerk/shared": 3.47.7(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
     transitivePeerDependencies:
       - react
       - react-dom
@@ -12985,9 +13006,9 @@ snapshots:
       - react
       - react-dom
 
-  "@clerk/types@4.101.25(react-dom@19.2.7(react@18.3.1))(react@18.3.1)":
+  "@clerk/types@4.101.25(react-dom@18.3.1(react@18.3.1))(react@18.3.1)":
     dependencies:
-      "@clerk/shared": 3.47.7(react-dom@19.2.7(react@18.3.1))(react@18.3.1)
+      "@clerk/shared": 3.47.7(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
     transitivePeerDependencies:
       - react
       - react-dom
@@ -13733,18 +13754,18 @@ snapshots:
       "@floating-ui/core": 1.7.5
       "@floating-ui/utils": 0.2.11
 
-  "@floating-ui/react-dom@2.1.8(react-dom@19.2.7(react@18.3.1))(react@18.3.1)":
+  "@floating-ui/react-dom@2.1.8(react-dom@18.3.1(react@18.3.1))(react@18.3.1)":
     dependencies:
       "@floating-ui/dom": 1.7.6
       react: 18.3.1
-      react-dom: 19.2.7(react@18.3.1)
+      react-dom: 18.3.1(react@18.3.1)
 
-  "@floating-ui/react@0.27.12(react-dom@19.2.7(react@18.3.1))(react@18.3.1)":
+  "@floating-ui/react@0.27.12(react-dom@18.3.1(react@18.3.1))(react@18.3.1)":
     dependencies:
-      "@floating-ui/react-dom": 2.1.8(react-dom@19.2.7(react@18.3.1))(react@18.3.1)
+      "@floating-ui/react-dom": 2.1.8(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       "@floating-ui/utils": 0.2.11
       react: 18.3.1
-      react-dom: 19.2.7(react@18.3.1)
+      react-dom: 18.3.1(react@18.3.1)
       tabbable: 6.5.0
 
   "@floating-ui/utils@0.2.11": {}
@@ -14533,17 +14554,19 @@ snapshots:
 
   "@sentry/babel-plugin-component-annotate@5.3.0": {}
 
-  "@sentry/browser-utils@10.64.0":
+  "@sentry/browser-utils@10.65.0":
     dependencies:
-      "@sentry/core": 10.64.0
+      "@sentry/conventions": 0.15.1
+      "@sentry/core": 10.65.0
 
-  "@sentry/browser@10.64.0":
+  "@sentry/browser@10.65.0":
     dependencies:
-      "@sentry/browser-utils": 10.64.0
-      "@sentry/core": 10.64.0
-      "@sentry/feedback": 10.64.0
-      "@sentry/replay": 10.64.0
-      "@sentry/replay-canvas": 10.64.0
+      "@sentry/browser-utils": 10.65.0
+      "@sentry/conventions": 0.15.1
+      "@sentry/core": 10.65.0
+      "@sentry/feedback": 10.65.0
+      "@sentry/replay": 10.65.0
+      "@sentry/replay-canvas": 10.65.0
 
   "@sentry/cli-darwin@3.6.0":
     optional: true
@@ -14587,30 +14610,32 @@ snapshots:
 
   "@sentry/conventions@0.15.1": {}
 
-  "@sentry/core@10.64.0":
-    dependencies:
-      "@sentry/conventions": 0.15.1
+  "@sentry/conventions@0.16.0": {}
 
   "@sentry/core@10.65.0":
     dependencies:
       "@sentry/conventions": 0.15.1
 
-  "@sentry/expo-upload-sourcemaps@8.18.0(@expo/env@2.4.0)(dotenv@16.6.1)":
+  "@sentry/core@10.66.0":
+    dependencies:
+      "@sentry/conventions": 0.16.0
+
+  "@sentry/expo-upload-sourcemaps@8.19.0(@expo/env@2.4.0)(dotenv@16.6.1)":
     dependencies:
       "@sentry/cli": 3.6.0
     optionalDependencies:
       "@expo/env": 2.4.0
       dotenv: 16.6.1
 
-  "@sentry/feedback@10.64.0":
+  "@sentry/feedback@10.65.0":
     dependencies:
-      "@sentry/core": 10.64.0
-
-  "@sentry/node-core@10.65.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1))(@opentelemetry/instrumentation@0.220.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.1))":
-    dependencies:
-      "@sentry/conventions": 0.15.1
       "@sentry/core": 10.65.0
-      "@sentry/opentelemetry": 10.65.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.1))
+
+  "@sentry/node-core@10.66.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1))(@opentelemetry/instrumentation@0.220.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.1))":
+    dependencies:
+      "@sentry/conventions": 0.16.0
+      "@sentry/core": 10.66.0
+      "@sentry/opentelemetry": 10.66.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.1))
       import-in-the-middle: 3.3.1
     optionalDependencies:
       "@opentelemetry/api": 1.9.1
@@ -14618,38 +14643,38 @@ snapshots:
       "@opentelemetry/instrumentation": 0.220.0(@opentelemetry/api@1.9.1)
       "@opentelemetry/sdk-trace-base": 2.9.0(@opentelemetry/api@1.9.1)
 
-  "@sentry/node@10.65.0(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1))":
+  "@sentry/node@10.66.0(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1))":
     dependencies:
       "@opentelemetry/api": 1.9.1
       "@opentelemetry/instrumentation": 0.220.0(@opentelemetry/api@1.9.1)
       "@opentelemetry/sdk-trace-base": 2.9.0(@opentelemetry/api@1.9.1)
-      "@sentry/conventions": 0.15.1
-      "@sentry/core": 10.65.0
-      "@sentry/node-core": 10.65.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1))(@opentelemetry/instrumentation@0.220.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.1))
-      "@sentry/opentelemetry": 10.65.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.1))
-      "@sentry/server-utils": 10.65.0
+      "@sentry/conventions": 0.16.0
+      "@sentry/core": 10.66.0
+      "@sentry/node-core": 10.66.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1))(@opentelemetry/instrumentation@0.220.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.1))
+      "@sentry/opentelemetry": 10.66.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.1))
+      "@sentry/server-utils": 10.66.0
       import-in-the-middle: 3.3.1
     transitivePeerDependencies:
       - "@opentelemetry/core"
       - "@opentelemetry/exporter-trace-otlp-http"
       - supports-color
 
-  "@sentry/opentelemetry@10.65.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.1))":
+  "@sentry/opentelemetry@10.66.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.9.0(@opentelemetry/api@1.9.1))":
     dependencies:
       "@opentelemetry/api": 1.9.1
       "@opentelemetry/core": 2.9.0(@opentelemetry/api@1.9.1)
       "@opentelemetry/sdk-trace-base": 2.9.0(@opentelemetry/api@1.9.1)
-      "@sentry/conventions": 0.15.1
-      "@sentry/core": 10.65.0
+      "@sentry/conventions": 0.16.0
+      "@sentry/core": 10.66.0
 
-  "@sentry/react-native@8.18.0(@expo/env@2.4.0)(dotenv@16.6.1)(expo@52.0.49(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@expo/metro-runtime@4.0.1(react-native@0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@19.2.7)))(bufferutil@4.1.0)(react-native@0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@19.2.7))(react@19.2.7))(react-native@0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@19.2.7))(react@19.2.7)":
+  "@sentry/react-native@8.19.0(@expo/env@2.4.0)(dotenv@16.6.1)(expo@52.0.49(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@expo/metro-runtime@4.0.1(react-native@0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@19.2.7)))(bufferutil@4.1.0)(react-native@0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@19.2.7))(react@19.2.7))(react-native@0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@19.2.7))(react@19.2.7)":
     dependencies:
       "@sentry/babel-plugin-component-annotate": 5.3.0
-      "@sentry/browser": 10.64.0
+      "@sentry/browser": 10.65.0
       "@sentry/cli": 3.6.0
-      "@sentry/core": 10.64.0
-      "@sentry/expo-upload-sourcemaps": 8.18.0(@expo/env@2.4.0)(dotenv@16.6.1)
-      "@sentry/react": 10.64.0(react@19.2.7)
+      "@sentry/core": 10.65.0
+      "@sentry/expo-upload-sourcemaps": 8.19.0(@expo/env@2.4.0)(dotenv@16.6.1)
+      "@sentry/react": 10.65.0(react@19.2.7)
       react: 19.2.7
       react-native: 0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@19.2.7)
     optionalDependencies:
@@ -14658,30 +14683,30 @@ snapshots:
       - "@expo/env"
       - dotenv
 
-  "@sentry/react@10.64.0(react@19.2.7)":
+  "@sentry/react@10.65.0(react@19.2.7)":
     dependencies:
-      "@sentry/browser": 10.64.0
-      "@sentry/core": 10.64.0
-      react: 19.2.7
-
-  "@sentry/replay-canvas@10.64.0":
-    dependencies:
-      "@sentry/core": 10.64.0
-      "@sentry/replay": 10.64.0
-
-  "@sentry/replay@10.64.0":
-    dependencies:
-      "@sentry/browser-utils": 10.64.0
-      "@sentry/core": 10.64.0
-
-  "@sentry/server-utils@10.65.0":
-    dependencies:
-      "@apm-js-collab/code-transformer": 0.15.0
-      "@apm-js-collab/code-transformer-bundler-plugins": 0.5.0
-      "@apm-js-collab/tracing-hooks": 0.10.1
+      "@sentry/browser": 10.65.0
       "@sentry/conventions": 0.15.1
       "@sentry/core": 10.65.0
-      magic-string: 0.30.21
+      react: 19.2.7
+
+  "@sentry/replay-canvas@10.65.0":
+    dependencies:
+      "@sentry/core": 10.65.0
+      "@sentry/replay": 10.65.0
+
+  "@sentry/replay@10.65.0":
+    dependencies:
+      "@sentry/browser-utils": 10.65.0
+      "@sentry/core": 10.65.0
+
+  "@sentry/server-utils@10.66.0":
+    dependencies:
+      "@apm-js-collab/code-transformer": 0.18.0
+      "@apm-js-collab/code-transformer-bundler-plugins": 0.6.2
+      "@apm-js-collab/tracing-hooks": 0.13.0
+      "@sentry/conventions": 0.16.0
+      "@sentry/core": 10.66.0
     transitivePeerDependencies:
       - supports-color
 
@@ -16522,7 +16547,7 @@ snapshots:
 
   es-module-lexer@1.7.0: {}
 
-  es-module-lexer@2.3.0: {}
+  es-module-lexer@2.3.1: {}
 
   es-object-atoms@1.1.2:
     dependencies:
@@ -16885,7 +16910,7 @@ snapshots:
     dependencies:
       invariant: 2.2.4
 
-  expo-router@4.0.22(c2540d3c954fce2e9270e701659ae3f2):
+  expo-router@4.0.22(5ad7a21367b599e2fdd3254068fa8cdd):
     dependencies:
       "@expo/metro-runtime": 4.0.1(react-native@0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6))
       "@expo/server": 0.5.3
@@ -16897,7 +16922,7 @@ snapshots:
       expo: 52.0.49(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@expo/metro-runtime@4.0.1(react-native@0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6)))(bufferutil@4.1.0)(react-native@0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6))(react@18.3.1)(utf-8-validate@6.0.6)
       expo-constants: 17.0.8(expo@52.0.49(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@expo/metro-runtime@4.0.1(react-native@0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6)))(bufferutil@4.1.0)(react-native@0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6))(react@18.3.1)(utf-8-validate@6.0.6))(react-native@0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6))
       expo-linking: 7.0.5(expo@52.0.49(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@expo/metro-runtime@4.0.1(react-native@0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6)))(bufferutil@4.1.0)(react-native@0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6))(react@18.3.1)(utf-8-validate@6.0.6))(react-native@0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6))(react@18.3.1)
-      react-helmet-async: 1.3.0(react-dom@19.2.7(react@18.3.1))(react@18.3.1)
+      react-helmet-async: 1.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react-native-helmet-async: 2.0.4(react@18.3.1)
       react-native-is-edge-to-edge: 1.3.1(react-native@0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6))(react@18.3.1)
       react-native-safe-area-context: 4.12.0(react-native@0.76.0(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6))(react@18.3.1)
@@ -17401,7 +17426,7 @@ snapshots:
   import-in-the-middle@3.3.1:
     dependencies:
       cjs-module-lexer: 2.2.0
-      es-module-lexer: 2.3.0
+      es-module-lexer: 2.3.1
       module-details-from-path: 1.0.4
 
   import-meta-resolve@4.2.0: {}
@@ -17421,10 +17446,10 @@ snapshots:
 
   ini@4.1.1: {}
 
-  input-otp@1.4.2(react-dom@19.2.7(react@18.3.1))(react@18.3.1):
+  input-otp@1.4.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       react: 18.3.1
-      react-dom: 19.2.7(react@18.3.1)
+      react-dom: 18.3.1(react@18.3.1)
 
   internal-ip@4.3.0:
     dependencies:
@@ -18814,10 +18839,11 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  react-dom@19.2.7(react@18.3.1):
+  react-dom@18.3.1(react@18.3.1):
     dependencies:
+      loose-envify: 1.4.0
       react: 18.3.1
-      scheduler: 0.27.0
+      scheduler: 0.23.2
 
   react-dom@19.2.7(react@19.2.7):
     dependencies:
@@ -18830,13 +18856,13 @@ snapshots:
     dependencies:
       react: 18.3.1
 
-  react-helmet-async@1.3.0(react-dom@19.2.7(react@18.3.1))(react@18.3.1):
+  react-helmet-async@1.3.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       "@babel/runtime": 7.29.7
       invariant: 2.2.4
       prop-types: 15.8.1
       react: 18.3.1
-      react-dom: 19.2.7(react@18.3.1)
+      react-dom: 18.3.1(react@18.3.1)
       react-fast-compare: 3.2.2
       shallowequal: 1.1.0
 
@@ -19163,6 +19189,10 @@ snapshots:
   safe-stable-stringify@2.5.0: {}
 
   sax@1.6.0: {}
+
+  scheduler@0.23.2:
+    dependencies:
+      loose-envify: 1.4.0
 
   scheduler@0.24.0-canary-efb381bbf-20230505:
     dependencies:

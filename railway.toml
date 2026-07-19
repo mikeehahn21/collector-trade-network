@@ -1,0 +1,6 @@
+[build]
+builder = "railpack"
+buildCommand = "pnpm --filter @ctn/api... build"
+
+[deploy]
+startCommand = "pnpm --filter @ctn/api start"
