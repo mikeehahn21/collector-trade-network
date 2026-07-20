@@ -11,16 +11,6 @@ import { UserProfileProvider } from "@/state/user-profile-state";
 import { WishlistStateProvider } from "@/state/wishlist-state";
 import { DataSyncBootstrap } from "@/sync/data-sync-bootstrap";
 import { ThemeProvider, useTheme } from "@/theme/theme-provider";
-import * as Sentry from "@sentry/react-native";
-import { getMobileEnv } from "@/config/env";
-
-const env = getMobileEnv();
-if (env.sentryDsn) {
-  Sentry.init({
-    dsn: env.sentryDsn,
-    tracesSampleRate: 1.0,
-  });
-}
 
 // Cast needed: @types/react 18.3 ReactNode includes bigint, causing TS2786 with expo-router components
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -64,4 +54,4 @@ function RootLayout() {
   );
 }
 
-export default Sentry.wrap(RootLayout);
+export default RootLayout;
