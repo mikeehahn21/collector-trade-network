@@ -1,4 +1,4 @@
-import 'react-native-reanimated';
+import React from 'react';
 import { Slot } from 'expo-router';
 import { View } from 'react-native';
 

@@ -1,6 +1,25 @@
 const { getDefaultConfig } = require('expo/metro-config');
+const path = require('path');
 
-/** @type {import('expo/metro-config').MetroConfig} */
-const config = getDefaultConfig(__dirname);
+// Find the project and workspace root
+const projectRoot = __dirname;
+const workspaceRoot = path.resolve(projectRoot, '../..');
+
+const config = getDefaultConfig(projectRoot);
+
+// 1. Watch all files within the monorepo
+config.watchFolders = [workspaceRoot];
+
+// 2. Let Metro know where to resolve packages and prioritize local node_modules
+config.resolver.nodeModulesPaths = [
+  path.resolve(projectRoot, 'node_modules'),
+  path.resolve(workspaceRoot, 'node_modules'),
+];
+
+// 3. Force Metro to resolve packages from the workspace root
+config.resolver.disableHierarchicalLookup = true;
+
+// 4. Enable package exports support (required for many modern packages)
+config.resolver.unstable_enablePackageExports = true;
 
 module.exports = config;
