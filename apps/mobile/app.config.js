@@ -23,6 +23,7 @@ module.exports = {
       supportsTablet: false,
       bundleIdentifier: "com.konnesor.mobile",
       buildNumber: "1",
+      itsAppUsesNonExemptEncryption: false,
       infoPlist: {
         NSCameraUsageDescription:
           "Konnesor needs camera access so you can take photos of your items and record verification videos.",

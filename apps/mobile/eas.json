@@ -17,6 +17,7 @@
     },
     "preview": {
       "distribution": "internal",
+      "autoIncrement": true,
       "node": "22.13.0",
       "pnpm": "11.13.1",
       "env": {
