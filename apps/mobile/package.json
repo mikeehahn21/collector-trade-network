@@ -40,9 +40,9 @@
     "react-dom": "18.3.1"
   },
   "devDependencies": {
-    "@testing-library/react-native": "^12.7.2",
+    "@testing-library/react-native": "^14.0.1",
     "@types/react": "~18.3.12",
-    "typescript": "^5.6.3",
-    "vitest": "^2.1.4"
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10"
   }
 }
