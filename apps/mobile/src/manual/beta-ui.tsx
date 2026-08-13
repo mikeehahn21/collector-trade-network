@@ -1,5 +1,5 @@
 import type { ComponentType, PropsWithChildren, ReactNode } from "react";
-import { ActivityIndicator, Pressable, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Image, Pressable, Text, TextInput, View } from "react-native";
 import type { KeyboardTypeOptions, TextInputProps } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 import type { SafeAreaViewProps } from "react-native-safe-area-context";
@@ -278,9 +278,17 @@ export function BetaItemCard({ item, onPress }: { item: TradeableItem; onPress: 
           justifyContent: "center",
         }}
       >
-        <Text style={{ color: beta.colors.inkMuted, fontSize: 13, fontWeight: "900" }}>
-          {item.photos.length > 0 ? `${item.photos.length} photos` : "Object image"}
-        </Text>
+        {item.photos[0] ? (
+          <Image
+            accessibilityLabel={`${title} photo`}
+            source={{ uri: item.photos[0].uri }}
+            style={{ height: "100%", width: "100%" }}
+          />
+        ) : (
+          <Text style={{ color: beta.colors.inkMuted, fontSize: 13, fontWeight: "900" }}>
+            Object image
+          </Text>
+        )}
       </View>
       <View style={{ gap: 7, padding: beta.spacing.md }}>
         <Text numberOfLines={2} style={{ color: beta.colors.ink, fontSize: 16, fontWeight: "900" }}>

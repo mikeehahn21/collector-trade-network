@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Alert, Pressable, ScrollView, StatusBar, Switch, Text, View } from "react-native";
+import * as ImagePicker from "expo-image-picker";
+import { Alert, Image, Pressable, ScrollView, StatusBar, Switch, Text, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import {
@@ -14,11 +15,14 @@ import {
 import type {
   Conversation,
   ConversationMessage,
+  RecommendationSummary,
   Trade,
+  TradeRecommendation,
   TradeStatus,
   TradeableItem,
   UserProfile,
   WishlistItem,
+  ItemPhoto,
 } from "@ctn/types";
 
 import {
@@ -58,6 +62,7 @@ import { useApiClient } from "@/api/use-api-client";
 import { MobileAuthProvider } from "@/auth/clerk-provider";
 import { CollectionStateProvider, useCollectionState } from "@/state/collection-state";
 import { OnboardingStateProvider } from "@/state/onboarding-state";
+import { useRecommendations } from "@/state/recommendation-state";
 import { UserProfileProvider, useUserProfile } from "@/state/user-profile-state";
 import { WishlistStateProvider, useWishlistState } from "@/state/wishlist-state";
 import { DataSyncBootstrap } from "@/sync/data-sync-bootstrap";
@@ -247,6 +252,13 @@ function HomeTab({ setTab }: { setTab: (tab: Tab) => void }) {
   const { items, summary: collectionSummary } = useCollectionState();
   const { activeItems, summary: wishlistSummary } = useWishlistState();
   const { isLoading: isProfileLoading, profile } = useUserProfile();
+  const {
+    error: recommendationError,
+    isLoading: isRecommendationsLoading,
+    recommendations,
+    refresh: refreshRecommendations,
+    summary: recommendationSummary,
+  } = useRecommendations();
   const tradeableItems = useMemo(
     () => items.filter((item) => item.status === "tradeable"),
     [items],
@@ -279,6 +291,13 @@ function HomeTab({ setTab }: { setTab: (tab: Tab) => void }) {
         />
 
         <MatchPreview tradeableItems={tradeableItems} wishlistItems={activeItems} />
+        <RecommendationPreview
+          error={recommendationError}
+          isLoading={isRecommendationsLoading}
+          onRefresh={() => void refreshRecommendations()}
+          recommendations={recommendations}
+          summary={recommendationSummary}
+        />
 
         <BetaReadinessPanel
           metrics={[
@@ -305,9 +324,14 @@ function HomeTab({ setTab }: { setTab: (tab: Tab) => void }) {
               status: "Beta wired",
             },
             {
-              detail: "Local structured proposal workflow",
+              detail: `${recommendationSummary.total} live opportunities checked`,
+              label: "Recommendations",
+              status: recommendationSummary.total > 0 ? "Live" : "Checking",
+            },
+            {
+              detail: "Live API attempt with local proposal fallback",
               label: "Trades",
-              status: "In progress",
+              status: "Beta wired",
             },
           ]}
         />
@@ -376,6 +400,70 @@ function MatchPreview({
         {sameSize ? "size match" : "size flexible"} /{" "}
         {firstWant.isGrail ? "grail priority" : "active want"}.
       </BetaBody>
+    </BetaPanel>
+  );
+}
+
+function RecommendationPreview({
+  error,
+  isLoading,
+  onRefresh,
+  recommendations,
+  summary,
+}: {
+  error?: string | undefined;
+  isLoading: boolean;
+  onRefresh: () => void;
+  recommendations: TradeRecommendation[];
+  summary: RecommendationSummary;
+}) {
+  const topRecommendation = recommendations[0];
+
+  return (
+    <BetaPanel>
+      <View style={{ gap: beta.spacing.xs }}>
+        <BetaKicker>LIVE OPPORTUNITIES</BetaKicker>
+        <Text style={{ color: beta.colors.ink, fontSize: 22, fontWeight: "900" }}>
+          {isLoading ? "Checking trade graph." : `${summary.total} opportunities`}
+        </Text>
+        <BetaBody>
+          {summary.grailMatches} grail matches / {summary.mutualMatches} mutual matches /{" "}
+          {summary.newMatches} new signals
+        </BetaBody>
+      </View>
+
+      {topRecommendation ? (
+        <View
+          style={{
+            backgroundColor: beta.colors.orangeSoft,
+            borderColor: beta.colors.orange,
+            borderRadius: beta.radius.md,
+            borderWidth: 1,
+            gap: beta.spacing.sm,
+            padding: beta.spacing.md,
+          }}
+        >
+          <Text style={{ color: beta.colors.ink, fontSize: 18, fontWeight: "900" }}>
+            {topRecommendation.counterpartyDisplayName}
+          </Text>
+          <Text style={{ color: beta.colors.inkMuted, fontSize: 14, lineHeight: 20 }}>
+            Score {topRecommendation.score} / {topRecommendation.confidence} confidence /{" "}
+            {topRecommendation.reasons[0]?.label ?? "match signal"}
+          </Text>
+        </View>
+      ) : (
+        <BetaBody>
+          {error ?? "Add tradeable inventory and wants, then refresh for backend match signals."}
+        </BetaBody>
+      )}
+
+      <BetaButton
+        accessibilityLabel="Refresh live recommendations"
+        onPress={onRefresh}
+        variant="secondary"
+      >
+        Refresh opportunities
+      </BetaButton>
     </BetaPanel>
   );
 }
@@ -1089,24 +1177,86 @@ function InventoryDetail({
   onEdit: (itemId: string) => void;
 }) {
   const theme = beta;
-  const { archiveItem, publishItem } = useCollectionState();
+  const api = useApiClient();
+  const { archiveItem, publishItem, updateItem, upsertItemFromServer } = useCollectionState();
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<string | undefined>();
 
   if (!item) {
     return <MissingRecord title="Item not found" onBack={onBack} />;
   }
 
+  const currentItem = item;
+  const publishCheck = getPublishCheck(currentItem);
   const measurements = [
-    item.measurements.chest ? `Chest ${item.measurements.chest}` : undefined,
-    item.measurements.length ? `Length ${item.measurements.length}` : undefined,
-    item.measurements.shoulder ? `Shoulder ${item.measurements.shoulder}` : undefined,
-    item.measurements.sleeve ? `Sleeve ${item.measurements.sleeve}` : undefined,
+    currentItem.measurements.chest ? `Chest ${currentItem.measurements.chest}` : undefined,
+    currentItem.measurements.length ? `Length ${currentItem.measurements.length}` : undefined,
+    currentItem.measurements.shoulder ? `Shoulder ${currentItem.measurements.shoulder}` : undefined,
+    currentItem.measurements.sleeve ? `Sleeve ${currentItem.measurements.sleeve}` : undefined,
   ]
     .filter(Boolean)
     .join(" - ");
   const value =
-    item.estimatedValue.min || item.estimatedValue.max
-      ? `$${item.estimatedValue.min ?? "?"} - $${item.estimatedValue.max ?? "?"}`
+    currentItem.estimatedValue.min || currentItem.estimatedValue.max
+      ? `$${currentItem.estimatedValue.min ?? "?"} - $${currentItem.estimatedValue.max ?? "?"}`
       : "Not estimated";
+
+  async function addPhoto(kind: ItemPhoto["kind"]) {
+    const photo = await pickItemPhoto(kind, currentItem.photos.length);
+    if (!photo) {
+      return;
+    }
+
+    updateItem(currentItem.id, { photos: [...currentItem.photos, photo] });
+  }
+
+  async function saveLive(nextItem: TradeableItem, mode: "draft" | "publish") {
+    setIsSyncing(true);
+    setSyncMessage(undefined);
+
+    try {
+      if (mode === "publish") {
+        const response = isLocalRecordId(nextItem.id)
+          ? await api.publishItem({ ...nextItem, status: "tradeable" })
+          : await api.updateItem(nextItem.id, { ...nextItem, status: "tradeable" });
+        upsertItemFromServer(response.item, isLocalRecordId(nextItem.id) ? nextItem.id : undefined);
+        setSyncMessage("Saved live as tradeable.");
+        return;
+      }
+
+      const response = isLocalRecordId(nextItem.id)
+        ? await api.createItem(nextItem)
+        : await api.updateItem(nextItem.id, nextItem);
+      upsertItemFromServer(response.item, isLocalRecordId(nextItem.id) ? nextItem.id : undefined);
+      setSyncMessage("Draft saved live.");
+    } catch {
+      setSyncMessage("Live sync unavailable. Local record is still saved on this phone.");
+    } finally {
+      setIsSyncing(false);
+    }
+  }
+
+  async function handlePublish() {
+    if (!publishCheck.isValid) {
+      Alert.alert("Item is not publish-ready", publishCheck.missing.join("\n"));
+      return;
+    }
+
+    publishItem(currentItem.id);
+    await saveLive({ ...currentItem, status: "tradeable" }, "publish");
+  }
+
+  async function handleArchive() {
+    archiveItem(currentItem.id);
+    if (!isLocalRecordId(currentItem.id)) {
+      try {
+        await api.updateItem(currentItem.id, { status: "archived" });
+      } catch {
+        // Local archive remains authoritative for the iPhone beta.
+      }
+    }
+    onBack();
+  }
 
   return (
     <BetaScreen>
@@ -1123,11 +1273,36 @@ function InventoryDetail({
             backgroundColor: theme.colors.surfaceElevated,
             borderRadius: theme.radius.lg,
             justifyContent: "center",
+            overflow: "hidden",
           }}
         >
-          <Text style={{ color: theme.colors.textSecondary, fontSize: 16, fontWeight: "800" }}>
-            {item.photos.length > 0 ? `${item.photos.length} photos` : "No photos yet"}
-          </Text>
+          {item.photos[0] ? (
+            <Image
+              accessibilityLabel={`${item.title || "Item"} primary photo`}
+              source={{ uri: item.photos[0].uri }}
+              style={{ height: "100%", width: "100%" }}
+            />
+          ) : (
+            <Text style={{ color: theme.colors.textSecondary, fontSize: 16, fontWeight: "800" }}>
+              No photos yet
+            </Text>
+          )}
+        </View>
+        <View style={{ flexDirection: "row", gap: theme.spacing.sm }}>
+          <View style={{ flex: 1 }}>
+            <BetaButton accessibilityLabel="Add front photo" onPress={() => void addPhoto("front")}>
+              Add front photo
+            </BetaButton>
+          </View>
+          <View style={{ flex: 1 }}>
+            <BetaButton
+              accessibilityLabel="Add tag photo"
+              onPress={() => void addPhoto("tag")}
+              variant="secondary"
+            >
+              Add tag photo
+            </BetaButton>
+          </View>
         </View>
 
         <View style={{ gap: theme.spacing.sm }}>
@@ -1154,25 +1329,40 @@ function InventoryDetail({
           ]}
           title="Item details"
         />
+        <DetailPanel
+          rows={[
+            ["Publish-ready", publishCheck.isValid ? "Yes" : "No"],
+            ["Missing", publishCheck.missing.length > 0 ? publishCheck.missing.join(", ") : "None"],
+            ["Live record", isLocalRecordId(item.id) ? "Not yet synced" : "Synced ID"],
+          ]}
+          title="Readiness"
+        />
+        {syncMessage ? <BetaEmptyState message={syncMessage} title="Sync status" /> : null}
 
         <View style={{ gap: theme.spacing.md }}>
           <BetaButton accessibilityLabel="Edit item" onPress={() => onEdit(item.id)}>
             Edit item
           </BetaButton>
           <BetaButton
+            accessibilityLabel="Save draft live"
+            loading={isSyncing}
+            onPress={() => void saveLive(item, "draft")}
+            variant="secondary"
+          >
+            Save draft live
+          </BetaButton>
+          <BetaButton
             accessibilityLabel="Publish item"
             disabled={item.status === "tradeable"}
-            onPress={() => publishItem(item.id)}
-            variant="secondary"
+            loading={isSyncing}
+            onPress={() => void handlePublish()}
+            variant="black"
           >
             Publish as Tradeable
           </BetaButton>
           <BetaButton
             accessibilityLabel="Archive item"
-            onPress={() => {
-              archiveItem(item.id);
-              onBack();
-            }}
+            onPress={() => void handleArchive()}
             variant="ghost"
           >
             Archive item
@@ -1185,7 +1375,10 @@ function InventoryDetail({
 
 function InventoryEdit({ item, onBack }: { item: TradeableItem | undefined; onBack: () => void }) {
   const theme = beta;
-  const { updateItem } = useCollectionState();
+  const api = useApiClient();
+  const { updateItem, upsertItemFromServer } = useCollectionState();
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<string | undefined>();
 
   if (!item) {
     return <MissingRecord title="Item not found" onBack={onBack} />;
@@ -1196,6 +1389,35 @@ function InventoryEdit({ item, onBack }: { item: TradeableItem | undefined; onBa
     const suggestions = getMockAiListingSuggestions(currentItem);
     updateItem(currentItem.id, { aiSuggestions: suggestions });
     Alert.alert("AI suggestions ready", "Suggestions were added for review.");
+  }
+
+  async function addPhoto(kind: ItemPhoto["kind"]) {
+    const photo = await pickItemPhoto(kind, currentItem.photos.length);
+    if (!photo) {
+      return;
+    }
+
+    updateItem(currentItem.id, { photos: [...currentItem.photos, photo] });
+  }
+
+  async function saveDraftLive() {
+    setIsSyncing(true);
+    setSyncMessage(undefined);
+
+    try {
+      const response = isLocalRecordId(currentItem.id)
+        ? await api.createItem(currentItem)
+        : await api.updateItem(currentItem.id, currentItem);
+      upsertItemFromServer(
+        response.item,
+        isLocalRecordId(currentItem.id) ? currentItem.id : undefined,
+      );
+      setSyncMessage("Draft saved live.");
+    } catch {
+      setSyncMessage("Live sync unavailable. Local edits are still saved on this phone.");
+    } finally {
+      setIsSyncing(false);
+    }
   }
 
   return (
@@ -1227,6 +1449,40 @@ function InventoryEdit({ item, onBack }: { item: TradeableItem | undefined; onBa
             title="AI suggestions"
           />
         ) : null}
+
+        <View style={{ flexDirection: "row", gap: theme.spacing.sm }}>
+          <View style={{ flex: 1 }}>
+            <BetaButton
+              accessibilityLabel="Add front item photo"
+              onPress={() => void addPhoto("front")}
+              variant="black"
+            >
+              Add front photo
+            </BetaButton>
+          </View>
+          <View style={{ flex: 1 }}>
+            <BetaButton
+              accessibilityLabel="Add detail item photo"
+              onPress={() => void addPhoto("detail")}
+              variant="secondary"
+            >
+              Add detail photo
+            </BetaButton>
+          </View>
+        </View>
+        <DetailPanel
+          rows={[
+            ["Photos", `${currentItem.photos.length} attached`],
+            [
+              "Publish readiness",
+              getPublishCheck(currentItem).isValid
+                ? "Ready"
+                : getPublishCheck(currentItem).missing.join(", "),
+            ],
+          ]}
+          title="Media and readiness"
+        />
+        {syncMessage ? <BetaEmptyState message={syncMessage} title="Sync status" /> : null}
 
         <BetaTextField
           label="Title"
@@ -1357,6 +1613,14 @@ function InventoryEdit({ item, onBack }: { item: TradeableItem | undefined; onBa
         <BetaButton accessibilityLabel="Done editing item" onPress={onBack}>
           Done
         </BetaButton>
+        <BetaButton
+          accessibilityLabel="Save item draft live"
+          loading={isSyncing}
+          onPress={() => void saveDraftLive()}
+          variant="secondary"
+        >
+          Save draft live
+        </BetaButton>
       </ScrollView>
     </BetaScreen>
   );
@@ -1372,10 +1636,47 @@ function WishlistDetail({
   onEdit: (itemId: string) => void;
 }) {
   const theme = beta;
-  const { archiveWishlistItem } = useWishlistState();
+  const api = useApiClient();
+  const { archiveWishlistItem, upsertWishlistItemFromServer } = useWishlistState();
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<string | undefined>();
 
   if (!item) {
     return <MissingRecord title="Wishlist item not found" onBack={onBack} />;
+  }
+
+  const currentItem = item;
+
+  async function saveWantLive() {
+    setIsSyncing(true);
+    setSyncMessage(undefined);
+
+    try {
+      const response = isLocalRecordId(currentItem.id)
+        ? await api.publishWishlistItem(currentItem)
+        : await api.updateWishlistItem(currentItem.id, currentItem);
+      upsertWishlistItemFromServer(
+        response.wishlistItem,
+        isLocalRecordId(currentItem.id) ? currentItem.id : undefined,
+      );
+      setSyncMessage("Want saved live.");
+    } catch {
+      setSyncMessage("Live sync unavailable. Local want is still saved on this phone.");
+    } finally {
+      setIsSyncing(false);
+    }
+  }
+
+  async function handleArchiveWant() {
+    archiveWishlistItem(currentItem.id);
+    if (!isLocalRecordId(currentItem.id)) {
+      try {
+        await api.updateWishlistItem(currentItem.id, { isArchived: true });
+      } catch {
+        // Local archive remains authoritative for the iPhone beta.
+      }
+    }
+    onBack();
   }
 
   return (
@@ -1414,17 +1715,31 @@ function WishlistDetail({
           title="Wishlist details"
         />
         {item.notes ? <DetailPanel rows={[["Collector note", item.notes]]} title="Notes" /> : null}
+        <DetailPanel
+          rows={[
+            ["Live record", isLocalRecordId(item.id) ? "Not yet synced" : "Synced ID"],
+            ["Minimum fields", item.title.trim().length >= 3 ? "Ready" : "Needs title"],
+            ["Visibility", wishlistVisibilityLabels[item.visibility]],
+          ]}
+          title="Readiness"
+        />
+        {syncMessage ? <BetaEmptyState message={syncMessage} title="Sync status" /> : null}
 
         <View style={{ gap: theme.spacing.md }}>
           <BetaButton accessibilityLabel="Edit wishlist item" onPress={() => onEdit(item.id)}>
             Edit want
           </BetaButton>
           <BetaButton
+            accessibilityLabel="Save want live"
+            loading={isSyncing}
+            onPress={() => void saveWantLive()}
+            variant="black"
+          >
+            Save want live
+          </BetaButton>
+          <BetaButton
             accessibilityLabel="Archive wishlist item"
-            onPress={() => {
-              archiveWishlistItem(item.id);
-              onBack();
-            }}
+            onPress={() => void handleArchiveWant()}
             variant="secondary"
           >
             Archive want
@@ -1437,7 +1752,10 @@ function WishlistDetail({
 
 function WishlistEdit({ item, onBack }: { item: WishlistItem | undefined; onBack: () => void }) {
   const theme = beta;
-  const { updateWishlistItem } = useWishlistState();
+  const api = useApiClient();
+  const { updateWishlistItem, upsertWishlistItemFromServer } = useWishlistState();
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<string | undefined>();
 
   if (!item) {
     return <MissingRecord title="Wishlist item not found" onBack={onBack} />;
@@ -1448,6 +1766,26 @@ function WishlistEdit({ item, onBack }: { item: WishlistItem | undefined; onBack
     const result = updateWishlistItem(currentItem.id, { isGrail });
     if (!result.ok) {
       Alert.alert("Grail limit reached", result.message);
+    }
+  }
+
+  async function saveWantLive() {
+    setIsSyncing(true);
+    setSyncMessage(undefined);
+
+    try {
+      const response = isLocalRecordId(currentItem.id)
+        ? await api.publishWishlistItem(currentItem)
+        : await api.updateWishlistItem(currentItem.id, currentItem);
+      upsertWishlistItemFromServer(
+        response.wishlistItem,
+        isLocalRecordId(currentItem.id) ? currentItem.id : undefined,
+      );
+      setSyncMessage("Want saved live.");
+    } catch {
+      setSyncMessage("Live sync unavailable. Local edits are still saved on this phone.");
+    } finally {
+      setIsSyncing(false);
     }
   }
 
@@ -1608,8 +1946,17 @@ function WishlistEdit({ item, onBack }: { item: WishlistItem | undefined; onBack
           style={{ minHeight: 104, textAlignVertical: "top" }}
           value={item.notes ?? ""}
         />
+        {syncMessage ? <BetaEmptyState message={syncMessage} title="Sync status" /> : null}
         <BetaButton accessibilityLabel="Done editing wishlist item" onPress={onBack}>
           Done
+        </BetaButton>
+        <BetaButton
+          accessibilityLabel="Save wishlist item live"
+          loading={isSyncing}
+          onPress={() => void saveWantLive()}
+          variant="secondary"
+        >
+          Save want live
         </BetaButton>
       </ScrollView>
     </BetaScreen>
@@ -1659,6 +2006,45 @@ function MissingRecord({ onBack, title }: { onBack: () => void; title: string })
       </View>
     </BetaScreen>
   );
+}
+
+function isLocalRecordId(id: string): boolean {
+  return id.startsWith("item_") || id.startsWith("wish_") || id.startsWith("local_");
+}
+
+async function pickItemPhoto(
+  kind: ItemPhoto["kind"],
+  sortOrder: number,
+): Promise<ItemPhoto | undefined> {
+  const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (!permission.granted) {
+    Alert.alert("Photo permission needed", "Allow photo access to attach item photos.");
+    return undefined;
+  }
+
+  const result = await ImagePicker.launchImageLibraryAsync({
+    allowsEditing: true,
+    aspect: [4, 5],
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    quality: 0.82,
+  });
+
+  if (result.canceled || result.assets.length === 0) {
+    return undefined;
+  }
+
+  const asset = result.assets[0];
+  if (!asset?.uri) {
+    return undefined;
+  }
+
+  return {
+    createdAt: new Date().toISOString(),
+    id: `photo_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    kind,
+    sortOrder,
+    uri: asset.uri,
+  };
 }
 
 function TradesTab({
