@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Pressable, ScrollView, StatusBar, Switch, Text, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
@@ -11,7 +11,15 @@ import {
   WISHLIST_PRIORITIES,
   WISHLIST_VISIBILITY_OPTIONS,
 } from "@ctn/constants";
-import type { TradeableItem, WishlistItem } from "@ctn/types";
+import type {
+  Conversation,
+  ConversationMessage,
+  Trade,
+  TradeStatus,
+  TradeableItem,
+  UserProfile,
+  WishlistItem,
+} from "@ctn/types";
 
 import {
   categoryLabels,
@@ -22,6 +30,8 @@ import {
   visibilityLabels,
 } from "@/lib/item-display";
 import { getMockAiListingSuggestions } from "@/lib/mock-ai-listing";
+import { getPublishCheck } from "@/lib/item-validation";
+import { tradeStatusLabels } from "@/lib/trade-display";
 import { betaTokens as beta } from "@/manual/beta-tokens";
 import {
   BetaBody,
@@ -44,14 +54,19 @@ import {
   wishlistPriorityLabels,
   wishlistVisibilityLabels,
 } from "@/lib/wishlist-display";
+import { useApiClient } from "@/api/use-api-client";
+import { MobileAuthProvider } from "@/auth/clerk-provider";
 import { CollectionStateProvider, useCollectionState } from "@/state/collection-state";
 import { OnboardingStateProvider } from "@/state/onboarding-state";
+import { UserProfileProvider, useUserProfile } from "@/state/user-profile-state";
 import { WishlistStateProvider, useWishlistState } from "@/state/wishlist-state";
+import { DataSyncBootstrap } from "@/sync/data-sync-bootstrap";
 import { ThemeProvider } from "@/theme/theme-provider";
 
 type Tab = "home" | "inventory" | "wishlist" | "messages" | "trades";
 type ManualRoute = { mode: "list" | "detail" | "edit"; itemId: string | undefined };
 type MessageRoute = { conversationId: string | undefined; mode: "list" | "detail" };
+type TradeRoute = { mode: "list" | "detail" | "compose"; tradeId: string | undefined };
 type LocalMessage = {
   id: string;
   content: string;
@@ -63,11 +78,22 @@ type LocalMessage = {
 type LocalConversation = {
   contextSubtitle: string;
   contextTitle: string;
-  contextType: "item" | "trade";
+  contextType: Conversation["contextType"];
   id: string;
   messages: LocalMessage[];
   participant: string;
   unreadCount: number;
+};
+type LocalTradeProposal = {
+  id: string;
+  offeredItemId: string | undefined;
+  requestedTitle: string;
+  requestedSubtitle: string;
+  status: TradeStatus;
+  counterparty: string;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 const tabs: Array<{ id: Tab; label: string }> = [
@@ -134,16 +160,21 @@ const localConversations: LocalConversation[] = [
 export default function BetaApp() {
   return (
     <SafeAreaProvider>
-      <ThemeProvider>
-        <OnboardingStateProvider>
-          <CollectionStateProvider>
-            <WishlistStateProvider>
-              <StatusBar barStyle="dark-content" />
-              <BetaShell />
-            </WishlistStateProvider>
-          </CollectionStateProvider>
-        </OnboardingStateProvider>
-      </ThemeProvider>
+      <MobileAuthProvider>
+        <ThemeProvider>
+          <OnboardingStateProvider>
+            <CollectionStateProvider>
+              <WishlistStateProvider>
+                <UserProfileProvider>
+                  <DataSyncBootstrap />
+                  <StatusBar barStyle="dark-content" />
+                  <BetaShell />
+                </UserProfileProvider>
+              </WishlistStateProvider>
+            </CollectionStateProvider>
+          </OnboardingStateProvider>
+        </ThemeProvider>
+      </MobileAuthProvider>
     </SafeAreaProvider>
   );
 }
@@ -162,6 +193,12 @@ function BetaShell() {
     conversationId: undefined,
     mode: "list",
   });
+  const [tradeRoute, setTradeRoute] = useState<TradeRoute>({
+    mode: "list",
+    tradeId: undefined,
+  });
+  const [localTrades, setLocalTrades] = useState<LocalTradeProposal[]>([]);
+
   function openTab(nextTab: Tab) {
     setTab(nextTab);
     if (nextTab !== "inventory") {
@@ -172,6 +209,9 @@ function BetaShell() {
     }
     if (nextTab !== "messages") {
       setMessageRoute({ conversationId: undefined, mode: "list" });
+    }
+    if (nextTab !== "trades") {
+      setTradeRoute({ mode: "list", tradeId: undefined });
     }
   }
 
@@ -188,7 +228,14 @@ function BetaShell() {
         {tab === "messages" ? (
           <MessagesTab route={messageRoute} setRoute={setMessageRoute} />
         ) : null}
-        {tab === "trades" ? <TradesTab /> : null}
+        {tab === "trades" ? (
+          <TradesTab
+            localTrades={localTrades}
+            route={tradeRoute}
+            setLocalTrades={setLocalTrades}
+            setRoute={setTradeRoute}
+          />
+        ) : null}
       </View>
       <BetaTabBar active={tab} onChange={openTab} tabs={tabs} />
     </View>
@@ -199,8 +246,13 @@ function HomeTab({ setTab }: { setTab: (tab: Tab) => void }) {
   const theme = beta;
   const { items, summary: collectionSummary } = useCollectionState();
   const { activeItems, summary: wishlistSummary } = useWishlistState();
+  const { isLoading: isProfileLoading, profile } = useUserProfile();
   const tradeableItems = useMemo(
     () => items.filter((item) => item.status === "tradeable"),
+    [items],
+  );
+  const publishReadyCount = useMemo(
+    () => items.filter((item) => getPublishCheck(item).isValid).length,
     [items],
   );
 
@@ -227,6 +279,38 @@ function HomeTab({ setTab }: { setTab: (tab: Tab) => void }) {
         />
 
         <MatchPreview tradeableItems={tradeableItems} wishlistItems={activeItems} />
+
+        <BetaReadinessPanel
+          metrics={[
+            {
+              detail:
+                profile?.displayName ??
+                (isProfileLoading ? "Checking live account" : "Local beta identity"),
+              label: "Account",
+              status: profile ? "Live" : "Local",
+            },
+            {
+              detail: `${publishReadyCount} of ${collectionSummary.totalItems} records pass publish checks`,
+              label: "Collection",
+              status: publishReadyCount > 0 ? "Ready" : "Needs records",
+            },
+            {
+              detail: `${wishlistSummary.activeItems} active wants, ${wishlistSummary.grailItems} grails`,
+              label: "Wishlist",
+              status: wishlistSummary.activeItems > 0 ? "Ready" : "Needs wants",
+            },
+            {
+              detail: "Live API attempt with local fallback",
+              label: "Messages",
+              status: "Beta wired",
+            },
+            {
+              detail: "Local structured proposal workflow",
+              label: "Trades",
+              status: "In progress",
+            },
+          ]}
+        />
 
         <View style={{ gap: theme.spacing.md }}>
           <BetaButton accessibilityLabel="Open inventory" onPress={() => setTab("inventory")}>
@@ -292,6 +376,56 @@ function MatchPreview({
         {sameSize ? "size match" : "size flexible"} /{" "}
         {firstWant.isGrail ? "grail priority" : "active want"}.
       </BetaBody>
+    </BetaPanel>
+  );
+}
+
+function BetaReadinessPanel({
+  metrics,
+}: {
+  metrics: Array<{ detail: string; label: string; status: string }>;
+}) {
+  return (
+    <BetaPanel>
+      <View style={{ gap: beta.spacing.xs }}>
+        <BetaKicker>BETA READINESS</BetaKicker>
+        <Text style={{ color: beta.colors.ink, fontSize: 22, fontWeight: "900" }}>
+          Product checkpoints
+        </Text>
+      </View>
+      <View style={{ gap: beta.spacing.sm }}>
+        {metrics.map((metric) => (
+          <View
+            key={metric.label}
+            style={{
+              borderColor: beta.colors.border,
+              borderRadius: beta.radius.md,
+              borderWidth: 1,
+              gap: beta.spacing.xs,
+              padding: beta.spacing.md,
+            }}
+          >
+            <View
+              style={{
+                alignItems: "center",
+                flexDirection: "row",
+                gap: beta.spacing.md,
+                justifyContent: "space-between",
+              }}
+            >
+              <Text style={{ color: beta.colors.ink, fontSize: 16, fontWeight: "900" }}>
+                {metric.label}
+              </Text>
+              <Text style={{ color: beta.colors.orange, fontSize: 12, fontWeight: "900" }}>
+                {metric.status}
+              </Text>
+            </View>
+            <Text style={{ color: beta.colors.inkMuted, fontSize: 14, lineHeight: 20 }}>
+              {metric.detail}
+            </Text>
+          </View>
+        ))}
+      </View>
     </BetaPanel>
   );
 }
@@ -506,29 +640,157 @@ function MessagesTab({
   setRoute: (route: MessageRoute) => void;
 }) {
   const theme = beta;
+  const api = useApiClient();
+  const apiRef = useRef(api);
   const [draft, setDraft] = useState("");
+  const [apiConversations, setApiConversations] = useState<Conversation[]>([]);
+  const [apiMessages, setApiMessages] = useState<Record<string, ConversationMessage[]>>({});
+  const [currentUser, setCurrentUser] = useState<UserProfile | undefined>();
+  const [error, setError] = useState<string | undefined>();
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSending, setIsSending] = useState(false);
+  const [source, setSource] = useState<"api" | "local">("local");
+
+  useEffect(() => {
+    apiRef.current = api;
+  }, [api]);
+
+  const refreshConversations = useCallback(async () => {
+    setError(undefined);
+    setIsLoading(true);
+
+    try {
+      const [meResponse, conversationsResponse] = await Promise.all([
+        apiRef.current.getMe(),
+        apiRef.current.listConversations(),
+      ]);
+      setCurrentUser(meResponse.user);
+      setApiConversations(conversationsResponse.conversations);
+      setSource("api");
+    } catch {
+      setError("Live messages are unavailable. Showing local beta conversations.");
+      setSource("local");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void refreshConversations();
+  }, [refreshConversations]);
+
+  const loadConversationMessages = useCallback(
+    async (conversationId: string) => {
+      try {
+        const [conversationResponse, messagesResponse] = await Promise.all([
+          apiRef.current.getConversation(conversationId),
+          apiRef.current.listMessages(conversationId),
+        ]);
+        setApiConversations((existing) => [
+          conversationResponse.conversation,
+          ...existing.filter((item) => item.id !== conversationId),
+        ]);
+        setApiMessages((existing) => ({
+          ...existing,
+          [conversationId]: messagesResponse.messages,
+        }));
+
+        const latestIncoming = [...messagesResponse.messages]
+          .reverse()
+          .find((message) => message.senderId !== currentUser?.id);
+        if (latestIncoming) {
+          void apiRef.current.markMessageRead(latestIncoming.id);
+        }
+      } catch {
+        setError("This conversation could not be loaded live.");
+      }
+    },
+    [currentUser?.id],
+  );
+
+  useEffect(() => {
+    if (source !== "api" || route.mode !== "detail" || !route.conversationId) {
+      return;
+    }
+
+    void loadConversationMessages(route.conversationId);
+  }, [loadConversationMessages, route.conversationId, route.mode, source]);
+
+  const conversations =
+    source === "api"
+      ? apiConversations.map((item) => toDisplayConversation(item, currentUser?.id))
+      : localConversations;
   const conversation =
     route.conversationId === undefined
       ? undefined
-      : localConversations.find((item) => item.id === route.conversationId);
+      : conversations.find((item) => item.id === route.conversationId);
+  const messages =
+    source === "api" && route.conversationId
+      ? (apiMessages[route.conversationId] ?? []).map((message) =>
+          toDisplayMessage(message, currentUser?.id),
+        )
+      : (conversation?.messages ?? []);
+
+  async function sendMessage() {
+    const content = draft.trim();
+
+    if (!content || !route.conversationId) {
+      return;
+    }
+
+    if (source !== "api") {
+      Alert.alert(
+        "Local message draft",
+        "Live messages are unavailable in fallback mode. The UI is still available for design review.",
+      );
+      setDraft("");
+      return;
+    }
+
+    setError(undefined);
+    setIsSending(true);
+
+    try {
+      const response = await apiRef.current.sendMessage(route.conversationId, {
+        content,
+        type: "text",
+      });
+      const conversationId = route.conversationId;
+      setApiMessages((existing) => ({
+        ...existing,
+        [conversationId]: [...(existing[conversationId] ?? []), response.message],
+      }));
+      setDraft("");
+      void loadConversationMessages(conversationId);
+    } catch {
+      setError("Message could not be sent.");
+    } finally {
+      setIsSending(false);
+    }
+  }
+
+  function handleDraftChange(value: string) {
+    setDraft(value);
+    if (source === "api" && route.conversationId) {
+      void apiRef.current.markConversationTyping(route.conversationId);
+    }
+  }
 
   if (route.mode === "detail") {
     return (
       <ConversationDetail
         conversation={conversation}
         draft={draft}
+        error={error}
+        isSending={isSending}
+        messages={messages}
         onBack={() => {
           setDraft("");
           setRoute({ conversationId: undefined, mode: "list" });
         }}
-        onChangeDraft={setDraft}
-        onSend={() => {
-          Alert.alert(
-            "Local message draft",
-            "This beta screen is visual-only. Live sending comes after the API wiring pass.",
-          );
-          setDraft("");
-        }}
+        onChangeDraft={handleDraftChange}
+        onSend={() => void sendMessage()}
+        source={source}
       />
     );
   }
@@ -547,13 +809,35 @@ function MessagesTab({
           </BetaBody>
         </View>
 
-        {localConversations.map((conversationItem) => (
+        {error ? <BetaEmptyState message={error} title="Offline fallback" tone="warning" /> : null}
+
+        {isLoading ? (
+          <BetaEmptyState
+            message="Checking the live conversation API before using the fallback."
+            title="Loading messages"
+          />
+        ) : conversations.length === 0 ? (
+          <BetaEmptyState
+            message="Start a thread from an item or trade once the backend has conversation records."
+            title="No live conversations yet"
+          />
+        ) : null}
+
+        {conversations.map((conversationItem) => (
           <ConversationRow
             conversation={conversationItem}
             key={conversationItem.id}
             onPress={() => setRoute({ conversationId: conversationItem.id, mode: "detail" })}
           />
         ))}
+
+        <BetaButton
+          accessibilityLabel="Refresh live conversations"
+          onPress={() => void refreshConversations()}
+          variant="secondary"
+        >
+          Refresh messages
+        </BetaButton>
       </ScrollView>
     </BetaScreen>
   );
@@ -601,18 +885,62 @@ function ConversationRow({
   );
 }
 
+function toDisplayConversation(
+  conversation: Conversation,
+  currentUserId: string | undefined,
+): LocalConversation {
+  const participantNames = conversation.participants
+    .map((participant) => participant.displayName)
+    .filter(Boolean);
+  const lastMessage = conversation.lastMessage
+    ? toDisplayMessage(conversation.lastMessage, currentUserId)
+    : undefined;
+
+  return {
+    contextSubtitle: conversation.context.subtitle ?? "Contextual collector thread",
+    contextTitle: conversation.context.title,
+    contextType: conversation.contextType,
+    id: conversation.id,
+    messages: lastMessage ? [lastMessage] : [],
+    participant: participantNames.length > 0 ? participantNames.join(", ") : "Collector",
+    unreadCount: conversation.unreadCount,
+  };
+}
+
+function toDisplayMessage(
+  message: ConversationMessage,
+  currentUserId: string | undefined,
+): LocalMessage {
+  return {
+    content: message.content,
+    createdAt: message.createdAt,
+    id: message.id,
+    isMine: Boolean(currentUserId && message.senderId === currentUserId),
+    sender: message.senderDisplayName,
+    type: message.type === "system_event" ? "system" : "text",
+  };
+}
+
 function ConversationDetail({
   conversation,
   draft,
+  error,
+  isSending,
+  messages,
   onBack,
   onChangeDraft,
   onSend,
+  source,
 }: {
   conversation: LocalConversation | undefined;
   draft: string;
+  error?: string | undefined;
+  isSending: boolean;
+  messages: LocalMessage[];
   onBack: () => void;
   onChangeDraft: (value: string) => void;
   onSend: () => void;
+  source: "api" | "local";
 }) {
   const theme = beta;
 
@@ -661,13 +989,32 @@ function ConversationDetail({
           >
             {conversation.contextSubtitle}
           </Text>
+          <Text
+            style={{
+              color:
+                conversation.contextType === "trade"
+                  ? beta.colors.orangeSoft
+                  : beta.colors.inkMuted,
+              fontSize: 12,
+              fontWeight: "900",
+            }}
+          >
+            {source === "api" ? "LIVE API THREAD" : "LOCAL FALLBACK THREAD"}
+          </Text>
         </BetaPanel>
 
         <View style={{ gap: theme.spacing.md }}>
-          {conversation.messages.map((message) => (
-            <MessageBubble key={message.id} message={message} />
-          ))}
+          {messages.length === 0 ? (
+            <BetaEmptyState
+              message="Ask a focused question about condition, measurements, photos, or trade terms."
+              title="Start the conversation"
+            />
+          ) : (
+            messages.map((message) => <MessageBubble key={message.id} message={message} />)
+          )}
         </View>
+
+        {error ? <BetaEmptyState message={error} title="Message status" tone="warning" /> : null}
 
         <BetaTextField
           label="Message"
@@ -679,8 +1026,9 @@ function ConversationDetail({
           value={draft}
         />
         <BetaButton
-          accessibilityLabel="Send local message"
+          accessibilityLabel="Send message"
           disabled={!draft.trim()}
+          loading={isSending}
           onPress={onSend}
         >
           Send message
@@ -1313,12 +1661,184 @@ function MissingRecord({ onBack, title }: { onBack: () => void; title: string })
   );
 }
 
-function TradesTab() {
+function TradesTab({
+  localTrades,
+  route,
+  setLocalTrades,
+  setRoute,
+}: {
+  localTrades: LocalTradeProposal[];
+  route: TradeRoute;
+  setLocalTrades: (updater: (current: LocalTradeProposal[]) => LocalTradeProposal[]) => void;
+  setRoute: (route: TradeRoute) => void;
+}) {
   const theme = beta;
+  const api = useApiClient();
+  const apiRef = useRef(api);
   const { items } = useCollectionState();
   const { activeItems } = useWishlistState();
+  const [draftNotes, setDraftNotes] = useState("");
+  const [error, setError] = useState<string | undefined>();
+  const [isLoading, setIsLoading] = useState(true);
+  const [liveTrades, setLiveTrades] = useState<Trade[]>([]);
+  const [source, setSource] = useState<"api" | "local">("local");
   const offeredItem = items.find((item) => item.status === "tradeable") ?? items[0];
   const requestedItem = activeItems.find((item) => item.isGrail) ?? activeItems[0];
+  const selectedLiveTrade = liveTrades.find((trade) => trade.id === route.tradeId);
+  const selectedLocalTrade = localTrades.find((trade) => trade.id === route.tradeId);
+  const localSummary = getLocalTradeSummary(localTrades);
+
+  useEffect(() => {
+    apiRef.current = api;
+  }, [api]);
+
+  const refreshTrades = useCallback(async () => {
+    setError(undefined);
+    setIsLoading(true);
+
+    try {
+      const response = await apiRef.current.listTrades();
+      setLiveTrades(response.trades);
+      setSource("api");
+    } catch {
+      setError("Live trades are unavailable. Local proposal workflow is active.");
+      setSource("local");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void refreshTrades();
+  }, [refreshTrades]);
+
+  function createLocalProposal() {
+    if (!offeredItem || !requestedItem) {
+      Alert.alert(
+        "Trade needs two sides",
+        "Add one archive item and one want before composing a proposal.",
+      );
+      return;
+    }
+
+    const now = new Date().toISOString();
+    const proposal: LocalTradeProposal = {
+      counterparty: requestedItem.isGrail ? "Grail match collector" : "Matching collector",
+      createdAt: now,
+      id: `local_trade_${Date.now()}`,
+      notes:
+        draftNotes.trim() ||
+        "Condition, measurements, and shipping details should be confirmed before sending.",
+      offeredItemId: offeredItem.id,
+      requestedSubtitle: [
+        requestedItem.category ? categoryLabels[requestedItem.category] : undefined,
+        requestedItem.size ? sizeLabels[requestedItem.size] : undefined,
+        requestedItem.isGrail ? "grail" : wishlistPriorityLabels[requestedItem.priority],
+      ]
+        .filter(Boolean)
+        .join(" / "),
+      requestedTitle: requestedItem.title || "Untitled wanted item",
+      status: "pending",
+      updatedAt: now,
+    };
+
+    setLocalTrades((current) => [proposal, ...current]);
+    setDraftNotes("");
+    setRoute({ mode: "detail", tradeId: proposal.id });
+  }
+
+  function updateLocalTradeStatus(tradeId: string, status: TradeStatus) {
+    setLocalTrades((current) =>
+      current.map((trade) =>
+        trade.id === tradeId ? { ...trade, status, updatedAt: new Date().toISOString() } : trade,
+      ),
+    );
+  }
+
+  if (route.mode === "compose") {
+    return (
+      <BetaScreen>
+        <ScrollView
+          contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}
+        >
+          <BetaButton
+            accessibilityLabel="Back to trades"
+            onPress={() => setRoute({ mode: "list", tradeId: undefined })}
+            variant="ghost"
+          >
+            Back to trades
+          </BetaButton>
+
+          <View style={{ gap: theme.spacing.sm }}>
+            <BetaKicker>COMPOSE TRADE</BetaKicker>
+            <BetaTitle>Build a structured proposal.</BetaTitle>
+            <BetaBody>
+              This beta composer uses your first tradeable item and strongest want as the two sides.
+            </BetaBody>
+          </View>
+
+          <TradeObjectPanel
+            emptyMessage="Publish one archive item before composing a trade."
+            item={offeredItem}
+            label="Your offer"
+          />
+          <TradeObjectPanel
+            emptyMessage="Add a want before composing a trade."
+            item={requestedItem}
+            label="Target"
+          />
+
+          <BetaTextField
+            label="Proposal note"
+            multiline
+            numberOfLines={4}
+            onChangeText={setDraftNotes}
+            placeholder="Explain condition, fit, what you want confirmed, and why the swap makes sense."
+            style={{ minHeight: 104, textAlignVertical: "top" }}
+            value={draftNotes}
+          />
+
+          <BetaButton
+            accessibilityLabel="Create local trade proposal"
+            disabled={!offeredItem || !requestedItem}
+            onPress={createLocalProposal}
+            variant="black"
+          >
+            Create proposal
+          </BetaButton>
+        </ScrollView>
+      </BetaScreen>
+    );
+  }
+
+  if (route.mode === "detail") {
+    if (selectedLiveTrade) {
+      return (
+        <TradeDetail
+          onBack={() => setRoute({ mode: "list", tradeId: undefined })}
+          trade={selectedLiveTrade}
+        />
+      );
+    }
+
+    if (selectedLocalTrade) {
+      return (
+        <LocalTradeDetail
+          getItem={(itemId) => items.find((item) => item.id === itemId)}
+          onBack={() => setRoute({ mode: "list", tradeId: undefined })}
+          onUpdateStatus={(status) => updateLocalTradeStatus(selectedLocalTrade.id, status)}
+          trade={selectedLocalTrade}
+        />
+      );
+    }
+
+    return (
+      <MissingRecord
+        onBack={() => setRoute({ mode: "list", tradeId: undefined })}
+        title="Trade not found"
+      />
+    );
+  }
 
   return (
     <BetaScreen>
@@ -1334,74 +1854,242 @@ function TradesTab() {
           </BetaBody>
         </View>
 
+        <BetaStatPanel
+          stats={[
+            { label: "Live", value: liveTrades.length },
+            { label: "Local", value: localTrades.length },
+            { label: "Active", value: localSummary.active },
+          ]}
+        />
+
+        {error ? <BetaEmptyState message={error} title="Trade mode" tone="warning" /> : null}
+        {isLoading ? (
+          <BetaEmptyState
+            message="Checking the live trade API before falling back to local proposals."
+            title="Loading trades"
+          />
+        ) : null}
+
         <BetaPanel tone="black">
           <Text style={{ color: theme.colors.orangeSoft, fontSize: 12, fontWeight: "900" }}>
-            TRADE REVIEW
+            {source === "api" ? "LIVE TRADE FEED" : "LOCAL TRADE WORKFLOW"}
           </Text>
           <Text style={{ color: theme.colors.surface, fontSize: 24, fontWeight: "900" }}>
-            One-for-one proposal
+            Structured swaps are now interactive.
           </Text>
           <Text style={{ color: theme.colors.orangeSoft, fontSize: 15, lineHeight: 22 }}>
-            Condition, sizing, and notes matter more than price. Cash balancing can come later.
+            Compose a proposal, review both sides, and move local beta trades through pending,
+            accepted, countered, cancelled, or completed.
           </Text>
         </BetaPanel>
 
-        <View style={{ gap: theme.spacing.md }}>
-          <TradeObjectPanel
-            emptyMessage="Add and publish a collection item to make this side real."
-            item={offeredItem}
-            label="Your offer"
-          />
-          <View
-            style={{
-              alignSelf: "center",
-              backgroundColor: theme.colors.orange,
-              borderRadius: 999,
-              height: 4,
-              width: 96,
-            }}
-          />
-          <TradeObjectPanel
-            emptyMessage="Add a want or grail to preview the requested side."
-            item={requestedItem}
-            label="Their item"
-          />
-        </View>
+        <BetaButton
+          accessibilityLabel="Compose trade proposal"
+          onPress={() => setRoute({ mode: "compose", tradeId: undefined })}
+        >
+          Compose trade
+        </BetaButton>
 
+        {liveTrades.length === 0 && localTrades.length === 0 && !isLoading ? (
+          <BetaEmptyState
+            message="Compose a local proposal after adding one archive item and one want."
+            title="No trades yet"
+          />
+        ) : null}
+
+        <View style={{ gap: theme.spacing.md }}>
+          {liveTrades.map((trade) => (
+            <TradeRow
+              key={trade.id}
+              onPress={() => setRoute({ mode: "detail", tradeId: trade.id })}
+              subtitle={`${trade.proposerDisplayName} <> ${trade.counterpartyDisplayName}`}
+              title={`${trade.proposerItem.title} for ${trade.counterpartyItem.title}`}
+              status={trade.status}
+              source="Live"
+            />
+          ))}
+          {localTrades.map((trade) => (
+            <TradeRow
+              key={trade.id}
+              onPress={() => setRoute({ mode: "detail", tradeId: trade.id })}
+              subtitle={trade.counterparty}
+              title={trade.requestedTitle}
+              status={trade.status}
+              source="Local"
+            />
+          ))}
+        </View>
+      </ScrollView>
+    </BetaScreen>
+  );
+}
+
+function TradeRow({
+  onPress,
+  source,
+  status,
+  subtitle,
+  title,
+}: {
+  onPress: () => void;
+  source: string;
+  status: TradeStatus;
+  subtitle: string;
+  title: string;
+}) {
+  return (
+    <Pressable
+      accessibilityLabel={`Open ${title} trade`}
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => ({
+        backgroundColor: beta.colors.surface,
+        borderColor: status === "accepted" ? beta.colors.orange : beta.colors.border,
+        borderRadius: beta.radius.lg,
+        borderWidth: 1,
+        gap: beta.spacing.sm,
+        opacity: pressed ? 0.86 : 1,
+        padding: beta.spacing.lg,
+      })}
+    >
+      <View style={{ flexDirection: "row", gap: beta.spacing.md, justifyContent: "space-between" }}>
+        <BetaKicker>{source.toUpperCase()}</BetaKicker>
+        <Text style={{ color: beta.colors.orange, fontSize: 12, fontWeight: "900" }}>
+          {tradeStatusLabels[status]}
+        </Text>
+      </View>
+      <Text style={{ color: beta.colors.ink, fontSize: 20, fontWeight: "900" }}>{title}</Text>
+      <Text style={{ color: beta.colors.inkMuted, fontSize: 14, lineHeight: 20 }}>{subtitle}</Text>
+    </Pressable>
+  );
+}
+
+function TradeDetail({ onBack, trade }: { onBack: () => void; trade: Trade }) {
+  const theme = beta;
+
+  return (
+    <BetaScreen>
+      <ScrollView
+        contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}
+      >
+        <BetaButton accessibilityLabel="Back to trades" onPress={onBack} variant="ghost">
+          Back to trades
+        </BetaButton>
+        <BetaPanel tone="black">
+          <Text style={{ color: theme.colors.orangeSoft, fontSize: 12, fontWeight: "900" }}>
+            LIVE TRADE
+          </Text>
+          <Text style={{ color: theme.colors.surface, fontSize: 24, fontWeight: "900" }}>
+            {tradeStatusLabels[trade.status]}
+          </Text>
+          <Text style={{ color: theme.colors.orangeSoft, fontSize: 15, lineHeight: 22 }}>
+            {trade.proposerDisplayName} and {trade.counterpartyDisplayName}
+          </Text>
+        </BetaPanel>
+        <TradeObjectPanel item={trade.proposerItem} label="Proposer item" />
+        <TradeObjectPanel item={trade.counterpartyItem} label="Counterparty item" />
         <DetailPanel
           rows={[
-            ["Status", "Draft review"],
-            ["Conversation", "Message collector before sending"],
-            ["Shipping", "Both sides confirm tracking later"],
-            ["Trust rule", "Trade stays contextual and item-bound"],
+            ["Your role", trade.viewerRole],
+            ["Proposer shipping", trade.proposerShipping.status],
+            ["Counterparty shipping", trade.counterpartyShipping.status],
+            ["Updated", new Date(trade.updatedAt).toLocaleDateString()],
           ]}
-          title="Terms checkpoint"
+          title="Live trade details"
         />
+      </ScrollView>
+    </BetaScreen>
+  );
+}
 
+function LocalTradeDetail({
+  getItem,
+  onBack,
+  onUpdateStatus,
+  trade,
+}: {
+  getItem: (itemId: string | undefined) => TradeableItem | undefined;
+  onBack: () => void;
+  onUpdateStatus: (status: TradeStatus) => void;
+  trade: LocalTradeProposal;
+}) {
+  const theme = beta;
+  const offeredItem = getItem(trade.offeredItemId);
+
+  return (
+    <BetaScreen>
+      <ScrollView
+        contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}
+      >
+        <BetaButton accessibilityLabel="Back to trades" onPress={onBack} variant="ghost">
+          Back to trades
+        </BetaButton>
+        <BetaPanel tone="black">
+          <Text style={{ color: theme.colors.orangeSoft, fontSize: 12, fontWeight: "900" }}>
+            LOCAL PROPOSAL
+          </Text>
+          <Text style={{ color: theme.colors.surface, fontSize: 24, fontWeight: "900" }}>
+            {tradeStatusLabels[trade.status]}
+          </Text>
+          <Text style={{ color: theme.colors.orangeSoft, fontSize: 15, lineHeight: 22 }}>
+            {trade.counterparty}
+          </Text>
+        </BetaPanel>
+        <TradeObjectPanel
+          emptyMessage="The offered archive item is no longer available."
+          item={offeredItem}
+          label="Your offer"
+        />
+        <BetaPanel>
+          <BetaKicker>TARGET</BetaKicker>
+          <Text style={{ color: beta.colors.ink, fontSize: 22, fontWeight: "900" }}>
+            {trade.requestedTitle}
+          </Text>
+          <Text style={{ color: beta.colors.inkMuted, fontSize: 15, lineHeight: 22 }}>
+            {trade.requestedSubtitle || "Wanted item"}
+          </Text>
+        </BetaPanel>
+        <DetailPanel
+          rows={[
+            ["Notes", trade.notes],
+            ["Created", new Date(trade.createdAt).toLocaleDateString()],
+            ["Updated", new Date(trade.updatedAt).toLocaleDateString()],
+            ["Next step", getTradeNextStep(trade.status)],
+          ]}
+          title="Proposal checkpoint"
+        />
         <View style={{ gap: theme.spacing.md }}>
           <BetaButton
-            accessibilityLabel="Open trade message concept"
-            onPress={() =>
-              Alert.alert(
-                "Trade messaging preview",
-                "Messages are now available as a local beta tab. Live trade conversations come after API wiring.",
-              )
-            }
+            accessibilityLabel="Mark proposal accepted"
+            disabled={trade.status === "accepted"}
+            onPress={() => onUpdateStatus("accepted")}
             variant="black"
           >
-            Message collector
+            Mark accepted
           </BetaButton>
           <BetaButton
-            accessibilityLabel="Review trade concept"
-            onPress={() =>
-              Alert.alert(
-                "Review trade",
-                "This is the visual trade-review concept. Sending real proposals stays disabled until backend wiring is restored.",
-              )
-            }
+            accessibilityLabel="Mark proposal countered"
+            disabled={trade.status === "countered"}
+            onPress={() => onUpdateStatus("countered")}
             variant="secondary"
           >
-            Review trade
+            Mark countered
+          </BetaButton>
+          <BetaButton
+            accessibilityLabel="Mark proposal completed"
+            disabled={trade.status === "completed"}
+            onPress={() => onUpdateStatus("completed")}
+            variant="secondary"
+          >
+            Mark completed
+          </BetaButton>
+          <BetaButton
+            accessibilityLabel="Cancel proposal"
+            disabled={trade.status === "cancelled"}
+            onPress={() => onUpdateStatus("cancelled")}
+            variant="ghost"
+          >
+            Cancel proposal
           </BetaButton>
         </View>
       </ScrollView>
@@ -1414,12 +2102,25 @@ function TradeObjectPanel({
   item,
   label,
 }: {
-  emptyMessage: string;
-  item: TradeableItem | WishlistItem | undefined;
+  emptyMessage?: string;
+  item:
+    | TradeableItem
+    | WishlistItem
+    | {
+        category?: TradeableItem["category"];
+        size?: TradeableItem["size"];
+        status?: TradeableItem["status"];
+        title: string;
+      }
+    | undefined;
   label: string;
 }) {
   if (!item) {
-    return <BetaEmptyState message={emptyMessage} title={label} />;
+    return emptyMessage ? (
+      <BetaEmptyState message={emptyMessage} title={label} />
+    ) : (
+      <BetaEmptyState title={label} />
+    );
   }
 
   const title = item.title || "Untitled record";
@@ -1430,7 +2131,9 @@ function TradeObjectPanel({
     ? item.isGrail
       ? "Grail want"
       : `${wishlistPriorityLabels[item.priority]} want`
-    : statusLabels[item.status];
+    : item.status
+      ? statusLabels[item.status]
+      : "Trade item";
 
   return (
     <BetaPanel>
@@ -1454,4 +2157,32 @@ function TradeObjectPanel({
       </Text>
     </BetaPanel>
   );
+}
+
+function getLocalTradeSummary(trades: LocalTradeProposal[]): { active: number; history: number } {
+  return trades.reduce(
+    (summary, trade) =>
+      ["completed", "declined", "cancelled", "disputed"].includes(trade.status)
+        ? { ...summary, history: summary.history + 1 }
+        : { ...summary, active: summary.active + 1 },
+    { active: 0, history: 0 },
+  );
+}
+
+function getTradeNextStep(status: TradeStatus): string {
+  switch (status) {
+    case "pending":
+      return "Confirm condition details in messages before accepting.";
+    case "accepted":
+      return "Collect shipping details and tracking from both sides.";
+    case "countered":
+      return "Review the counter offer and adjust the item side.";
+    case "completed":
+      return "Archive the trade and update collector reputation.";
+    case "cancelled":
+    case "declined":
+      return "No action needed unless the collectors reopen terms.";
+    case "disputed":
+      return "Hold completion until support reviews the issue.";
+  }
 }
