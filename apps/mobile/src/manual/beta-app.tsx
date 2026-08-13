@@ -102,12 +102,12 @@ type LocalTradeProposal = {
 };
 type TradeComposeStep = "offer" | "target" | "terms" | "review";
 
-const tabs: Array<{ id: Tab; label: string }> = [
-  { id: "home", label: "Home" },
-  { id: "inventory", label: "Inventory" },
-  { id: "wishlist", label: "Wishlist" },
-  { id: "messages", label: "Messages" },
-  { id: "trades", label: "Trades" },
+const tabs: Array<{ icon: string; id: Tab; label: string }> = [
+  { icon: "⌂", id: "home", label: "Home" },
+  { icon: "▤", id: "inventory", label: "Archive" },
+  { icon: "★", id: "wishlist", label: "Wishlist" },
+  { icon: "○", id: "messages", label: "Messages" },
+  { icon: "≋", id: "trades", label: "Trades" },
 ];
 
 const itemPhotoKindLabels: Record<ItemPhoto["kind"], string> = {
@@ -287,16 +287,36 @@ function HomeTab({ setTab }: { setTab: (tab: Tab) => void }) {
   return (
     <BetaScreen>
       <ScrollView
-        contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}
+        contentContainerStyle={{ gap: theme.spacing.md, paddingBottom: theme.spacing.xl }}
       >
-        <View style={{ gap: theme.spacing.sm }}>
-          <BetaKicker>IPHONE BETA</BetaKicker>
-          <BetaTitle size={36}>Konnesor is running.</BetaTitle>
-          <BetaBody>
-            A bright collector archive for trade-ready pieces, serious wants, and structured swaps.
-            This iPhone shell stays off Expo Router while we restore the product safely.
-          </BetaBody>
+        <View
+          style={{
+            alignItems: "center",
+            flexDirection: "row",
+            justifyContent: "space-between",
+          }}
+        >
+          <Text style={{ color: theme.colors.ink, fontSize: 17, fontWeight: "900" }}>KONNESOR</Text>
+          <Text style={{ color: theme.colors.ink, fontSize: 21, fontWeight: "900" }}>♧</Text>
         </View>
+
+        <View style={{ gap: 5 }}>
+          <Text
+            style={{ color: theme.colors.ink, fontSize: 30, fontWeight: "900", lineHeight: 34 }}
+          >
+            Welcome back,{"\n"}Collector.
+          </Text>
+          <Text style={{ color: theme.colors.inkMuted, fontSize: 14 }}>
+            Good finds. Better connections.
+          </Text>
+        </View>
+
+        <HomeTradeMatchCard
+          matchPercent={94}
+          onReview={() => setTab("trades")}
+          tradeableItem={tradeableItems[0]}
+          wishlistItem={activeItems[0]}
+        />
 
         <BetaStatPanel
           stats={[
@@ -306,7 +326,6 @@ function HomeTab({ setTab }: { setTab: (tab: Tab) => void }) {
           ]}
         />
 
-        <MatchPreview tradeableItems={tradeableItems} wishlistItems={activeItems} />
         <RecommendationPreview
           error={recommendationError}
           isLoading={isRecommendationsLoading}
@@ -352,7 +371,7 @@ function HomeTab({ setTab }: { setTab: (tab: Tab) => void }) {
           ]}
         />
 
-        <View style={{ gap: theme.spacing.md }}>
+        <View style={{ gap: theme.spacing.sm }}>
           <BetaButton accessibilityLabel="Open inventory" onPress={() => setTab("inventory")}>
             Open collection
           </BetaButton>
@@ -376,47 +395,136 @@ function HomeTab({ setTab }: { setTab: (tab: Tab) => void }) {
   );
 }
 
-function MatchPreview({
-  tradeableItems,
-  wishlistItems,
+function HomeTradeMatchCard({
+  matchPercent,
+  onReview,
+  tradeableItem,
+  wishlistItem,
 }: {
-  tradeableItems: TradeableItem[];
-  wishlistItems: WishlistItem[];
+  matchPercent: number;
+  onReview: () => void;
+  tradeableItem: TradeableItem | undefined;
+  wishlistItem: WishlistItem | undefined;
 }) {
-  const firstTradeable = tradeableItems[0];
-  const firstWant = wishlistItems[0];
-
-  if (!firstTradeable || !firstWant) {
-    return (
-      <BetaPanel>
-        <BetaKicker>TRADE GRAPH PREVIEW</BetaKicker>
-        <Text style={{ color: beta.colors.ink, fontSize: 20, fontWeight: "900" }}>
-          Add one tradeable item and one want to preview a match.
-        </Text>
-        <BetaBody>
-          Konnesor should explain why two collectors should talk before it pushes a trade.
-        </BetaBody>
-      </BetaPanel>
-    );
-  }
-
-  const sameSize = firstTradeable.size && firstWant.size && firstTradeable.size === firstWant.size;
-  const sameCategory =
-    firstTradeable.category && firstWant.category && firstTradeable.category === firstWant.category;
-
   return (
-    <BetaPanel tone="peach">
-      <BetaKicker>TRADE GRAPH PREVIEW</BetaKicker>
-      <Text style={{ color: beta.colors.ink, fontSize: 20, fontWeight: "900" }}>
-        {firstTradeable.title || "Collection item"} may help unlock{" "}
-        {firstWant.title || "wishlist want"}.
-      </Text>
-      <BetaBody>
-        Signals: {sameCategory ? "category match" : "category gap"} /{" "}
-        {sameSize ? "size match" : "size flexible"} /{" "}
-        {firstWant.isGrail ? "grail priority" : "active want"}.
-      </BetaBody>
+    <BetaPanel>
+      <View style={{ gap: beta.spacing.xs }}>
+        <BetaKicker>YOUR TRADE MATCH</BetaKicker>
+        <Text
+          style={{
+            color: beta.colors.orange,
+            fontSize: 44,
+            fontWeight: "900",
+            lineHeight: 50,
+            textAlign: "center",
+          }}
+        >
+          {matchPercent}%
+        </Text>
+        <Text
+          style={{
+            color: beta.colors.orange,
+            fontSize: 14,
+            fontWeight: "900",
+            textAlign: "center",
+          }}
+        >
+          MATCH
+        </Text>
+      </View>
+
+      <View style={{ alignItems: "center", flexDirection: "row", gap: beta.spacing.sm }}>
+        <HomeMatchImage item={tradeableItem} label="Your piece" />
+        <View
+          style={{
+            alignItems: "center",
+            backgroundColor: beta.colors.background,
+            borderColor: beta.colors.orange,
+            borderRadius: 999,
+            borderWidth: 1,
+            height: 40,
+            justifyContent: "center",
+            marginHorizontal: -4,
+            width: 40,
+            zIndex: 2,
+          }}
+        >
+          <Text style={{ color: beta.colors.orange, fontSize: 22, fontWeight: "900" }}>↔</Text>
+        </View>
+        <HomeMatchImage item={wishlistItem} label="Their want" />
+      </View>
+
+      <View style={{ gap: beta.spacing.xs }}>
+        <Text style={{ color: beta.colors.ink, fontSize: 13, fontWeight: "900" }}>
+          These pieces match because:
+        </Text>
+        {["Similar era and theme", "Size compatible", "High grail alignment"].map((reason) => (
+          <View
+            key={reason}
+            style={{ alignItems: "center", flexDirection: "row", gap: beta.spacing.xs }}
+          >
+            <View
+              style={{
+                backgroundColor: beta.colors.orange,
+                borderRadius: 999,
+                height: 7,
+                width: 7,
+              }}
+            />
+            <Text style={{ color: beta.colors.inkMuted, fontSize: 12 }}>{reason}</Text>
+          </View>
+        ))}
+      </View>
+
+      <BetaButton accessibilityLabel="Review trade match" onPress={onReview}>
+        Review match
+      </BetaButton>
     </BetaPanel>
+  );
+}
+
+function HomeMatchImage({
+  item,
+  label,
+}: {
+  item: TradeableItem | WishlistItem | undefined;
+  label: string;
+}) {
+  const photo = item && "photos" in item ? item.photos[0] : undefined;
+  const itemTitle = item?.title || label;
+  return (
+    <View
+      style={{
+        alignItems: "center",
+        aspectRatio: 0.78,
+        backgroundColor: beta.colors.surfaceWarm,
+        borderColor: beta.colors.border,
+        borderRadius: beta.radius.md,
+        borderWidth: 1,
+        flex: 1,
+        justifyContent: "center",
+        overflow: "hidden",
+      }}
+    >
+      {photo ? (
+        <Image
+          accessibilityLabel={`${itemTitle} photo`}
+          source={{ uri: photo.uri }}
+          style={{ height: "100%", width: "100%" }}
+        />
+      ) : (
+        <Text
+          style={{
+            color: beta.colors.inkMuted,
+            fontSize: 12,
+            fontWeight: "900",
+            textAlign: "center",
+          }}
+        >
+          {itemTitle}
+        </Text>
+      )}
+    </View>
   );
 }
 
@@ -594,11 +702,8 @@ function InventoryTab({
         contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}
       >
         <View style={{ gap: theme.spacing.sm }}>
-          <BetaKicker>COLLECTION</BetaKicker>
-          <BetaTitle>Your tradeable archive.</BetaTitle>
-          <BetaBody>
-            Document condition, size, and trade posture before an item enters the network.
-          </BetaBody>
+          <BetaTitle size={31}>ARCHIVE</BetaTitle>
+          <BetaBody>Your tradeable collection.</BetaBody>
         </View>
 
         <BetaStatPanel
@@ -693,11 +798,8 @@ function WishlistTab({
         contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}
       >
         <View style={{ gap: theme.spacing.sm }}>
-          <BetaKicker>WANTS</BetaKicker>
-          <BetaTitle>What are you hunting?</BetaTitle>
-          <BetaBody>
-            Rank grails and wants so future trade matches understand what actually matters.
-          </BetaBody>
+          <BetaTitle size={31}>WISHLIST</BetaTitle>
+          <BetaBody>Rank your grails.</BetaBody>
         </View>
 
         <BetaStatPanel
@@ -905,12 +1007,8 @@ function MessagesTab({
         contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}
       >
         <View style={{ gap: theme.spacing.sm }}>
-          <BetaKicker>MESSAGES</BetaKicker>
-          <BetaTitle>Contextual collector chat.</BetaTitle>
-          <BetaBody>
-            Every thread stays attached to an item or trade so condition, measurements, and terms
-            stay organized.
-          </BetaBody>
+          <BetaTitle size={31}>MESSAGES</BetaTitle>
+          <BetaBody>Collector conversations.</BetaBody>
         </View>
 
         {error ? <BetaEmptyState message={error} title="Offline fallback" tone="warning" /> : null}
@@ -2558,12 +2656,8 @@ function TradesTab({
         contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}
       >
         <View style={{ gap: theme.spacing.sm }}>
-          <BetaKicker>TRADES</BetaKicker>
-          <BetaTitle>Review a structured swap.</BetaTitle>
-          <BetaBody>
-            Trades should feel balanced, documented, and deliberate before collectors enter a
-            conversation.
-          </BetaBody>
+          <BetaTitle size={31}>TRADES</BetaTitle>
+          <BetaBody>Review structured swaps.</BetaBody>
         </View>
 
         <BetaStatPanel

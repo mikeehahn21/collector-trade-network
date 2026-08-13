@@ -27,8 +27,9 @@ export function BetaScreen({ children }: PropsWithChildren) {
         style={{
           alignSelf: "center",
           flex: 1,
-          maxWidth: 720,
-          padding: beta.spacing.lg,
+          maxWidth: 430,
+          paddingHorizontal: 18,
+          paddingTop: beta.spacing.lg,
           width: "100%",
         }}
       >
@@ -65,7 +66,7 @@ export function BetaButton({
           : beta.colors.ink;
   const content: ReactNode =
     typeof children === "string" || typeof children === "number" ? (
-      <Text style={{ color, fontSize: 16, fontWeight: "800" }}>{children}</Text>
+      <Text style={{ color, fontSize: 14, fontWeight: "900" }}>{children}</Text>
     ) : (
       children
     );
@@ -89,7 +90,7 @@ export function BetaButton({
         borderRadius: beta.radius.md,
         borderWidth: variant === "primary" ? 0 : 1,
         justifyContent: "center",
-        minHeight: 52,
+        minHeight: 44,
         opacity: isDisabled ? 0.45 : pressed ? 0.9 : 1,
         paddingHorizontal: beta.spacing.lg,
       })}
@@ -101,7 +102,7 @@ export function BetaButton({
 
 export function BetaKicker({ children }: PropsWithChildren) {
   return (
-    <Text style={{ color: beta.colors.orange, fontSize: 12, fontWeight: "900" }}>{children}</Text>
+    <Text style={{ color: beta.colors.orange, fontSize: 11, fontWeight: "900" }}>{children}</Text>
   );
 }
 
@@ -139,7 +140,7 @@ export function BetaPanel({
         borderRadius: beta.radius.lg,
         borderWidth: 1,
         gap: beta.spacing.md,
-        padding: beta.spacing.lg,
+        padding: beta.spacing.md,
       }}
     >
       {children}
@@ -171,12 +172,12 @@ export function BetaTabBar<T extends string>({
 }: {
   active: T;
   onChange: (tab: T) => void;
-  tabs: Array<{ id: T; label: string }>;
+  tabs: Array<{ icon?: string; id: T; label: string }>;
 }) {
   return (
     <View
       style={{
-        backgroundColor: beta.colors.surface,
+        backgroundColor: "rgba(16,16,15,0.96)",
         borderColor: beta.colors.border,
         borderTopWidth: 1,
         flexDirection: "row",
@@ -198,14 +199,24 @@ export function BetaTabBar<T extends string>({
               alignItems: "center",
               borderRadius: beta.radius.md,
               flex: 1,
-              minHeight: 46,
+              minHeight: 50,
               paddingVertical: beta.spacing.sm,
             }}
           >
             <Text
               style={{
-                color: selected ? beta.colors.ink : beta.colors.inkMuted,
-                fontSize: 12,
+                color: selected ? beta.colors.orange : beta.colors.inkMuted,
+                fontSize: 18,
+                fontWeight: "900",
+                lineHeight: 20,
+              }}
+            >
+              {item.icon ?? "•"}
+            </Text>
+            <Text
+              style={{
+                color: selected ? beta.colors.orange : beta.colors.inkMuted,
+                fontSize: 10,
                 fontWeight: "900",
               }}
             >
@@ -215,9 +226,9 @@ export function BetaTabBar<T extends string>({
               style={{
                 backgroundColor: selected ? beta.colors.orange : "transparent",
                 borderRadius: 999,
-                height: 3,
+                height: 2,
                 marginTop: beta.spacing.xs,
-                width: 28,
+                width: 20,
               }}
             />
           </Pressable>
@@ -233,28 +244,38 @@ export function BetaStatPanel({
   stats: Array<{ label: string; value: number | string }>;
 }) {
   return (
-    <BetaPanel tone="black">
-      <View style={{ flexDirection: "row", gap: beta.spacing.sm }}>
-        {stats.map((stat) => (
-          <View
-            key={stat.label}
-            style={{
-              backgroundColor: beta.colors.surfaceWarm,
-              borderRadius: beta.radius.md,
-              flex: 1,
-              padding: beta.spacing.md,
-            }}
-          >
-            <Text style={{ color: beta.colors.ink, fontSize: 24, fontWeight: "900" }}>
-              {stat.value}
-            </Text>
-            <Text style={{ color: beta.colors.orange, fontSize: 12, fontWeight: "800" }}>
-              {stat.label}
-            </Text>
-          </View>
-        ))}
-      </View>
-    </BetaPanel>
+    <View
+      style={{
+        backgroundColor: beta.colors.surface,
+        borderColor: beta.colors.border,
+        borderRadius: beta.radius.lg,
+        borderWidth: 1,
+        flexDirection: "row",
+        gap: beta.spacing.sm,
+        padding: beta.spacing.sm,
+      }}
+    >
+      {stats.map((stat) => (
+        <View
+          key={stat.label}
+          style={{
+            backgroundColor: beta.colors.surfaceElevated,
+            borderColor: beta.colors.border,
+            borderRadius: beta.radius.md,
+            borderWidth: 1,
+            flex: 1,
+            padding: beta.spacing.md,
+          }}
+        >
+          <Text style={{ color: beta.colors.ink, fontSize: 22, fontWeight: "900" }}>
+            {stat.value}
+          </Text>
+          <Text style={{ color: beta.colors.orange, fontSize: 10, fontWeight: "900" }}>
+            {stat.label}
+          </Text>
+        </View>
+      ))}
+    </View>
   );
 }
 
@@ -297,10 +318,10 @@ export function BetaItemCard({ item, onPress }: { item: TradeableItem; onPress: 
         )}
       </View>
       <View style={{ gap: 7, padding: beta.spacing.md }}>
-        <Text numberOfLines={2} style={{ color: beta.colors.ink, fontSize: 16, fontWeight: "900" }}>
+        <Text numberOfLines={2} style={{ color: beta.colors.ink, fontSize: 14, fontWeight: "900" }}>
           {title}
         </Text>
-        <Text style={{ color: beta.colors.inkMuted, fontSize: 13 }}>
+        <Text style={{ color: beta.colors.inkMuted, fontSize: 12 }}>
           {category} / {size}
         </Text>
         <View style={{ alignItems: "center", flexDirection: "row", gap: beta.spacing.xs }}>
