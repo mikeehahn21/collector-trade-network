@@ -100,6 +100,7 @@ type LocalTradeProposal = {
   createdAt: string;
   updatedAt: string;
 };
+type TradeComposeStep = "offer" | "target" | "terms" | "review";
 
 const tabs: Array<{ id: Tab; label: string }> = [
   { id: "home", label: "Home" },
@@ -107,6 +108,21 @@ const tabs: Array<{ id: Tab; label: string }> = [
   { id: "wishlist", label: "Wishlist" },
   { id: "messages", label: "Messages" },
   { id: "trades", label: "Trades" },
+];
+
+const itemPhotoKindLabels: Record<ItemPhoto["kind"], string> = {
+  back: "Back",
+  detail: "Detail",
+  flaw: "Flaw",
+  front: "Front",
+  tag: "Tag",
+};
+
+const tradeComposeSteps: Array<{ id: TradeComposeStep; label: string }> = [
+  { id: "offer", label: "Offer" },
+  { id: "target", label: "Target" },
+  { id: "terms", label: "Terms" },
+  { id: "review", label: "Review" },
 ];
 
 const localConversations: LocalConversation[] = [
@@ -1209,6 +1225,30 @@ function InventoryDetail({
     updateItem(currentItem.id, { photos: [...currentItem.photos, photo] });
   }
 
+  function setCoverPhoto(photoId: string) {
+    const selected = currentItem.photos.find((photo) => photo.id === photoId);
+    if (!selected) {
+      return;
+    }
+
+    updateItem(currentItem.id, {
+      photos: [
+        { ...selected, sortOrder: 0 },
+        ...currentItem.photos
+          .filter((photo) => photo.id !== photoId)
+          .map((photo, index) => ({ ...photo, sortOrder: index + 1 })),
+      ],
+    });
+  }
+
+  function removePhoto(photoId: string) {
+    updateItem(currentItem.id, {
+      photos: currentItem.photos
+        .filter((photo) => photo.id !== photoId)
+        .map((photo, index) => ({ ...photo, sortOrder: index })),
+    });
+  }
+
   async function saveLive(nextItem: TradeableItem, mode: "draft" | "publish") {
     setIsSyncing(true);
     setSyncMessage(undefined);
@@ -1265,44 +1305,13 @@ function InventoryDetail({
         <BetaButton accessibilityLabel="Back to inventory" onPress={onBack} variant="ghost">
           Back to inventory
         </BetaButton>
-        <View
-          style={{
-            alignItems: "center",
-            aspectRatio: 0.86,
-            backgroundColor: theme.colors.surfaceElevated,
-            borderRadius: theme.radius.lg,
-            justifyContent: "center",
-            overflow: "hidden",
-          }}
-        >
-          {item.photos[0] ? (
-            <Image
-              accessibilityLabel={`${item.title || "Item"} primary photo`}
-              source={{ uri: item.photos[0].uri }}
-              style={{ height: "100%", width: "100%" }}
-            />
-          ) : (
-            <Text style={{ color: theme.colors.textSecondary, fontSize: 16, fontWeight: "800" }}>
-              No photos yet
-            </Text>
-          )}
-        </View>
-        <View style={{ flexDirection: "row", gap: theme.spacing.sm }}>
-          <View style={{ flex: 1 }}>
-            <BetaButton accessibilityLabel="Add front photo" onPress={() => void addPhoto("front")}>
-              Add front photo
-            </BetaButton>
-          </View>
-          <View style={{ flex: 1 }}>
-            <BetaButton
-              accessibilityLabel="Add tag photo"
-              onPress={() => void addPhoto("tag")}
-              variant="secondary"
-            >
-              Add tag photo
-            </BetaButton>
-          </View>
-        </View>
+        <ItemPhotoGallery
+          onRemovePhoto={removePhoto}
+          onSetCover={setCoverPhoto}
+          photos={item.photos}
+          title={item.title || "Item"}
+        />
+        <PhotoActionGrid onAddPhoto={(kind) => void addPhoto(kind)} />
 
         <View style={{ gap: theme.spacing.sm }}>
           <BetaKicker>{statusLabels[item.status]}</BetaKicker>
@@ -1332,10 +1341,12 @@ function InventoryDetail({
           rows={[
             ["Publish-ready", publishCheck.isValid ? "Yes" : "No"],
             ["Missing", publishCheck.missing.length > 0 ? publishCheck.missing.join(", ") : "None"],
+            ["Photos", getPhotoSummary(item.photos)],
             ["Live record", isLocalRecordId(item.id) ? "Not yet synced" : "Synced ID"],
           ]}
           title="Readiness"
         />
+        <PublishReadinessChecklist missing={publishCheck.missing} />
         {syncMessage ? <BetaEmptyState message={syncMessage} title="Sync status" /> : null}
 
         <View style={{ gap: theme.spacing.md }}>
@@ -1399,6 +1410,30 @@ function InventoryEdit({ item, onBack }: { item: TradeableItem | undefined; onBa
     updateItem(currentItem.id, { photos: [...currentItem.photos, photo] });
   }
 
+  function setCoverPhoto(photoId: string) {
+    const selected = currentItem.photos.find((photo) => photo.id === photoId);
+    if (!selected) {
+      return;
+    }
+
+    updateItem(currentItem.id, {
+      photos: [
+        { ...selected, sortOrder: 0 },
+        ...currentItem.photos
+          .filter((photo) => photo.id !== photoId)
+          .map((photo, index) => ({ ...photo, sortOrder: index + 1 })),
+      ],
+    });
+  }
+
+  function removePhoto(photoId: string) {
+    updateItem(currentItem.id, {
+      photos: currentItem.photos
+        .filter((photo) => photo.id !== photoId)
+        .map((photo, index) => ({ ...photo, sortOrder: index })),
+    });
+  }
+
   async function saveDraftLive() {
     setIsSyncing(true);
     setSyncMessage(undefined);
@@ -1449,29 +1484,16 @@ function InventoryEdit({ item, onBack }: { item: TradeableItem | undefined; onBa
           />
         ) : null}
 
-        <View style={{ flexDirection: "row", gap: theme.spacing.sm }}>
-          <View style={{ flex: 1 }}>
-            <BetaButton
-              accessibilityLabel="Add front item photo"
-              onPress={() => void addPhoto("front")}
-              variant="black"
-            >
-              Add front photo
-            </BetaButton>
-          </View>
-          <View style={{ flex: 1 }}>
-            <BetaButton
-              accessibilityLabel="Add detail item photo"
-              onPress={() => void addPhoto("detail")}
-              variant="secondary"
-            >
-              Add detail photo
-            </BetaButton>
-          </View>
-        </View>
+        <ItemPhotoGallery
+          onRemovePhoto={removePhoto}
+          onSetCover={setCoverPhoto}
+          photos={currentItem.photos}
+          title={currentItem.title || "Item"}
+        />
+        <PhotoActionGrid onAddPhoto={(kind) => void addPhoto(kind)} />
         <DetailPanel
           rows={[
-            ["Photos", `${currentItem.photos.length} attached`],
+            ["Photos", getPhotoSummary(currentItem.photos)],
             [
               "Publish readiness",
               getPublishCheck(currentItem).isValid
@@ -1481,6 +1503,7 @@ function InventoryEdit({ item, onBack }: { item: TradeableItem | undefined; onBa
           ]}
           title="Media and readiness"
         />
+        <PublishReadinessChecklist missing={getPublishCheck(currentItem).missing} />
         {syncMessage ? <BetaEmptyState message={syncMessage} title="Sync status" /> : null}
 
         <BetaTextField
@@ -1992,6 +2015,229 @@ function DetailPanel({ rows, title }: { rows: [string, string][]; title: string 
   );
 }
 
+function ItemPhotoGallery({
+  onRemovePhoto,
+  onSetCover,
+  photos,
+  title,
+}: {
+  onRemovePhoto: (photoId: string) => void;
+  onSetCover: (photoId: string) => void;
+  photos: ItemPhoto[];
+  title: string;
+}) {
+  const coverPhoto = photos[0];
+
+  return (
+    <View style={{ gap: beta.spacing.md }}>
+      <View
+        style={{
+          alignItems: "center",
+          aspectRatio: 0.86,
+          backgroundColor: beta.colors.surfaceElevated,
+          borderColor: coverPhoto ? beta.colors.orange : beta.colors.border,
+          borderRadius: beta.radius.lg,
+          borderWidth: 1,
+          justifyContent: "center",
+          overflow: "hidden",
+        }}
+      >
+        {coverPhoto ? (
+          <>
+            <Image
+              accessibilityLabel={`${title} cover photo`}
+              source={{ uri: coverPhoto.uri }}
+              style={{ height: "100%", width: "100%" }}
+            />
+            <View
+              style={{
+                backgroundColor: beta.colors.orange,
+                borderRadius: beta.radius.sm,
+                left: beta.spacing.md,
+                paddingHorizontal: beta.spacing.sm,
+                paddingVertical: beta.spacing.xs,
+                position: "absolute",
+                top: beta.spacing.md,
+              }}
+            >
+              <Text style={{ color: beta.colors.background, fontSize: 11, fontWeight: "900" }}>
+                COVER / {itemPhotoKindLabels[coverPhoto.kind].toUpperCase()}
+              </Text>
+            </View>
+          </>
+        ) : (
+          <View style={{ alignItems: "center", gap: beta.spacing.sm, padding: beta.spacing.lg }}>
+            <Text style={{ color: beta.colors.ink, fontSize: 20, fontWeight: "900" }}>
+              No photos yet
+            </Text>
+            <Text
+              style={{
+                color: beta.colors.inkMuted,
+                fontSize: 14,
+                lineHeight: 20,
+                textAlign: "center",
+              }}
+            >
+              Add front, tag, flaw, and detail shots so collectors can judge condition quickly.
+            </Text>
+          </View>
+        )}
+      </View>
+
+      {photos.length > 0 ? (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <View style={{ flexDirection: "row", gap: beta.spacing.sm }}>
+            {photos.map((photo, index) => (
+              <View
+                key={photo.id}
+                style={{
+                  backgroundColor: beta.colors.surface,
+                  borderColor: index === 0 ? beta.colors.orange : beta.colors.border,
+                  borderRadius: beta.radius.md,
+                  borderWidth: 1,
+                  gap: beta.spacing.sm,
+                  padding: beta.spacing.sm,
+                  width: 128,
+                }}
+              >
+                <Image
+                  accessibilityLabel={`${title} ${itemPhotoKindLabels[photo.kind]} photo`}
+                  source={{ uri: photo.uri }}
+                  style={{
+                    aspectRatio: 1,
+                    backgroundColor: beta.colors.surfaceWarm,
+                    borderRadius: beta.radius.sm,
+                    width: "100%",
+                  }}
+                />
+                <Text style={{ color: beta.colors.orange, fontSize: 11, fontWeight: "900" }}>
+                  {index === 0 ? "COVER" : itemPhotoKindLabels[photo.kind].toUpperCase()}
+                </Text>
+                <View style={{ flexDirection: "row", gap: beta.spacing.sm }}>
+                  {index !== 0 ? (
+                    <Pressable
+                      accessibilityLabel={`Make ${itemPhotoKindLabels[photo.kind]} photo cover`}
+                      accessibilityRole="button"
+                      onPress={() => onSetCover(photo.id)}
+                    >
+                      <Text style={{ color: beta.colors.ink, fontSize: 12, fontWeight: "900" }}>
+                        Cover
+                      </Text>
+                    </Pressable>
+                  ) : null}
+                  <Pressable
+                    accessibilityLabel={`Remove ${itemPhotoKindLabels[photo.kind]} photo`}
+                    accessibilityRole="button"
+                    onPress={() => onRemovePhoto(photo.id)}
+                  >
+                    <Text style={{ color: beta.colors.danger, fontSize: 12, fontWeight: "900" }}>
+                      Remove
+                    </Text>
+                  </Pressable>
+                </View>
+              </View>
+            ))}
+          </View>
+        </ScrollView>
+      ) : null}
+    </View>
+  );
+}
+
+function PhotoActionGrid({ onAddPhoto }: { onAddPhoto: (kind: ItemPhoto["kind"]) => void }) {
+  const photoKinds: ItemPhoto["kind"][] = ["front", "back", "tag", "flaw", "detail"];
+
+  return (
+    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: beta.spacing.sm }}>
+      {photoKinds.map((kind) => (
+        <View key={kind} style={{ flexGrow: 1, minWidth: "31%" }}>
+          <BetaButton
+            accessibilityLabel={`Add ${itemPhotoKindLabels[kind]} photo`}
+            onPress={() => onAddPhoto(kind)}
+            variant={kind === "front" ? "black" : "secondary"}
+          >
+            {itemPhotoKindLabels[kind]}
+          </BetaButton>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function PublishReadinessChecklist({ missing }: { missing: string[] }) {
+  const checkpoints = [
+    "At least one photo",
+    "Title",
+    "Category",
+    "Size",
+    "Tag",
+    "Condition",
+    "Trade preference",
+    "Member visibility",
+  ];
+
+  return (
+    <BetaPanel>
+      <View style={{ gap: beta.spacing.xs }}>
+        <BetaKicker>PUBLISH CHECKLIST</BetaKicker>
+        <Text style={{ color: beta.colors.ink, fontSize: 20, fontWeight: "900" }}>
+          {missing.length === 0 ? "Ready to publish" : `${missing.length} checkpoints left`}
+        </Text>
+      </View>
+      <View style={{ gap: beta.spacing.sm }}>
+        {checkpoints.map((checkpoint) => {
+          const complete = !missing.includes(checkpoint);
+          return (
+            <View
+              key={checkpoint}
+              style={{ alignItems: "center", flexDirection: "row", gap: beta.spacing.sm }}
+            >
+              <View
+                style={{
+                  backgroundColor: complete ? beta.colors.orange : "transparent",
+                  borderColor: complete ? beta.colors.orange : beta.colors.border,
+                  borderRadius: 999,
+                  borderWidth: 1,
+                  height: 12,
+                  width: 12,
+                }}
+              />
+              <Text
+                style={{
+                  color: complete ? beta.colors.ink : beta.colors.inkMuted,
+                  flex: 1,
+                  fontSize: 14,
+                  fontWeight: complete ? "900" : "700",
+                }}
+              >
+                {checkpoint}
+              </Text>
+            </View>
+          );
+        })}
+      </View>
+    </BetaPanel>
+  );
+}
+
+function getPhotoSummary(photos: ItemPhoto[]): string {
+  if (photos.length === 0) {
+    return "No photos attached";
+  }
+
+  const counts = photos.reduce<Record<ItemPhoto["kind"], number>>(
+    (summary, photo) => ({ ...summary, [photo.kind]: summary[photo.kind] + 1 }),
+    { back: 0, detail: 0, flaw: 0, front: 0, tag: 0 },
+  );
+
+  return Object.entries(counts)
+    .filter(([, count]) => count > 0)
+    .map(
+      ([kind, count]) => `${count} ${itemPhotoKindLabels[kind as ItemPhoto["kind"]].toLowerCase()}`,
+    )
+    .join(" / ");
+}
+
 function MissingRecord({ onBack, title }: { onBack: () => void; title: string }) {
   const theme = beta;
 
@@ -2062,13 +2308,26 @@ function TradesTab({
   const apiRef = useRef(api);
   const { items } = useCollectionState();
   const { activeItems } = useWishlistState();
+  const [composeStep, setComposeStep] = useState<TradeComposeStep>("offer");
   const [draftNotes, setDraftNotes] = useState("");
   const [error, setError] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(true);
   const [liveTrades, setLiveTrades] = useState<Trade[]>([]);
+  const [selectedOfferId, setSelectedOfferId] = useState<string | undefined>();
+  const [selectedTargetId, setSelectedTargetId] = useState<string | undefined>();
   const [source, setSource] = useState<"api" | "local">("local");
-  const offeredItem = items.find((item) => item.status === "tradeable") ?? items[0];
-  const requestedItem = activeItems.find((item) => item.isGrail) ?? activeItems[0];
+  const offerCandidates = useMemo(
+    () => items.filter((item) => item.status !== "archived"),
+    [items],
+  );
+  const offeredItem =
+    offerCandidates.find((item) => item.id === selectedOfferId) ??
+    offerCandidates.find((item) => item.status === "tradeable") ??
+    offerCandidates[0];
+  const requestedItem =
+    activeItems.find((item) => item.id === selectedTargetId) ??
+    activeItems.find((item) => item.isGrail) ??
+    activeItems[0];
   const selectedLiveTrade = liveTrades.find((trade) => trade.id === route.tradeId);
   const selectedLocalTrade = localTrades.find((trade) => trade.id === route.tradeId);
   const localSummary = getLocalTradeSummary(localTrades);
@@ -2096,6 +2355,18 @@ function TradesTab({
   useEffect(() => {
     void refreshTrades();
   }, [refreshTrades]);
+
+  useEffect(() => {
+    if (!selectedOfferId && offeredItem) {
+      setSelectedOfferId(offeredItem.id);
+    }
+  }, [offeredItem, selectedOfferId]);
+
+  useEffect(() => {
+    if (!selectedTargetId && requestedItem) {
+      setSelectedTargetId(requestedItem.id);
+    }
+  }, [requestedItem, selectedTargetId]);
 
   function createLocalProposal() {
     if (!offeredItem || !requestedItem) {
@@ -2129,6 +2400,7 @@ function TradesTab({
 
     setLocalTrades((current) => [proposal, ...current]);
     setDraftNotes("");
+    setComposeStep("offer");
     setRoute({ mode: "detail", tradeId: proposal.id });
   }
 
@@ -2158,39 +2430,94 @@ function TradesTab({
             <BetaKicker>COMPOSE TRADE</BetaKicker>
             <BetaTitle>Build a structured proposal.</BetaTitle>
             <BetaBody>
-              This beta composer uses your first tradeable item and strongest want as the two sides.
+              Choose the piece you would offer, pick the want you are targeting, then review the
+              trade terms before creating the proposal.
             </BetaBody>
           </View>
 
-          <TradeObjectPanel
-            emptyMessage="Publish one archive item before composing a trade."
-            item={offeredItem}
-            label="Your offer"
-          />
-          <TradeObjectPanel
-            emptyMessage="Add a want before composing a trade."
-            item={requestedItem}
-            label="Target"
-          />
+          <TradeComposeProgress activeStep={composeStep} onChange={setComposeStep} />
 
-          <BetaTextField
-            label="Proposal note"
-            multiline
-            numberOfLines={4}
-            onChangeText={setDraftNotes}
-            placeholder="Explain condition, fit, what you want confirmed, and why the swap makes sense."
-            style={{ minHeight: 104, textAlignVertical: "top" }}
-            value={draftNotes}
-          />
+          {composeStep === "offer" ? (
+            <TradeComposeSelection
+              emptyMessage="Publish or create one archive item before composing a trade."
+              items={offerCandidates}
+              onSelect={(itemId) => setSelectedOfferId(itemId)}
+              selectedId={offeredItem?.id}
+              title="Choose your offer"
+              type="offer"
+            />
+          ) : null}
 
-          <BetaButton
-            accessibilityLabel="Create local trade proposal"
-            disabled={!offeredItem || !requestedItem}
-            onPress={createLocalProposal}
-            variant="black"
-          >
-            Create proposal
-          </BetaButton>
+          {composeStep === "target" ? (
+            <TradeComposeSelection
+              emptyMessage="Add at least one want before composing a trade."
+              items={activeItems}
+              onSelect={(itemId) => setSelectedTargetId(itemId)}
+              selectedId={requestedItem?.id}
+              title="Choose the target"
+              type="target"
+            />
+          ) : null}
+
+          {composeStep === "terms" ? (
+            <BetaPanel>
+              <BetaKicker>TERMS</BetaKicker>
+              <BetaTextField
+                label="Proposal note"
+                multiline
+                numberOfLines={5}
+                onChangeText={setDraftNotes}
+                placeholder="Explain condition, fit, what you want confirmed, and why the swap makes sense."
+                style={{ minHeight: 124, textAlignVertical: "top" }}
+                value={draftNotes}
+              />
+              <DetailPanel
+                rows={[
+                  ["Shipping", "Confirm both addresses after acceptance"],
+                  ["Condition", "Ask for measurements, tag, flaw, and back photos"],
+                  ["Safety", "Keep final terms in this trade thread"],
+                ]}
+                title="Terms checklist"
+              />
+            </BetaPanel>
+          ) : null}
+
+          {composeStep === "review" ? (
+            <View style={{ gap: theme.spacing.md }}>
+              <TradeObjectPanel
+                emptyMessage="Choose an archive item before creating the proposal."
+                item={offeredItem}
+                label="Your offer"
+              />
+              <TradeObjectPanel
+                emptyMessage="Choose a target want before creating the proposal."
+                item={requestedItem}
+                label="Target"
+              />
+              <DetailPanel
+                rows={[
+                  ["Proposal note", draftNotes.trim() || "Default condition confirmation note"],
+                  ["Offer status", offeredItem ? statusLabels[offeredItem.status] : "Missing"],
+                  [
+                    "Target priority",
+                    requestedItem
+                      ? requestedItem.isGrail
+                        ? "Grail"
+                        : wishlistPriorityLabels[requestedItem.priority]
+                      : "Missing",
+                  ],
+                ]}
+                title="Review"
+              />
+            </View>
+          ) : null}
+
+          <TradeComposeControls
+            canCreate={Boolean(offeredItem && requestedItem)}
+            onCreate={createLocalProposal}
+            onStepChange={setComposeStep}
+            step={composeStep}
+          />
         </ScrollView>
       </BetaScreen>
     );
@@ -2306,6 +2633,221 @@ function TradesTab({
         </View>
       </ScrollView>
     </BetaScreen>
+  );
+}
+
+function TradeComposeProgress({
+  activeStep,
+  onChange,
+}: {
+  activeStep: TradeComposeStep;
+  onChange: (step: TradeComposeStep) => void;
+}) {
+  const activeIndex = tradeComposeSteps.findIndex((step) => step.id === activeStep);
+
+  return (
+    <View style={{ flexDirection: "row", gap: beta.spacing.sm }}>
+      {tradeComposeSteps.map((step, index) => {
+        const active = step.id === activeStep;
+        const complete = index < activeIndex;
+        return (
+          <Pressable
+            accessibilityLabel={`Open trade step ${step.label}`}
+            accessibilityRole="button"
+            key={step.id}
+            onPress={() => onChange(step.id)}
+            style={{
+              backgroundColor: active ? beta.colors.orange : beta.colors.surface,
+              borderColor: active || complete ? beta.colors.orange : beta.colors.border,
+              borderRadius: beta.radius.md,
+              borderWidth: 1,
+              flex: 1,
+              minHeight: 42,
+              justifyContent: "center",
+              paddingHorizontal: beta.spacing.xs,
+            }}
+          >
+            <Text
+              numberOfLines={1}
+              style={{
+                color: active ? beta.colors.background : beta.colors.ink,
+                fontSize: 11,
+                fontWeight: "900",
+                textAlign: "center",
+              }}
+            >
+              {complete ? "OK " : ""}
+              {step.label}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+function TradeComposeSelection({
+  emptyMessage,
+  items,
+  onSelect,
+  selectedId,
+  title,
+  type,
+}: {
+  emptyMessage: string;
+  items: Array<TradeableItem | WishlistItem>;
+  onSelect: (itemId: string) => void;
+  selectedId: string | undefined;
+  title: string;
+  type: "offer" | "target";
+}) {
+  if (items.length === 0) {
+    return <BetaEmptyState message={emptyMessage} title={title} />;
+  }
+
+  return (
+    <BetaPanel>
+      <View style={{ gap: beta.spacing.xs }}>
+        <BetaKicker>{type === "offer" ? "YOUR SIDE" : "THE WANT"}</BetaKicker>
+        <Text style={{ color: beta.colors.ink, fontSize: 22, fontWeight: "900" }}>{title}</Text>
+      </View>
+      <View style={{ gap: beta.spacing.md }}>
+        {items.map((item) => (
+          <TradeComposeOption
+            item={item}
+            key={item.id}
+            onPress={() => onSelect(item.id)}
+            selected={item.id === selectedId}
+          />
+        ))}
+      </View>
+    </BetaPanel>
+  );
+}
+
+function TradeComposeOption({
+  item,
+  onPress,
+  selected,
+}: {
+  item: TradeableItem | WishlistItem;
+  onPress: () => void;
+  selected: boolean;
+}) {
+  const isWishlistItem = "isGrail" in item;
+  const subtitle = [
+    item.category ? categoryLabels[item.category] : undefined,
+    item.size ? sizeLabels[item.size] : undefined,
+    isWishlistItem
+      ? item.isGrail
+        ? "Grail"
+        : wishlistPriorityLabels[item.priority]
+      : statusLabels[item.status],
+  ]
+    .filter(Boolean)
+    .join(" / ");
+
+  return (
+    <Pressable
+      accessibilityLabel={`Select ${item.title || "untitled item"}`}
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
+      onPress={onPress}
+      style={({ pressed }) => ({
+        backgroundColor: selected ? beta.colors.orangeSoft : beta.colors.surface,
+        borderColor: selected ? beta.colors.orange : beta.colors.border,
+        borderRadius: beta.radius.md,
+        borderWidth: 1,
+        gap: beta.spacing.sm,
+        opacity: pressed ? 0.86 : 1,
+        padding: beta.spacing.md,
+      })}
+    >
+      <View style={{ alignItems: "center", flexDirection: "row", gap: beta.spacing.md }}>
+        <View
+          style={{
+            alignItems: "center",
+            backgroundColor: beta.colors.surfaceWarm,
+            borderRadius: beta.radius.sm,
+            height: 62,
+            justifyContent: "center",
+            overflow: "hidden",
+            width: 62,
+          }}
+        >
+          {"photos" in item && item.photos[0] ? (
+            <Image
+              accessibilityLabel={`${item.title || "Item"} thumbnail`}
+              source={{ uri: item.photos[0].uri }}
+              style={{ height: "100%", width: "100%" }}
+            />
+          ) : (
+            <Text style={{ color: beta.colors.orange, fontSize: 18, fontWeight: "900" }}>
+              {selected ? "OK" : "+"}
+            </Text>
+          )}
+        </View>
+        <View style={{ flex: 1, gap: beta.spacing.xs }}>
+          <Text style={{ color: beta.colors.ink, fontSize: 17, fontWeight: "900" }}>
+            {item.title || "Untitled record"}
+          </Text>
+          <Text style={{ color: beta.colors.inkMuted, fontSize: 13, lineHeight: 19 }}>
+            {subtitle || "Needs more details"}
+          </Text>
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
+function TradeComposeControls({
+  canCreate,
+  onCreate,
+  onStepChange,
+  step,
+}: {
+  canCreate: boolean;
+  onCreate: () => void;
+  onStepChange: (step: TradeComposeStep) => void;
+  step: TradeComposeStep;
+}) {
+  const stepIndex = tradeComposeSteps.findIndex((item) => item.id === step);
+  const previousStep = tradeComposeSteps[Math.max(0, stepIndex - 1)]?.id;
+  const nextStep = tradeComposeSteps[Math.min(tradeComposeSteps.length - 1, stepIndex + 1)]?.id;
+
+  return (
+    <View style={{ gap: beta.spacing.md }}>
+      {step === "review" ? (
+        <BetaButton
+          accessibilityLabel="Create local trade proposal"
+          disabled={!canCreate}
+          onPress={onCreate}
+          variant="black"
+        >
+          Create proposal
+        </BetaButton>
+      ) : (
+        <BetaButton
+          accessibilityLabel="Continue trade proposal"
+          onPress={() => {
+            if (nextStep) onStepChange(nextStep);
+          }}
+        >
+          Continue
+        </BetaButton>
+      )}
+      {stepIndex > 0 ? (
+        <BetaButton
+          accessibilityLabel="Back one trade proposal step"
+          onPress={() => {
+            if (previousStep) onStepChange(previousStep);
+          }}
+          variant="secondary"
+        >
+          Back one step
+        </BetaButton>
+      ) : null}
+    </View>
   );
 }
 
