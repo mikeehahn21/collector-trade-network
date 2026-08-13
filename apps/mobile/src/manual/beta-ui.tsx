@@ -51,16 +51,18 @@ export function BetaButton({
     variant === "primary"
       ? beta.colors.orange
       : variant === "black"
-        ? beta.colors.ink
+        ? beta.colors.surfaceElevated
         : variant === "secondary"
           ? beta.colors.surface
           : "transparent";
   const color =
-    variant === "primary" || variant === "black"
-      ? beta.colors.surface
-      : variant === "ghost"
-        ? beta.colors.inkMuted
-        : beta.colors.ink;
+    variant === "primary"
+      ? beta.colors.background
+      : variant === "black"
+        ? beta.colors.orange
+        : variant === "ghost"
+          ? beta.colors.inkMuted
+          : beta.colors.ink;
   const content: ReactNode =
     typeof children === "string" || typeof children === "number" ? (
       <Text style={{ color, fontSize: 16, fontWeight: "800" }}>{children}</Text>
@@ -78,9 +80,14 @@ export function BetaButton({
         alignItems: "center",
         backgroundColor:
           pressed && variant === "primary" ? beta.colors.orangePressed : backgroundColor,
-        borderColor: variant === "ghost" ? "transparent" : beta.colors.border,
+        borderColor:
+          variant === "ghost"
+            ? "transparent"
+            : variant === "primary" || variant === "black"
+              ? beta.colors.orange
+              : beta.colors.border,
         borderRadius: beta.radius.md,
-        borderWidth: variant === "primary" || variant === "black" ? 0 : 1,
+        borderWidth: variant === "primary" ? 0 : 1,
         justifyContent: "center",
         minHeight: 52,
         opacity: isDisabled ? 0.45 : pressed ? 0.9 : 1,
@@ -126,10 +133,9 @@ export function BetaPanel({
           tone === "peach"
             ? beta.colors.orangeSoft
             : isBlack
-              ? beta.colors.ink
+              ? beta.colors.surfaceElevated
               : beta.colors.surface,
-        borderColor:
-          tone === "peach" ? beta.colors.orange : isBlack ? beta.colors.ink : beta.colors.border,
+        borderColor: tone === "peach" || isBlack ? beta.colors.orange : beta.colors.border,
         borderRadius: beta.radius.lg,
         borderWidth: 1,
         gap: beta.spacing.md,
@@ -233,16 +239,16 @@ export function BetaStatPanel({
           <View
             key={stat.label}
             style={{
-              backgroundColor: "#25211D",
+              backgroundColor: beta.colors.surfaceWarm,
               borderRadius: beta.radius.md,
               flex: 1,
               padding: beta.spacing.md,
             }}
           >
-            <Text style={{ color: beta.colors.surface, fontSize: 24, fontWeight: "900" }}>
+            <Text style={{ color: beta.colors.ink, fontSize: 24, fontWeight: "900" }}>
               {stat.value}
             </Text>
-            <Text style={{ color: beta.colors.orangeSoft, fontSize: 12, fontWeight: "800" }}>
+            <Text style={{ color: beta.colors.orange, fontSize: 12, fontWeight: "800" }}>
               {stat.label}
             </Text>
           </View>

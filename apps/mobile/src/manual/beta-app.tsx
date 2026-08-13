@@ -172,7 +172,7 @@ export default function BetaApp() {
               <WishlistStateProvider>
                 <UserProfileProvider>
                   <DataSyncBootstrap />
-                  <StatusBar barStyle="dark-content" />
+                  <StatusBar barStyle="light-content" />
                   <BetaShell />
                 </UserProfileProvider>
               </WishlistStateProvider>
@@ -1048,8 +1048,7 @@ function ConversationDetail({
         <BetaPanel tone={conversation.contextType === "trade" ? "black" : "peach"}>
           <Text
             style={{
-              color:
-                conversation.contextType === "trade" ? beta.colors.surface : beta.colors.orange,
+              color: beta.colors.orange,
               fontSize: 12,
               fontWeight: "900",
             }}
@@ -1058,7 +1057,7 @@ function ConversationDetail({
           </Text>
           <Text
             style={{
-              color: conversation.contextType === "trade" ? beta.colors.surface : beta.colors.ink,
+              color: beta.colors.ink,
               fontSize: 24,
               fontWeight: "900",
             }}
@@ -1132,17 +1131,17 @@ function MessageBubble({ message }: { message: LocalMessage }) {
   const backgroundColor = isSystem
     ? beta.colors.surfaceWarm
     : message.isMine
-      ? beta.colors.ink
+      ? beta.colors.orange
       : beta.colors.surface;
-  const textColor = message.isMine && !isSystem ? beta.colors.surface : beta.colors.ink;
-  const metaColor = message.isMine && !isSystem ? beta.colors.orangeSoft : beta.colors.inkMuted;
+  const textColor = message.isMine && !isSystem ? beta.colors.background : beta.colors.ink;
+  const metaColor = message.isMine && !isSystem ? beta.colors.background : beta.colors.inkMuted;
 
   return (
     <View style={{ alignItems }}>
       <View
         style={{
           backgroundColor,
-          borderColor: isSystem || !message.isMine ? beta.colors.border : beta.colors.ink,
+          borderColor: isSystem || !message.isMine ? beta.colors.border : beta.colors.orange,
           borderRadius: beta.radius.lg,
           borderWidth: 1,
           gap: beta.spacing.xs,
@@ -2260,7 +2259,7 @@ function TradesTab({
           <Text style={{ color: theme.colors.orangeSoft, fontSize: 12, fontWeight: "900" }}>
             {source === "api" ? "LIVE TRADE FEED" : "LOCAL TRADE WORKFLOW"}
           </Text>
-          <Text style={{ color: theme.colors.surface, fontSize: 24, fontWeight: "900" }}>
+          <Text style={{ color: theme.colors.textPrimary, fontSize: 24, fontWeight: "900" }}>
             Structured swaps are now interactive.
           </Text>
           <Text style={{ color: theme.colors.orangeSoft, fontSize: 15, lineHeight: 22 }}>
@@ -2365,7 +2364,7 @@ function TradeDetail({ onBack, trade }: { onBack: () => void; trade: Trade }) {
           <Text style={{ color: theme.colors.orangeSoft, fontSize: 12, fontWeight: "900" }}>
             LIVE TRADE
           </Text>
-          <Text style={{ color: theme.colors.surface, fontSize: 24, fontWeight: "900" }}>
+          <Text style={{ color: theme.colors.textPrimary, fontSize: 24, fontWeight: "900" }}>
             {tradeStatusLabels[trade.status]}
           </Text>
           <Text style={{ color: theme.colors.orangeSoft, fontSize: 15, lineHeight: 22 }}>
@@ -2414,7 +2413,7 @@ function LocalTradeDetail({
           <Text style={{ color: theme.colors.orangeSoft, fontSize: 12, fontWeight: "900" }}>
             LOCAL PROPOSAL
           </Text>
-          <Text style={{ color: theme.colors.surface, fontSize: 24, fontWeight: "900" }}>
+          <Text style={{ color: theme.colors.textPrimary, fontSize: 24, fontWeight: "900" }}>
             {tradeStatusLabels[trade.status]}
           </Text>
           <Text style={{ color: theme.colors.orangeSoft, fontSize: 15, lineHeight: 22 }}>
