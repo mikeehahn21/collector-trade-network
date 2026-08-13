@@ -15,6 +15,7 @@ import {
 import type {
   Conversation,
   ConversationMessage,
+  TradeItemSummary,
   RecommendationSummary,
   Trade,
   TradeRecommendation,
@@ -51,7 +52,6 @@ import {
   BetaTabBar,
   BetaTextField,
   BetaTitle,
-  BetaWantCard,
 } from "@/manual/beta-ui";
 import {
   wishlistMatchPreferenceLabels,
@@ -101,6 +101,7 @@ type LocalTradeProposal = {
   updatedAt: string;
 };
 type TradeComposeStep = "offer" | "target" | "terms" | "review";
+type TradeProgressStep = "Proposed" | "Review" | "Counter" | "Ship" | "Complete";
 
 const tabs: Array<{ icon: string; id: Tab; label: string }> = [
   { icon: "⌂", id: "home", label: "Home" },
@@ -123,6 +124,14 @@ const tradeComposeSteps: Array<{ id: TradeComposeStep; label: string }> = [
   { id: "target", label: "Target" },
   { id: "terms", label: "Terms" },
   { id: "review", label: "Review" },
+];
+
+const tradeProgressSteps: TradeProgressStep[] = [
+  "Proposed",
+  "Review",
+  "Counter",
+  "Ship",
+  "Complete",
 ];
 
 const localConversations: LocalConversation[] = [
@@ -822,7 +831,7 @@ function WishlistTab({
         ) : (
           <View style={{ gap: theme.spacing.md }}>
             {activeItems.map((item, index) => (
-              <BetaWantCard
+              <MockupWishlistRow
                 index={index}
                 item={item}
                 key={item.id}
@@ -837,6 +846,99 @@ function WishlistTab({
     </BetaScreen>
   );
 }
+
+function MockupWishlistRow({
+  index,
+  item,
+  onMoveDown,
+  onMoveUp,
+  onPress,
+}: {
+  index: number;
+  item: WishlistItem;
+  onMoveDown: () => void;
+  onMoveUp: () => void;
+  onPress: () => void;
+}) {
+  const title = item.title.trim() || "Untitled grail";
+  const category = item.category ? categoryLabels[item.category] : "No category";
+  const size = item.size ? sizeLabels[item.size] : "Any size";
+
+  return (
+    <Pressable
+      accessibilityLabel={`Open ${title} wishlist item`}
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => ({
+        alignItems: "center",
+        backgroundColor: beta.colors.surface,
+        borderColor: item.isGrail ? beta.colors.orange : beta.colors.border,
+        borderRadius: beta.radius.lg,
+        borderWidth: 1,
+        flexDirection: "row",
+        gap: beta.spacing.md,
+        opacity: pressed ? 0.86 : 1,
+        padding: beta.spacing.sm,
+      })}
+    >
+      <View style={{ position: "relative" }}>
+        <View
+          style={{
+            backgroundColor: beta.colors.surfaceElevated,
+            borderColor: beta.colors.border,
+            borderRadius: beta.radius.sm,
+            borderWidth: 1,
+            left: -4,
+            paddingHorizontal: beta.spacing.sm,
+            paddingVertical: 3,
+            position: "absolute",
+            top: -4,
+            zIndex: 2,
+          }}
+        >
+          <Text style={{ color: beta.colors.orange, fontSize: 18, fontWeight: "900" }}>
+            {index + 1}
+          </Text>
+        </View>
+        <ItemThumb item={item} label={title} size={112} />
+      </View>
+      <View style={{ flex: 1, gap: beta.spacing.sm }}>
+        <Text style={{ color: beta.colors.ink, fontSize: 17, fontWeight: "900" }}>{title}</Text>
+        <Text style={{ color: beta.colors.inkMuted, fontSize: 12, lineHeight: 18 }}>
+          {category} / {size}
+        </Text>
+        <Text style={{ color: beta.colors.inkMuted, fontSize: 12 }}>
+          {wishlistMatchPreferenceLabels[item.matchPreference]}
+        </Text>
+        <View style={{ flexDirection: "row", gap: beta.spacing.sm }}>
+          <Pressable accessibilityRole="button" onPress={onMoveUp} style={rankButtonStyle}>
+            <Text style={rankButtonTextStyle}>↑</Text>
+          </Pressable>
+          <Pressable accessibilityRole="button" onPress={onMoveDown} style={rankButtonStyle}>
+            <Text style={rankButtonTextStyle}>↓</Text>
+          </Pressable>
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
+const rankButtonStyle = {
+  alignItems: "center" as const,
+  backgroundColor: beta.colors.surfaceElevated,
+  borderColor: beta.colors.border,
+  borderRadius: beta.radius.sm,
+  borderWidth: 1,
+  height: 34,
+  justifyContent: "center" as const,
+  width: 38,
+};
+
+const rankButtonTextStyle = {
+  color: beta.colors.ink,
+  fontSize: 18,
+  fontWeight: "900" as const,
+};
 
 function MessagesTab({
   route,
@@ -1053,6 +1155,7 @@ function ConversationRow({
   onPress: () => void;
 }) {
   const lastMessage = conversation.messages.at(-1);
+  const isBrand = conversation.participant.toLowerCase().includes("trade team");
 
   return (
     <Pressable
@@ -1060,29 +1163,60 @@ function ConversationRow({
       accessibilityRole="button"
       onPress={onPress}
       style={({ pressed }) => ({
+        alignItems: "center",
         backgroundColor: beta.colors.surface,
         borderColor: conversation.unreadCount > 0 ? beta.colors.orange : beta.colors.border,
         borderRadius: beta.radius.lg,
         borderWidth: 1,
-        gap: beta.spacing.sm,
+        flexDirection: "row",
+        gap: beta.spacing.md,
         opacity: pressed ? 0.86 : 1,
-        padding: beta.spacing.lg,
+        padding: beta.spacing.md,
       })}
     >
-      <View style={{ flexDirection: "row", gap: beta.spacing.md, justifyContent: "space-between" }}>
-        <BetaKicker>{conversation.contextType.toUpperCase()}</BetaKicker>
-        {conversation.unreadCount > 0 ? (
-          <Text style={{ color: beta.colors.orange, fontSize: 12, fontWeight: "900" }}>
-            {conversation.unreadCount} unread
+      <AvatarBadge label={conversation.participant} tone={isBrand ? "brand" : "person"} />
+      <View style={{ flex: 1, gap: beta.spacing.xs }}>
+        <View style={{ alignItems: "center", flexDirection: "row", gap: beta.spacing.sm }}>
+          <Text style={{ color: beta.colors.ink, flex: 1, fontSize: 16, fontWeight: "900" }}>
+            {conversation.participant}
           </Text>
-        ) : null}
+          {conversation.unreadCount > 0 ? (
+            <View
+              style={{
+                backgroundColor: beta.colors.orange,
+                borderRadius: 999,
+                height: 10,
+                width: 10,
+              }}
+            />
+          ) : null}
+        </View>
+        <Text style={{ color: beta.colors.ink, fontSize: 13, fontWeight: "800" }}>
+          {conversation.contextTitle}
+        </Text>
+        <Text
+          numberOfLines={2}
+          style={{ color: beta.colors.inkMuted, fontSize: 12, lineHeight: 17 }}
+        >
+          {lastMessage ? `${lastMessage.sender}: ${lastMessage.content}` : "No messages yet"}
+        </Text>
       </View>
-      <Text style={{ color: beta.colors.ink, fontSize: 20, fontWeight: "900" }}>
-        {conversation.contextTitle}
-      </Text>
-      <Text style={{ color: beta.colors.inkMuted, fontSize: 14, lineHeight: 20 }}>
-        {lastMessage ? `${lastMessage.sender}: ${lastMessage.content}` : "No messages yet"}
-      </Text>
+      <View
+        style={{
+          alignItems: "center",
+          backgroundColor: beta.colors.surfaceWarm,
+          borderColor: beta.colors.border,
+          borderRadius: beta.radius.sm,
+          borderWidth: 1,
+          height: 58,
+          justifyContent: "center",
+          width: 58,
+        }}
+      >
+        <Text style={{ color: beta.colors.orange, fontSize: 12, fontWeight: "900" }}>
+          {conversation.contextType === "trade" ? "↔" : "TEE"}
+        </Text>
+      </View>
     </Pressable>
   );
 }
@@ -2113,6 +2247,156 @@ function DetailPanel({ rows, title }: { rows: [string, string][]; title: string 
   );
 }
 
+function ItemThumb({
+  item,
+  label,
+  size = 72,
+}: {
+  item: TradeItemSummary | TradeableItem | WishlistItem | undefined;
+  label: string;
+  size?: number;
+}) {
+  const photo = item && "photos" in item ? item.photos[0] : undefined;
+  const itemTitle = item?.title || label;
+
+  return (
+    <View
+      style={{
+        alignItems: "center",
+        backgroundColor: beta.colors.surfaceWarm,
+        borderColor: beta.colors.border,
+        borderRadius: beta.radius.md,
+        borderWidth: 1,
+        height: size,
+        justifyContent: "center",
+        overflow: "hidden",
+        width: size,
+      }}
+    >
+      {photo ? (
+        <Image
+          accessibilityLabel={`${itemTitle} thumbnail`}
+          source={{ uri: photo.uri }}
+          style={{ height: "100%", width: "100%" }}
+        />
+      ) : (
+        <Text style={{ color: beta.colors.orange, fontSize: 18, fontWeight: "900" }}>
+          {label.slice(0, 1).toUpperCase()}
+        </Text>
+      )}
+    </View>
+  );
+}
+
+function AvatarBadge({ label, tone = "person" }: { label: string; tone?: "brand" | "person" }) {
+  const initials = label
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("");
+
+  return (
+    <View
+      style={{
+        alignItems: "center",
+        backgroundColor: tone === "brand" ? beta.colors.orangeSoft : beta.colors.surfaceWarm,
+        borderColor: tone === "brand" ? beta.colors.orange : beta.colors.border,
+        borderRadius: 999,
+        borderWidth: 1,
+        height: 42,
+        justifyContent: "center",
+        width: 42,
+      }}
+    >
+      <Text
+        style={{
+          color: tone === "brand" ? beta.colors.orange : beta.colors.ink,
+          fontSize: 14,
+          fontWeight: "900",
+        }}
+      >
+        {tone === "brand" ? "K" : initials || "C"}
+      </Text>
+    </View>
+  );
+}
+
+function TradeProgressRail({ status }: { status: TradeStatus }) {
+  const activeIndex = getTradeProgressIndex(status);
+
+  return (
+    <View style={{ gap: beta.spacing.xs }}>
+      <View style={{ alignItems: "center", flexDirection: "row" }}>
+        {tradeProgressSteps.map((step, index) => {
+          const active = index <= activeIndex;
+          return (
+            <View
+              key={step}
+              style={{
+                alignItems: "center",
+                flex: 1,
+                flexDirection: "row",
+              }}
+            >
+              <View
+                style={{
+                  backgroundColor: active ? beta.colors.orange : beta.colors.surfaceElevated,
+                  borderColor: active ? beta.colors.orange : beta.colors.border,
+                  borderRadius: 999,
+                  borderWidth: 1,
+                  height: 12,
+                  width: 12,
+                }}
+              />
+              {index < tradeProgressSteps.length - 1 ? (
+                <View
+                  style={{
+                    backgroundColor: index < activeIndex ? beta.colors.orange : beta.colors.border,
+                    flex: 1,
+                    height: 2,
+                  }}
+                />
+              ) : null}
+            </View>
+          );
+        })}
+      </View>
+      <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+        {tradeProgressSteps.map((step, index) => (
+          <Text
+            key={step}
+            style={{
+              color: index <= activeIndex ? beta.colors.orange : beta.colors.inkMuted,
+              fontSize: 9,
+              fontWeight: "800",
+            }}
+          >
+            {step}
+          </Text>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+function getTradeProgressIndex(status: TradeStatus): number {
+  switch (status) {
+    case "pending":
+      return 0;
+    case "countered":
+      return 2;
+    case "accepted":
+      return 3;
+    case "completed":
+      return 4;
+    case "cancelled":
+    case "declined":
+    case "disputed":
+      return 1;
+  }
+}
+
 function ItemPhotoGallery({
   onRemovePhoto,
   onSetCover,
@@ -2706,8 +2990,10 @@ function TradesTab({
         <View style={{ gap: theme.spacing.md }}>
           {liveTrades.map((trade) => (
             <TradeRow
+              counterpartyItem={trade.counterpartyItem}
               key={trade.id}
               onPress={() => setRoute({ mode: "detail", tradeId: trade.id })}
+              proposerItem={trade.proposerItem}
               subtitle={`${trade.proposerDisplayName} <> ${trade.counterpartyDisplayName}`}
               title={`${trade.proposerItem.title} for ${trade.counterpartyItem.title}`}
               status={trade.status}
@@ -2716,8 +3002,10 @@ function TradesTab({
           ))}
           {localTrades.map((trade) => (
             <TradeRow
+              counterpartyTitle={trade.requestedTitle}
               key={trade.id}
               onPress={() => setRoute({ mode: "detail", tradeId: trade.id })}
+              proposerItem={items.find((item) => item.id === trade.offeredItemId)}
               subtitle={trade.counterparty}
               title={trade.requestedTitle}
               status={trade.status}
@@ -2946,13 +3234,19 @@ function TradeComposeControls({
 }
 
 function TradeRow({
+  counterpartyItem,
+  counterpartyTitle,
   onPress,
+  proposerItem,
   source,
   status,
   subtitle,
   title,
 }: {
+  counterpartyItem?: TradeItemSummary | TradeableItem | undefined;
+  counterpartyTitle?: string | undefined;
   onPress: () => void;
+  proposerItem?: TradeItemSummary | TradeableItem | undefined;
   source: string;
   status: TradeStatus;
   subtitle: string;
@@ -2968,9 +3262,9 @@ function TradeRow({
         borderColor: status === "accepted" ? beta.colors.orange : beta.colors.border,
         borderRadius: beta.radius.lg,
         borderWidth: 1,
-        gap: beta.spacing.sm,
+        gap: beta.spacing.md,
         opacity: pressed ? 0.86 : 1,
-        padding: beta.spacing.lg,
+        padding: beta.spacing.md,
       })}
     >
       <View style={{ flexDirection: "row", gap: beta.spacing.md, justifyContent: "space-between" }}>
@@ -2979,8 +3273,29 @@ function TradeRow({
           {tradeStatusLabels[status]}
         </Text>
       </View>
-      <Text style={{ color: beta.colors.ink, fontSize: 20, fontWeight: "900" }}>{title}</Text>
-      <Text style={{ color: beta.colors.inkMuted, fontSize: 14, lineHeight: 20 }}>{subtitle}</Text>
+      <Text style={{ color: beta.colors.ink, fontSize: 17, fontWeight: "900" }}>{title}</Text>
+      <Text style={{ color: beta.colors.inkMuted, fontSize: 12, lineHeight: 18 }}>{subtitle}</Text>
+      <View style={{ alignItems: "center", flexDirection: "row", gap: beta.spacing.md }}>
+        <ItemThumb item={proposerItem} label="Offer" size={92} />
+        <View
+          style={{
+            alignItems: "center",
+            backgroundColor: beta.colors.surfaceElevated,
+            borderColor: beta.colors.border,
+            borderRadius: 999,
+            borderWidth: 1,
+            height: 34,
+            justifyContent: "center",
+            marginHorizontal: -2,
+            width: 34,
+            zIndex: 2,
+          }}
+        >
+          <Text style={{ color: beta.colors.ink, fontSize: 17, fontWeight: "900" }}>↔</Text>
+        </View>
+        <ItemThumb item={counterpartyItem} label={counterpartyTitle ?? "Target"} size={92} />
+      </View>
+      <TradeProgressRail status={status} />
     </Pressable>
   );
 }
@@ -3148,6 +3463,7 @@ function TradeObjectPanel({
   const category = item.category ? categoryLabels[item.category] : "No category";
   const size = item.size ? sizeLabels[item.size] : "Any size";
   const isWishlistItem = "isGrail" in item;
+  const photo = "photos" in item ? item.photos[0] : undefined;
   const status = isWishlistItem
     ? item.isGrail
       ? "Grail want"
@@ -3166,11 +3482,20 @@ function TradeObjectPanel({
           backgroundColor: beta.colors.surfaceWarm,
           borderRadius: beta.radius.md,
           justifyContent: "center",
+          overflow: "hidden",
         }}
       >
-        <Text style={{ color: beta.colors.inkMuted, fontSize: 13, fontWeight: "900" }}>
-          Object image
-        </Text>
+        {photo ? (
+          <Image
+            accessibilityLabel={`${title} trade object photo`}
+            source={{ uri: photo.uri }}
+            style={{ height: "100%", width: "100%" }}
+          />
+        ) : (
+          <Text style={{ color: beta.colors.inkMuted, fontSize: 13, fontWeight: "900" }}>
+            Object image
+          </Text>
+        )}
       </View>
       <Text style={{ color: beta.colors.ink, fontSize: 22, fontWeight: "900" }}>{title}</Text>
       <Text style={{ color: beta.colors.inkMuted, fontSize: 15 }}>
