@@ -1,4 +1,4 @@
-import type { PropsWithChildren } from "react";
+import type { PropsWithChildren, ReactNode } from "react";
 import { ActivityIndicator, Pressable, Text } from "react-native";
 
 import { useTheme } from "@/theme/theme-provider";
@@ -28,6 +28,12 @@ export function AppButton({
         ? theme.colors.surfaceElevated
         : "transparent";
   const color = variant === "primary" ? theme.colors.background : theme.colors.textPrimary;
+  const content: ReactNode =
+    typeof children === "string" || typeof children === "number" ? (
+      <Text style={{ color, fontSize: 16, fontWeight: "700" }}>{children}</Text>
+    ) : (
+      children
+    );
 
   return (
     <Pressable
@@ -47,11 +53,7 @@ export function AppButton({
         paddingHorizontal: theme.spacing.lg,
       })}
     >
-      {loading ? (
-        <ActivityIndicator color={color} />
-      ) : (
-        <Text style={{ color, fontSize: 16, fontWeight: "700" }}>{children}</Text>
-      )}
+      {loading ? <ActivityIndicator color={color} /> : content}
     </Pressable>
   );
 }
