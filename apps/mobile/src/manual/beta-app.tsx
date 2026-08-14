@@ -13,8 +13,10 @@ import {
   WISHLIST_VISIBILITY_OPTIONS,
 } from "@ctn/constants";
 import type {
+  CollectionSummary,
   Conversation,
   ConversationMessage,
+  ItemPhoto,
   TradeItemSummary,
   RecommendationSummary,
   Trade,
@@ -23,7 +25,7 @@ import type {
   TradeableItem,
   UserProfile,
   WishlistItem,
-  ItemPhoto,
+  WishlistSummary,
 } from "@ctn/types";
 
 import {
@@ -60,6 +62,7 @@ import {
 } from "@/lib/wishlist-display";
 import { useApiClient } from "@/api/use-api-client";
 import { MobileAuthProvider } from "@/auth/clerk-provider";
+import { useAuthSession } from "@/auth/use-auth-session";
 import { CollectionStateProvider, useCollectionState } from "@/state/collection-state";
 import { OnboardingStateProvider } from "@/state/onboarding-state";
 import { useRecommendations } from "@/state/recommendation-state";
@@ -102,6 +105,10 @@ type LocalTradeProposal = {
 };
 type TradeComposeStep = "offer" | "target" | "terms" | "review";
 type TradeProgressStep = "Proposed" | "Review" | "Counter" | "Ship" | "Complete";
+type InventoryFilter = "all" | "tradeable" | "draft" | "needs_photos" | "ready";
+type InventorySort = "recent" | "ready" | "value";
+type WishlistFilter = "all" | "grails" | "high" | "medium" | "low";
+type WishlistSort = "rank" | "grails" | "recent";
 
 const tabs: Array<{ icon: string; id: Tab; label: string }> = [
   { icon: "⌂", id: "home", label: "Home" },
@@ -274,9 +281,11 @@ function BetaShell() {
 
 function HomeTab({ setTab }: { setTab: (tab: Tab) => void }) {
   const theme = beta;
+  const auth = useAuthSession();
   const { items, summary: collectionSummary } = useCollectionState();
   const { activeItems, summary: wishlistSummary } = useWishlistState();
   const { isLoading: isProfileLoading, profile } = useUserProfile();
+  const [showProfile, setShowProfile] = useState(false);
   const {
     error: recommendationError,
     isLoading: isRecommendationsLoading,
@@ -292,6 +301,28 @@ function HomeTab({ setTab }: { setTab: (tab: Tab) => void }) {
     () => items.filter((item) => getPublishCheck(item).isValid).length,
     [items],
   );
+  const photoReadyCount = useMemo(
+    () => items.filter((item) => item.photos.length >= 2).length,
+    [items],
+  );
+
+  if (showProfile) {
+    return (
+      <CollectorProfilePanel
+        auth={auth}
+        collectionSummary={collectionSummary}
+        onBack={() => setShowProfile(false)}
+        onOpenTab={(nextTab) => {
+          setShowProfile(false);
+          setTab(nextTab);
+        }}
+        photoReadyCount={photoReadyCount}
+        profile={profile}
+        publishReadyCount={publishReadyCount}
+        wishlistSummary={wishlistSummary}
+      />
+    );
+  }
 
   return (
     <BetaScreen>
@@ -306,7 +337,25 @@ function HomeTab({ setTab }: { setTab: (tab: Tab) => void }) {
           }}
         >
           <Text style={{ color: theme.colors.ink, fontSize: 17, fontWeight: "900" }}>KONNESOR</Text>
-          <Text style={{ color: theme.colors.ink, fontSize: 21, fontWeight: "900" }}>♧</Text>
+          <Pressable
+            accessibilityLabel="Open collector profile"
+            accessibilityRole="button"
+            onPress={() => setShowProfile(true)}
+            style={({ pressed }) => ({
+              alignItems: "center",
+              borderColor: theme.colors.border,
+              borderRadius: 999,
+              borderWidth: 1,
+              height: 36,
+              justifyContent: "center",
+              marginLeft: "auto",
+              marginRight: theme.spacing.sm,
+              opacity: pressed ? 0.82 : 1,
+              width: 36,
+            })}
+          >
+            <Text style={{ color: theme.colors.ink, fontSize: 18, fontWeight: "900" }}>K</Text>
+          </Pressable>
         </View>
 
         <View style={{ gap: 5 }}>
@@ -651,6 +700,264 @@ function BetaReadinessPanel({
   );
 }
 
+function CollectorProfilePanel({
+  auth,
+  collectionSummary,
+  onBack,
+  onOpenTab,
+  photoReadyCount,
+  profile,
+  publishReadyCount,
+  wishlistSummary,
+}: {
+  auth: ReturnType<typeof useAuthSession>;
+  collectionSummary: CollectionSummary;
+  onBack: () => void;
+  onOpenTab: (tab: Tab) => void;
+  photoReadyCount: number;
+  profile: UserProfile | undefined;
+  publishReadyCount: number;
+  wishlistSummary: WishlistSummary;
+}) {
+  const collectorName = profile?.displayName ?? "Collector";
+  const email = auth.userEmail ?? "Local beta session";
+  const readinessScore = Math.min(
+    100,
+    Math.round(
+      (collectionSummary.tradeableItems > 0 ? 25 : 0) +
+        (publishReadyCount > 0 ? 25 : 0) +
+        (wishlistSummary.activeItems > 0 ? 25 : 0) +
+        (photoReadyCount > 0 ? 25 : 0),
+    ),
+  );
+
+  return (
+    <BetaScreen>
+      <ScrollView contentContainerStyle={{ gap: beta.spacing.lg, paddingBottom: beta.spacing.xl }}>
+        <BetaButton accessibilityLabel="Back to home" onPress={onBack} variant="ghost">
+          Back to home
+        </BetaButton>
+
+        <BetaPanel tone="black">
+          <View style={{ alignItems: "center", flexDirection: "row", gap: beta.spacing.md }}>
+            <View
+              style={{
+                alignItems: "center",
+                backgroundColor: beta.colors.orange,
+                borderRadius: 999,
+                height: 58,
+                justifyContent: "center",
+                width: 58,
+              }}
+            >
+              <Text style={{ color: beta.colors.background, fontSize: 28, fontWeight: "900" }}>
+                K
+              </Text>
+            </View>
+            <View style={{ flex: 1, gap: 4 }}>
+              <BetaKicker>COLLECTOR PROFILE</BetaKicker>
+              <Text style={{ color: beta.colors.ink, fontSize: 28, fontWeight: "900" }}>
+                {collectorName}
+              </Text>
+              <Text style={{ color: beta.colors.inkMuted, fontSize: 13 }}>{email}</Text>
+            </View>
+          </View>
+
+          <View
+            style={{
+              backgroundColor: beta.colors.orangeSoft,
+              borderColor: beta.colors.orange,
+              borderRadius: beta.radius.md,
+              borderWidth: 1,
+              gap: beta.spacing.xs,
+              padding: beta.spacing.md,
+            }}
+          >
+            <Text style={{ color: beta.colors.orange, fontSize: 44, fontWeight: "900" }}>
+              {readinessScore}%
+            </Text>
+            <Text style={{ color: beta.colors.ink, fontSize: 16, fontWeight: "900" }}>
+              Beta trade readiness
+            </Text>
+            <BetaBody>
+              Add complete photos, publish-ready records, and active wants to raise this score.
+            </BetaBody>
+          </View>
+        </BetaPanel>
+
+        <BetaStatPanel
+          stats={[
+            { label: "Archive", value: collectionSummary.totalItems },
+            { label: "Ready", value: publishReadyCount },
+            { label: "Wants", value: wishlistSummary.activeItems },
+          ]}
+        />
+
+        <BetaPanel>
+          <BetaKicker>ACCOUNT MODE</BetaKicker>
+          <Text style={{ color: beta.colors.ink, fontSize: 22, fontWeight: "900" }}>
+            {auth.clerkEnabled ? "Live account" : "Local beta"}
+          </Text>
+          <BetaBody>
+            {auth.clerkEnabled
+              ? "Signed-in account features are enabled for live services."
+              : "This build keeps working locally while the live account layer is optional."}
+          </BetaBody>
+        </BetaPanel>
+
+        <BetaPanel>
+          <BetaKicker>NEXT BEST ACTIONS</BetaKicker>
+          <ProfileActionRow
+            detail={`${collectionSummary.tradeableItems} tradeable pieces, ${collectionSummary.draftItems} drafts`}
+            label="Review archive"
+            onPress={() => onOpenTab("inventory")}
+          />
+          <ProfileActionRow
+            detail={`${wishlistSummary.grailItems} grails and ${wishlistSummary.highPriorityItems} high-priority wants`}
+            label="Tune wishlist"
+            onPress={() => onOpenTab("wishlist")}
+          />
+          <ProfileActionRow
+            detail="Check conversations and condition questions"
+            label="Open messages"
+            onPress={() => onOpenTab("messages")}
+          />
+          <ProfileActionRow
+            detail="Review proposed swaps and trade status"
+            label="Open trades"
+            onPress={() => onOpenTab("trades")}
+          />
+        </BetaPanel>
+      </ScrollView>
+    </BetaScreen>
+  );
+}
+
+function ProfileActionRow({
+  detail,
+  label,
+  onPress,
+}: {
+  detail: string;
+  label: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => ({
+        borderBottomColor: beta.colors.border,
+        borderBottomWidth: 1,
+        gap: beta.spacing.xs,
+        opacity: pressed ? 0.82 : 1,
+        paddingVertical: beta.spacing.md,
+      })}
+    >
+      <Text style={{ color: beta.colors.ink, fontSize: 16, fontWeight: "900" }}>{label}</Text>
+      <Text style={{ color: beta.colors.inkMuted, fontSize: 13, lineHeight: 18 }}>{detail}</Text>
+    </Pressable>
+  );
+}
+
+const inventoryFilterOptions: Array<{ label: string; value: InventoryFilter }> = [
+  { label: "All", value: "all" },
+  { label: "Tradeable", value: "tradeable" },
+  { label: "Drafts", value: "draft" },
+  { label: "Needs photos", value: "needs_photos" },
+  { label: "Publish-ready", value: "ready" },
+];
+
+const inventorySortOptions: Array<{ label: string; value: InventorySort }> = [
+  { label: "Recent", value: "recent" },
+  { label: "Ready first", value: "ready" },
+  { label: "Value", value: "value" },
+];
+
+const wishlistFilterOptions: Array<{ label: string; value: WishlistFilter }> = [
+  { label: "All", value: "all" },
+  { label: "Grails", value: "grails" },
+  { label: "High", value: "high" },
+  { label: "Medium", value: "medium" },
+  { label: "Low", value: "low" },
+];
+
+const wishlistSortOptions: Array<{ label: string; value: WishlistSort }> = [
+  { label: "Rank", value: "rank" },
+  { label: "Grails first", value: "grails" },
+  { label: "Recent", value: "recent" },
+];
+
+function getInventorySearchText(item: TradeableItem): string {
+  return [
+    item.title,
+    item.category ? categoryLabels[item.category] : undefined,
+    item.size ? sizeLabels[item.size] : undefined,
+    item.era,
+    item.tag,
+    item.condition ? conditionLabels[item.condition] : undefined,
+    statusLabels[item.status],
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+}
+
+function sortInventoryItems(a: TradeableItem, b: TradeableItem, sort: InventorySort): number {
+  if (sort === "ready") {
+    return Number(getPublishCheck(b).isValid) - Number(getPublishCheck(a).isValid);
+  }
+  if (sort === "value") {
+    return getItemValue(b) - getItemValue(a);
+  }
+  return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+}
+
+function getItemValue(item: TradeableItem): number {
+  return item.estimatedValue.max ?? item.estimatedValue.min ?? 0;
+}
+
+function getWishlistSearchText(item: WishlistItem): string {
+  return [
+    item.title,
+    item.category ? categoryLabels[item.category] : undefined,
+    item.size ? sizeLabels[item.size] : undefined,
+    item.preferredEra,
+    item.preferredTag,
+    item.preferredCondition ? conditionLabels[item.preferredCondition] : undefined,
+    wishlistPriorityLabels[item.priority],
+    item.isGrail ? "grail" : undefined,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+}
+
+function sortWishlistItems(a: WishlistItem, b: WishlistItem, sort: WishlistSort): number {
+  if (sort === "grails") {
+    const grailSort = Number(b.isGrail) - Number(a.isGrail);
+    if (grailSort !== 0) {
+      return grailSort;
+    }
+    return getWishlistPriorityRank(b.priority) - getWishlistPriorityRank(a.priority);
+  }
+  if (sort === "recent") {
+    return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+  }
+  return a.sortOrder - b.sortOrder;
+}
+
+function getWishlistPriorityRank(priority: WishlistItem["priority"]): number {
+  switch (priority) {
+    case "high":
+      return 3;
+    case "medium":
+      return 2;
+    case "low":
+      return 1;
+  }
+}
+
 function InventoryTab({
   route,
   setRoute,
@@ -661,7 +968,47 @@ function InventoryTab({
   const theme = beta;
   const { createItem, getItem, items, publishItem, summary } = useCollectionState();
   const visibleItems = useMemo(() => items.filter((item) => item.status !== "archived"), [items]);
+  const [categoryFilter, setCategoryFilter] = useState<TradeableItem["category"] | "all">("all");
+  const [filter, setFilter] = useState<InventoryFilter>("all");
+  const [query, setQuery] = useState("");
+  const [sort, setSort] = useState<InventorySort>("recent");
   const selectedItem = route.itemId ? getItem(route.itemId) : undefined;
+  const categoryOptions = useMemo(
+    () =>
+      Array.from(new Set(visibleItems.map((item) => item.category).filter(Boolean))) as Array<
+        NonNullable<TradeableItem["category"]>
+      >,
+    [visibleItems],
+  );
+  const filteredItems = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    return visibleItems
+      .filter((item) => {
+        if (categoryFilter !== "all" && item.category !== categoryFilter) {
+          return false;
+        }
+
+        if (filter === "tradeable" && item.status !== "tradeable") {
+          return false;
+        }
+        if (filter === "draft" && item.status !== "draft") {
+          return false;
+        }
+        if (filter === "needs_photos" && item.photos.length >= 2) {
+          return false;
+        }
+        if (filter === "ready" && !getPublishCheck(item).isValid) {
+          return false;
+        }
+
+        if (!normalizedQuery) {
+          return true;
+        }
+
+        return getInventorySearchText(item).includes(normalizedQuery);
+      })
+      .sort((a, b) => sortInventoryItems(a, b, sort));
+  }, [categoryFilter, filter, query, sort, visibleItems]);
 
   if (route.mode === "detail") {
     return (
@@ -727,14 +1074,68 @@ function InventoryTab({
           Add archive item
         </BetaButton>
 
+        <BetaPanel>
+          <BetaKicker>FIND RECORDS</BetaKicker>
+          <BetaTextField
+            autoCapitalize="none"
+            label="Search archive"
+            onChangeText={setQuery}
+            placeholder="Search title, era, tag, category, size"
+            value={query}
+          />
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: theme.spacing.sm }}>
+            {inventoryFilterOptions.map((option) => (
+              <BetaChip
+                key={option.value}
+                label={option.label}
+                onPress={() => setFilter(option.value)}
+                selected={filter === option.value}
+              />
+            ))}
+          </View>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: theme.spacing.sm }}>
+            <BetaChip
+              label="All categories"
+              onPress={() => setCategoryFilter("all")}
+              selected={categoryFilter === "all"}
+            />
+            {categoryOptions.map((category) => (
+              <BetaChip
+                key={category}
+                label={categoryLabels[category]}
+                onPress={() => setCategoryFilter(category)}
+                selected={categoryFilter === category}
+              />
+            ))}
+          </View>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: theme.spacing.sm }}>
+            {inventorySortOptions.map((option) => (
+              <BetaChip
+                key={option.value}
+                label={option.label}
+                onPress={() => setSort(option.value)}
+                selected={sort === option.value}
+              />
+            ))}
+          </View>
+          <BetaBody>
+            Showing {filteredItems.length} of {visibleItems.length} archive records.
+          </BetaBody>
+        </BetaPanel>
+
         {visibleItems.length === 0 ? (
           <BetaEmptyState
             message="Tap Add archive item to create the first local beta collection record."
             title="No collection records yet"
           />
+        ) : filteredItems.length === 0 ? (
+          <BetaEmptyState
+            message="No archive records match this search. Clear filters or add another piece."
+            title="Nothing found"
+          />
         ) : (
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: theme.spacing.md }}>
-            {visibleItems.map((item) => (
+            {filteredItems.map((item) => (
               <View key={item.id} style={{ width: "47%" }}>
                 <BetaItemCard
                   item={item}
@@ -759,7 +1160,35 @@ function WishlistTab({
   const theme = beta;
   const { activeItems, createWishlistItem, getWishlistItem, moveWishlistItem, summary } =
     useWishlistState();
+  const [filter, setFilter] = useState<WishlistFilter>("all");
+  const [query, setQuery] = useState("");
+  const [sort, setSort] = useState<WishlistSort>("rank");
   const selectedItem = route.itemId ? getWishlistItem(route.itemId) : undefined;
+  const filteredWants = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    return activeItems
+      .filter((item) => {
+        if (filter === "grails" && !item.isGrail) {
+          return false;
+        }
+        if (filter === "high" && item.priority !== "high") {
+          return false;
+        }
+        if (filter === "medium" && item.priority !== "medium") {
+          return false;
+        }
+        if (filter === "low" && item.priority !== "low") {
+          return false;
+        }
+
+        if (!normalizedQuery) {
+          return true;
+        }
+
+        return getWishlistSearchText(item).includes(normalizedQuery);
+      })
+      .sort((a, b) => sortWishlistItems(a, b, sort));
+  }, [activeItems, filter, query, sort]);
 
   if (route.mode === "detail") {
     return (
@@ -823,14 +1252,53 @@ function WishlistTab({
           Add want
         </BetaButton>
 
+        <BetaPanel>
+          <BetaKicker>FIND WANTS</BetaKicker>
+          <BetaTextField
+            autoCapitalize="none"
+            label="Search wishlist"
+            onChangeText={setQuery}
+            placeholder="Search title, era, category, priority"
+            value={query}
+          />
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: theme.spacing.sm }}>
+            {wishlistFilterOptions.map((option) => (
+              <BetaChip
+                key={option.value}
+                label={option.label}
+                onPress={() => setFilter(option.value)}
+                selected={filter === option.value}
+              />
+            ))}
+          </View>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: theme.spacing.sm }}>
+            {wishlistSortOptions.map((option) => (
+              <BetaChip
+                key={option.value}
+                label={option.label}
+                onPress={() => setSort(option.value)}
+                selected={sort === option.value}
+              />
+            ))}
+          </View>
+          <BetaBody>
+            Showing {filteredWants.length} of {activeItems.length} wishlist records.
+          </BetaBody>
+        </BetaPanel>
+
         {activeItems.length === 0 ? (
           <BetaEmptyState
             message="Tap Add sample want to create the first local beta wishlist record."
             title="No wants yet"
           />
+        ) : filteredWants.length === 0 ? (
+          <BetaEmptyState
+            message="No wants match this search. Clear filters or add another grail."
+            title="Nothing found"
+          />
         ) : (
           <View style={{ gap: theme.spacing.md }}>
-            {activeItems.map((item, index) => (
+            {filteredWants.map((item, index) => (
               <MockupWishlistRow
                 index={index}
                 item={item}
