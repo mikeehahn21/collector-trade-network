@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as ImagePicker from "expo-image-picker";
 import {
   Alert,
+  Animated,
+  Easing,
   Image,
   Linking,
   Pressable,
@@ -234,6 +236,9 @@ export default function BetaApp() {
 }
 
 function BetaShell() {
+  const [showIntro, setShowIntro] = useState(true);
+  const introOpacity = useRef(new Animated.Value(0)).current;
+  const introScale = useRef(new Animated.Value(0.92)).current;
   const [tab, setTab] = useState<Tab>("home");
   const [inventoryRoute, setInventoryRoute] = useState<ManualRoute>({
     itemId: undefined,
@@ -253,6 +258,40 @@ function BetaShell() {
   });
   const [localTrades, setLocalTrades] = useState<LocalTradeProposal[]>([]);
 
+  useEffect(() => {
+    const animation = Animated.sequence([
+      Animated.parallel([
+        Animated.timing(introOpacity, {
+          duration: 420,
+          easing: Easing.out(Easing.cubic),
+          toValue: 1,
+          useNativeDriver: true,
+        }),
+        Animated.timing(introScale, {
+          duration: 520,
+          easing: Easing.out(Easing.cubic),
+          toValue: 1,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.delay(850),
+      Animated.timing(introOpacity, {
+        duration: 360,
+        easing: Easing.in(Easing.cubic),
+        toValue: 0,
+        useNativeDriver: true,
+      }),
+    ]);
+
+    animation.start(({ finished }) => {
+      if (finished) {
+        setShowIntro(false);
+      }
+    });
+
+    return () => animation.stop();
+  }, [introOpacity, introScale]);
+
   function openTab(nextTab: Tab) {
     setTab(nextTab);
     if (nextTab !== "inventory") {
@@ -267,6 +306,10 @@ function BetaShell() {
     if (nextTab !== "trades") {
       setTradeRoute({ mode: "list", tradeId: undefined });
     }
+  }
+
+  if (showIntro) {
+    return <KonnesorIntro opacity={introOpacity} scale={introScale} />;
   }
 
   return (
@@ -292,6 +335,57 @@ function BetaShell() {
         ) : null}
       </View>
       <BetaTabBar active={tab} onChange={openTab} tabs={tabs} />
+    </View>
+  );
+}
+
+function KonnesorIntro({ opacity, scale }: { opacity: Animated.Value; scale: Animated.Value }) {
+  return (
+    <View
+      style={{
+        alignItems: "center",
+        backgroundColor: beta.colors.background,
+        flex: 1,
+        justifyContent: "center",
+        paddingHorizontal: beta.spacing.xl,
+      }}
+    >
+      <Animated.View
+        style={{
+          alignItems: "center",
+          gap: beta.spacing.lg,
+          opacity,
+          transform: [{ scale }],
+          width: "100%",
+        }}
+      >
+        <Image
+          accessibilityLabel="Konnesor intro logo"
+          resizeMode="contain"
+          source={konnesorWordmark}
+          style={{ height: 92, width: "100%" }}
+        />
+        <View
+          style={{
+            backgroundColor: beta.colors.surface,
+            borderRadius: 999,
+            height: 3,
+            overflow: "hidden",
+            width: 132,
+          }}
+        >
+          <Animated.View
+            style={{
+              backgroundColor: beta.colors.orange,
+              borderRadius: 999,
+              height: 3,
+              opacity,
+              transform: [{ scaleX: scale }],
+              width: 132,
+            }}
+          />
+        </View>
+      </Animated.View>
     </View>
   );
 }
