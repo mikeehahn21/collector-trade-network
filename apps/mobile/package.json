@@ -5,8 +5,10 @@
   "main": "index.js",
   "scripts": {
     "build": "expo export",
+    "build:ios:testflight": "eas build --profile testflight --platform ios",
     "dev": "expo start",
     "lint": "eslint .",
+    "submit:ios:testflight": "eas submit --profile testflight --platform ios --latest",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
