@@ -274,7 +274,7 @@ function BetaShell() {
           useNativeDriver: true,
         }),
       ]),
-      Animated.delay(850),
+      Animated.delay(1600),
       Animated.timing(introOpacity, {
         duration: 360,
         easing: Easing.in(Easing.cubic),
