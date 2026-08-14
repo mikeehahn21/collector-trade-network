@@ -70,6 +70,8 @@ import { UserProfileProvider, useUserProfile } from "@/state/user-profile-state"
 import { WishlistStateProvider, useWishlistState } from "@/state/wishlist-state";
 import { DataSyncBootstrap } from "@/sync/data-sync-bootstrap";
 import { ThemeProvider } from "@/theme/theme-provider";
+import konnesorSymbol from "../../assets/brand/konnesor-symbol.png";
+import konnesorWordmark from "../../assets/brand/konnesor-wordmark.png";
 
 type Tab = "home" | "inventory" | "wishlist" | "messages" | "trades";
 type ManualRoute = { mode: "list" | "detail" | "edit"; itemId: string | undefined };
@@ -336,7 +338,12 @@ function HomeTab({ setTab }: { setTab: (tab: Tab) => void }) {
             justifyContent: "space-between",
           }}
         >
-          <Text style={{ color: theme.colors.ink, fontSize: 17, fontWeight: "900" }}>KONNESOR</Text>
+          <Image
+            accessibilityLabel="Konnesor logo"
+            resizeMode="contain"
+            source={konnesorWordmark}
+            style={{ height: 34, width: 168 }}
+          />
           <Pressable
             accessibilityLabel="Open collector profile"
             accessibilityRole="button"
@@ -354,7 +361,12 @@ function HomeTab({ setTab }: { setTab: (tab: Tab) => void }) {
               width: 36,
             })}
           >
-            <Text style={{ color: theme.colors.ink, fontSize: 18, fontWeight: "900" }}>K</Text>
+            <Image
+              accessibilityLabel="Konnesor symbol"
+              resizeMode="contain"
+              source={konnesorSymbol}
+              style={{ height: 28, width: 28 }}
+            />
           </Pressable>
         </View>
 
@@ -750,9 +762,12 @@ function CollectorProfilePanel({
                 width: 58,
               }}
             >
-              <Text style={{ color: beta.colors.background, fontSize: 28, fontWeight: "900" }}>
-                K
-              </Text>
+              <Image
+                accessibilityLabel="Konnesor symbol"
+                resizeMode="cover"
+                source={konnesorSymbol}
+                style={{ borderRadius: 999, height: 58, width: 58 }}
+              />
             </View>
             <View style={{ flex: 1, gap: 4 }}>
               <BetaKicker>COLLECTOR PROFILE</BetaKicker>
