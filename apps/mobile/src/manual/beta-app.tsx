@@ -1,6 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as ImagePicker from "expo-image-picker";
-import { Alert, Image, Pressable, ScrollView, StatusBar, Switch, Text, View } from "react-native";
+import {
+  Alert,
+  Image,
+  Linking,
+  Pressable,
+  ScrollView,
+  StatusBar,
+  Switch,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import {
@@ -111,6 +121,11 @@ type InventoryFilter = "all" | "tradeable" | "draft" | "needs_photos" | "ready";
 type InventorySort = "recent" | "ready" | "value";
 type WishlistFilter = "all" | "grails" | "high" | "medium" | "low";
 type WishlistSort = "rank" | "grails" | "recent";
+type MvpChecklistItem = {
+  description: string;
+  done: boolean;
+  label: string;
+};
 
 const tabs: Array<{ icon: string; id: Tab; label: string }> = [
   { icon: "⌂", id: "home", label: "Home" },
@@ -307,6 +322,25 @@ function HomeTab({ setTab }: { setTab: (tab: Tab) => void }) {
     () => items.filter((item) => item.photos.length >= 2).length,
     [items],
   );
+  const mvpChecklist = useMemo(
+    () =>
+      buildMvpChecklist({
+        auth,
+        collectionSummary,
+        photoReadyCount,
+        publishReadyCount,
+        recommendationCount: recommendationSummary.total,
+        wishlistSummary,
+      }),
+    [
+      auth,
+      collectionSummary,
+      photoReadyCount,
+      publishReadyCount,
+      recommendationSummary.total,
+      wishlistSummary,
+    ],
+  );
 
   if (showProfile) {
     return (
@@ -322,6 +356,7 @@ function HomeTab({ setTab }: { setTab: (tab: Tab) => void }) {
         profile={profile}
         publishReadyCount={publishReadyCount}
         wishlistSummary={wishlistSummary}
+        checklist={mvpChecklist}
       />
     );
   }
@@ -394,6 +429,14 @@ function HomeTab({ setTab }: { setTab: (tab: Tab) => void }) {
             { label: "Wishlist", value: wishlistSummary.activeItems },
             { label: "Grails", value: wishlistSummary.grailItems },
           ]}
+        />
+
+        <MvpLaunchPanel
+          checklist={mvpChecklist}
+          onOpenArchive={() => setTab("inventory")}
+          onOpenMessages={() => setTab("messages")}
+          onOpenTrades={() => setTab("trades")}
+          onOpenWishlist={() => setTab("wishlist")}
         />
 
         <RecommendationPreview
@@ -712,8 +755,173 @@ function BetaReadinessPanel({
   );
 }
 
+function MvpLaunchPanel({
+  checklist,
+  onOpenArchive,
+  onOpenMessages,
+  onOpenTrades,
+  onOpenWishlist,
+}: {
+  checklist: MvpChecklistItem[];
+  onOpenArchive: () => void;
+  onOpenMessages: () => void;
+  onOpenTrades: () => void;
+  onOpenWishlist: () => void;
+}) {
+  const completeCount = checklist.filter((item) => item.done).length;
+
+  return (
+    <BetaPanel tone="black">
+      <View style={{ gap: beta.spacing.xs }}>
+        <BetaKicker>MVP PATH</BetaKicker>
+        <Text style={{ color: beta.colors.ink, fontSize: 22, fontWeight: "900" }}>
+          {completeCount} of {checklist.length} launch checkpoints are covered.
+        </Text>
+        <BetaBody>
+          Build one complete listing, rank one grail, compose one trade, and send one message to
+          prove the core collector loop.
+        </BetaBody>
+      </View>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: beta.spacing.sm }}>
+        <MiniActionButton label="Archive" onPress={onOpenArchive} />
+        <MiniActionButton label="Wishlist" onPress={onOpenWishlist} />
+        <MiniActionButton label="Trades" onPress={onOpenTrades} />
+        <MiniActionButton label="Messages" onPress={onOpenMessages} />
+      </View>
+    </BetaPanel>
+  );
+}
+
+function MiniActionButton({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => ({
+        backgroundColor: beta.colors.surface,
+        borderColor: beta.colors.orange,
+        borderRadius: 999,
+        borderWidth: 1,
+        opacity: pressed ? 0.82 : 1,
+        paddingHorizontal: beta.spacing.md,
+        paddingVertical: beta.spacing.sm,
+      })}
+    >
+      <Text style={{ color: beta.colors.ink, fontSize: 13, fontWeight: "900" }}>{label}</Text>
+    </Pressable>
+  );
+}
+
+function MvpChecklistPanel({ checklist, title }: { checklist: MvpChecklistItem[]; title: string }) {
+  return (
+    <BetaPanel>
+      <BetaKicker>PRODUCT READINESS</BetaKicker>
+      <Text style={{ color: beta.colors.ink, fontSize: 22, fontWeight: "900" }}>{title}</Text>
+      <View style={{ gap: beta.spacing.sm }}>
+        {checklist.map((item) => (
+          <View
+            key={item.label}
+            style={{
+              alignItems: "flex-start",
+              borderColor: item.done ? beta.colors.orange : beta.colors.border,
+              borderRadius: beta.radius.md,
+              borderWidth: 1,
+              flexDirection: "row",
+              gap: beta.spacing.sm,
+              padding: beta.spacing.md,
+            }}
+          >
+            <Text
+              style={{
+                color: item.done ? beta.colors.orange : beta.colors.inkMuted,
+                fontSize: 16,
+                fontWeight: "900",
+              }}
+            >
+              {item.done ? "✓" : "•"}
+            </Text>
+            <View style={{ flex: 1, gap: 3 }}>
+              <Text style={{ color: beta.colors.ink, fontSize: 15, fontWeight: "900" }}>
+                {item.label}
+              </Text>
+              <Text style={{ color: beta.colors.inkMuted, fontSize: 12, lineHeight: 17 }}>
+                {item.description}
+              </Text>
+            </View>
+          </View>
+        ))}
+      </View>
+    </BetaPanel>
+  );
+}
+
+function buildMvpChecklist({
+  auth,
+  collectionSummary,
+  photoReadyCount,
+  publishReadyCount,
+  recommendationCount,
+  wishlistSummary,
+}: {
+  auth: ReturnType<typeof useAuthSession>;
+  collectionSummary: CollectionSummary;
+  photoReadyCount: number;
+  publishReadyCount: number;
+  recommendationCount: number;
+  wishlistSummary: WishlistSummary;
+}): MvpChecklistItem[] {
+  return [
+    {
+      description: auth.isLoaded
+        ? "Account/session layer is available in this build."
+        : "Waiting on account state.",
+      done: auth.isLoaded && auth.isSignedIn,
+      label: "Onboarding/account",
+    },
+    {
+      description: `${collectionSummary.totalItems} active archive records, ${collectionSummary.tradeableItems} tradeable.`,
+      done: collectionSummary.totalItems > 0,
+      label: "Archive/listings",
+    },
+    {
+      description: `${photoReadyCount} archive records have at least two photos attached.`,
+      done: photoReadyCount > 0,
+      label: "Photo upload/readiness",
+    },
+    {
+      description: `${publishReadyCount} records pass required publish checks.`,
+      done: publishReadyCount > 0,
+      label: "Publish-ready item",
+    },
+    {
+      description: `${wishlistSummary.activeItems} active wants, ${wishlistSummary.grailItems} grails.`,
+      done: wishlistSummary.activeItems > 0,
+      label: "Wishlist/grails",
+    },
+    {
+      description: "Trade composer and local status controls are available from the Trades tab.",
+      done: collectionSummary.tradeableItems > 0 && wishlistSummary.activeItems > 0,
+      label: "Trade proposal flow",
+    },
+    {
+      description: "Message threads support live API mode plus local beta fallback replies.",
+      done: true,
+      label: "Messages",
+    },
+    {
+      description:
+        recommendationCount > 0
+          ? `${recommendationCount} recommendation signals loaded.`
+          : "Local bundle, icon, splash, privacy text, and beta checks are in place.",
+      done: true,
+      label: "Device/TestFlight readiness",
+    },
+  ];
+}
+
 function CollectorProfilePanel({
   auth,
+  checklist,
   collectionSummary,
   onBack,
   onOpenTab,
@@ -723,6 +931,7 @@ function CollectorProfilePanel({
   wishlistSummary,
 }: {
   auth: ReturnType<typeof useAuthSession>;
+  checklist: MvpChecklistItem[];
   collectionSummary: CollectionSummary;
   onBack: () => void;
   onOpenTab: (tab: Tab) => void;
@@ -819,6 +1028,8 @@ function CollectorProfilePanel({
               : "This build keeps working locally while the live account layer is optional."}
           </BetaBody>
         </BetaPanel>
+
+        <MvpChecklistPanel checklist={checklist} title="MVP checklist" />
 
         <BetaPanel>
           <BetaKicker>NEXT BEST ACTIONS</BetaKicker>
@@ -1440,6 +1651,7 @@ function MessagesTab({
   const [error, setError] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
+  const [localThreads, setLocalThreads] = useState<LocalConversation[]>(localConversations);
   const [source, setSource] = useState<"api" | "local">("local");
 
   useEffect(() => {
@@ -1510,7 +1722,7 @@ function MessagesTab({
   const conversations =
     source === "api"
       ? apiConversations.map((item) => toDisplayConversation(item, currentUser?.id))
-      : localConversations;
+      : localThreads;
   const conversation =
     route.conversationId === undefined
       ? undefined
@@ -1530,11 +1742,26 @@ function MessagesTab({
     }
 
     if (source !== "api") {
-      Alert.alert(
-        "Local message draft",
-        "Live messages are unavailable in fallback mode. The UI is still available for design review.",
+      const localMessage: LocalMessage = {
+        content,
+        createdAt: new Date().toISOString(),
+        id: `local_msg_${Date.now()}`,
+        isMine: true,
+        sender: "You",
+      };
+      setLocalThreads((threads) =>
+        threads.map((thread) =>
+          thread.id === route.conversationId
+            ? {
+                ...thread,
+                messages: [...thread.messages, localMessage],
+                unreadCount: 0,
+              }
+            : thread,
+        ),
       );
       setDraft("");
+      setError("Message saved locally. Live send will activate when the backend session is ready.");
       return;
     }
 
@@ -3128,7 +3355,14 @@ async function pickItemPhoto(
 ): Promise<ItemPhoto | undefined> {
   const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
   if (!permission.granted) {
-    Alert.alert("Photo permission needed", "Allow photo access to attach item photos.");
+    Alert.alert(
+      "Photo permission needed",
+      "Allow photo access so Konnesor can attach front, back, tag, flaw, and detail photos to your listing.",
+      [
+        { text: "Not now", style: "cancel" },
+        { text: "Open Settings", onPress: () => void Linking.openSettings() },
+      ],
+    );
     return undefined;
   }
 
