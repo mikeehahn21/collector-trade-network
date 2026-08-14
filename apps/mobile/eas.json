@@ -44,6 +44,9 @@
       "autoIncrement": true,
       "node": "22.13.0",
       "pnpm": "11.13.1",
+      "ios": {
+        "image": "latest"
+      },
       "env": {
         "APP_ENV": "production",
         "SENTRY_DISABLE_AUTO_UPLOAD": "true",
@@ -55,6 +58,9 @@
       "autoIncrement": true,
       "node": "22.13.0",
       "pnpm": "11.13.1",
+      "ios": {
+        "image": "latest"
+      },
       "env": {
         "APP_ENV": "production",
         "SENTRY_DISABLE_AUTO_UPLOAD": "true",
