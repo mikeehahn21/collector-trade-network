@@ -342,7 +342,7 @@ function HomeTab({ setTab }: { setTab: (tab: Tab) => void }) {
             accessibilityLabel="Konnesor logo"
             resizeMode="contain"
             source={konnesorWordmark}
-            style={{ height: 42, width: 238 }}
+            style={{ height: 48, width: 260 }}
           />
           <Pressable
             accessibilityLabel="Open collector profile"
