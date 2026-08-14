@@ -1,6 +1,7 @@
 import type { ComponentType, PropsWithChildren, ReactNode } from "react";
+import { ResizeMode, Video } from "expo-av";
 import { ActivityIndicator, Image, Pressable, Text, TextInput, View } from "react-native";
-import type { KeyboardTypeOptions, TextInputProps } from "react-native";
+import type { KeyboardTypeOptions, StyleProp, TextInputProps, ViewStyle } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 import type { SafeAreaViewProps } from "react-native-safe-area-context";
 
@@ -11,6 +12,17 @@ import { wishlistMatchPreferenceLabels, wishlistPriorityLabels } from "@/lib/wis
 import { betaTokens as beta } from "@/manual/beta-tokens";
 
 const SafeAreaView = RNSafeAreaView as unknown as ComponentType<SafeAreaViewProps>;
+
+type LoopingVideoProps = {
+  isLooping?: boolean;
+  isMuted?: boolean;
+  resizeMode?: ResizeMode;
+  shouldPlay?: boolean;
+  source: { uri: string };
+  style?: StyleProp<ViewStyle>;
+};
+
+const LoopingVideo = Video as unknown as ComponentType<LoopingVideoProps>;
 
 type BetaButtonProps = PropsWithChildren<{
   accessibilityLabel: string;
@@ -165,6 +177,19 @@ export function BetaEmptyState({
   );
 }
 
+export function BetaLoopingVideo({ uri }: { uri: string }) {
+  return (
+    <LoopingVideo
+      isLooping
+      isMuted
+      resizeMode={ResizeMode.COVER}
+      shouldPlay
+      source={{ uri }}
+      style={{ height: "100%", width: "100%" }}
+    />
+  );
+}
+
 export function BetaTabBar<T extends string>({
   active,
   onChange,
@@ -283,6 +308,7 @@ export function BetaItemCard({ item, onPress }: { item: TradeableItem; onPress: 
   const title = item.title.trim() || "Untitled draft";
   const category = item.category ? categoryLabels[item.category] : "No category";
   const size = item.size ? sizeLabels[item.size] : "No size";
+  const hasClip = Boolean(item.verificationVideoUrl);
 
   return (
     <Pressable
@@ -305,7 +331,26 @@ export function BetaItemCard({ item, onPress }: { item: TradeableItem; onPress: 
           justifyContent: "center",
         }}
       >
-        {item.photos[0] ? (
+        {item.verificationVideoUrl ? (
+          <>
+            <BetaLoopingVideo uri={item.verificationVideoUrl} />
+            <View
+              style={{
+                backgroundColor: beta.colors.orange,
+                borderRadius: beta.radius.sm,
+                left: beta.spacing.sm,
+                paddingHorizontal: beta.spacing.sm,
+                paddingVertical: 3,
+                position: "absolute",
+                top: beta.spacing.sm,
+              }}
+            >
+              <Text style={{ color: beta.colors.background, fontSize: 10, fontWeight: "900" }}>
+                5 SEC CLIP
+              </Text>
+            </View>
+          </>
+        ) : item.photos[0] ? (
           <Image
             accessibilityLabel={`${title} photo`}
             source={{ uri: item.photos[0].uri }}
@@ -323,6 +368,7 @@ export function BetaItemCard({ item, onPress }: { item: TradeableItem; onPress: 
         </Text>
         <Text style={{ color: beta.colors.inkMuted, fontSize: 12 }}>
           {category} / {size}
+          {hasClip ? " / Clip" : ""}
         </Text>
         <View style={{ alignItems: "center", flexDirection: "row", gap: beta.spacing.xs }}>
           <View

@@ -60,6 +60,7 @@ import {
   BetaEmptyState,
   BetaItemCard,
   BetaKicker,
+  BetaLoopingVideo,
   BetaPanel,
   BetaScreen,
   BetaStatPanel,
@@ -2261,6 +2262,19 @@ function InventoryDetail({
     updateItem(currentItem.id, { photos: [...currentItem.photos, photo] });
   }
 
+  async function addVideoClip() {
+    const clipUri = await pickItemVideoClip();
+    if (!clipUri) {
+      return;
+    }
+
+    updateItem(currentItem.id, { verificationVideoUrl: clipUri });
+  }
+
+  function removeVideoClip() {
+    updateItem(currentItem.id, { verificationVideoUrl: undefined });
+  }
+
   function setCoverPhoto(photoId: string) {
     const selected = currentItem.photos.find((photo) => photo.id === photoId);
     if (!selected) {
@@ -2348,6 +2362,11 @@ function InventoryDetail({
           title={item.title || "Item"}
         />
         <PhotoActionGrid onAddPhoto={(kind) => void addPhoto(kind)} />
+        <ItemVideoClip
+          onAddVideo={() => void addVideoClip()}
+          onRemoveVideo={removeVideoClip}
+          videoUrl={item.verificationVideoUrl}
+        />
 
         <View style={{ gap: theme.spacing.sm }}>
           <BetaKicker>{statusLabels[item.status]}</BetaKicker>
@@ -2378,6 +2397,7 @@ function InventoryDetail({
             ["Publish-ready", publishCheck.isValid ? "Yes" : "No"],
             ["Missing", publishCheck.missing.length > 0 ? publishCheck.missing.join(", ") : "None"],
             ["Photos", getPhotoSummary(item.photos)],
+            ["Item clip", item.verificationVideoUrl ? "5 sec loop attached" : "Not attached"],
             ["Live record", isLocalRecordId(item.id) ? "Not yet synced" : "Synced ID"],
           ]}
           title="Readiness"
@@ -2444,6 +2464,19 @@ function InventoryEdit({ item, onBack }: { item: TradeableItem | undefined; onBa
     }
 
     updateItem(currentItem.id, { photos: [...currentItem.photos, photo] });
+  }
+
+  async function addVideoClip() {
+    const clipUri = await pickItemVideoClip();
+    if (!clipUri) {
+      return;
+    }
+
+    updateItem(currentItem.id, { verificationVideoUrl: clipUri });
+  }
+
+  function removeVideoClip() {
+    updateItem(currentItem.id, { verificationVideoUrl: undefined });
   }
 
   function setCoverPhoto(photoId: string) {
@@ -2527,9 +2560,15 @@ function InventoryEdit({ item, onBack }: { item: TradeableItem | undefined; onBa
           title={currentItem.title || "Item"}
         />
         <PhotoActionGrid onAddPhoto={(kind) => void addPhoto(kind)} />
+        <ItemVideoClip
+          onAddVideo={() => void addVideoClip()}
+          onRemoveVideo={removeVideoClip}
+          videoUrl={currentItem.verificationVideoUrl}
+        />
         <DetailPanel
           rows={[
             ["Photos", getPhotoSummary(currentItem.photos)],
+            ["Item clip", currentItem.verificationVideoUrl ? "5 sec loop attached" : "Optional"],
             [
               "Publish readiness",
               getPublishCheck(currentItem).isValid
@@ -3350,6 +3389,69 @@ function PhotoActionGrid({ onAddPhoto }: { onAddPhoto: (kind: ItemPhoto["kind"])
   );
 }
 
+function ItemVideoClip({
+  onAddVideo,
+  onRemoveVideo,
+  videoUrl,
+}: {
+  onAddVideo: () => void;
+  onRemoveVideo: () => void;
+  videoUrl?: string | undefined;
+}) {
+  return (
+    <BetaPanel tone={videoUrl ? "black" : "white"}>
+      <View style={{ gap: beta.spacing.xs }}>
+        <BetaKicker>ITEM CLIP</BetaKicker>
+        <Text style={{ color: beta.colors.ink, fontSize: 20, fontWeight: "900" }}>
+          {videoUrl ? "5 sec loop attached" : "Add a 5 sec item loop"}
+        </Text>
+        <Text style={{ color: beta.colors.inkMuted, fontSize: 14, lineHeight: 20 }}>
+          Short silent clips help collectors see fit, fabric, print texture, and condition while
+          they scroll.
+        </Text>
+      </View>
+
+      {videoUrl ? (
+        <View
+          style={{
+            aspectRatio: 1,
+            backgroundColor: beta.colors.surfaceWarm,
+            borderColor: beta.colors.orange,
+            borderRadius: beta.radius.md,
+            borderWidth: 1,
+            overflow: "hidden",
+          }}
+        >
+          <BetaLoopingVideo uri={videoUrl} />
+        </View>
+      ) : null}
+
+      <View style={{ flexDirection: "row", gap: beta.spacing.sm }}>
+        <View style={{ flex: 1 }}>
+          <BetaButton
+            accessibilityLabel={videoUrl ? "Replace item video clip" : "Add item video clip"}
+            onPress={onAddVideo}
+            variant={videoUrl ? "secondary" : "black"}
+          >
+            {videoUrl ? "Replace clip" : "Add clip"}
+          </BetaButton>
+        </View>
+        {videoUrl ? (
+          <View style={{ flex: 1 }}>
+            <BetaButton
+              accessibilityLabel="Remove item video clip"
+              onPress={onRemoveVideo}
+              variant="ghost"
+            >
+              Remove
+            </BetaButton>
+          </View>
+        ) : null}
+      </View>
+    </BetaPanel>
+  );
+}
+
 function PublishReadinessChecklist({ missing }: { missing: string[] }) {
   const checkpoints = [
     "At least one photo",
@@ -3483,6 +3585,47 @@ async function pickItemPhoto(
     sortOrder,
     uri: asset.uri,
   };
+}
+
+async function pickItemVideoClip(): Promise<string | undefined> {
+  const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (!permission.granted) {
+    Alert.alert(
+      "Photo permission needed",
+      "Allow photo access so Konnesor can attach short item clips to your listing.",
+      [
+        { text: "Not now", style: "cancel" },
+        { text: "Open Settings", onPress: () => void Linking.openSettings() },
+      ],
+    );
+    return undefined;
+  }
+
+  const result = await ImagePicker.launchImageLibraryAsync({
+    allowsEditing: true,
+    mediaTypes: ["videos"],
+    quality: 0.72,
+    videoMaxDuration: 5,
+  });
+
+  if (result.canceled || result.assets.length === 0) {
+    return undefined;
+  }
+
+  const asset = result.assets[0];
+  if (!asset?.uri) {
+    return undefined;
+  }
+
+  if (asset.duration && asset.duration > 6500) {
+    Alert.alert(
+      "Clip is too long",
+      "Choose a video around 5 seconds. We are keeping item clips short so the feed stays fast.",
+    );
+    return undefined;
+  }
+
+  return asset.uri;
 }
 
 function TradesTab({
