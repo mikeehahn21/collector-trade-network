@@ -342,7 +342,7 @@ function HomeTab({ setTab }: { setTab: (tab: Tab) => void }) {
             accessibilityLabel="Konnesor logo"
             resizeMode="contain"
             source={konnesorWordmark}
-            style={{ height: 34, width: 168 }}
+            style={{ height: 42, width: 238 }}
           />
           <Pressable
             accessibilityLabel="Open collector profile"
@@ -372,7 +372,7 @@ function HomeTab({ setTab }: { setTab: (tab: Tab) => void }) {
 
         <View style={{ gap: 5 }}>
           <Text
-            style={{ color: theme.colors.ink, fontSize: 30, fontWeight: "900", lineHeight: 34 }}
+            style={{ color: theme.colors.ink, fontSize: 26, fontWeight: "900", lineHeight: 30 }}
           >
             Welcome back,{"\n"}Collector.
           </Text>
