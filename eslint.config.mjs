@@ -39,6 +39,7 @@ export default tseslint.config(
             "lint-staged.config.cjs",
             "commitlint.config.cjs",
             "apps/mobile/app.config.js",
+            "apps/mobile/plugins/with-fmt-cxx17.js",
           ],
         },
         tsconfigRootDir: import.meta.dirname,
@@ -57,12 +58,13 @@ export default tseslint.config(
   },
   // Root config files and CJS modules: disable type-checked rules that don't apply
   {
-    files: ["eslint.config.mjs", "*.cjs"],
+    files: ["eslint.config.mjs", "*.cjs", "apps/mobile/plugins/*.js"],
     rules: {
       "@typescript-eslint/no-unsafe-argument": "off",
       "@typescript-eslint/no-unsafe-member-access": "off",
       "@typescript-eslint/no-unsafe-call": "off",
       "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-unsafe-return": "off",
       "@typescript-eslint/no-require-imports": "off",
       "no-undef": "off",
     },

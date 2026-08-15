@@ -56,6 +56,7 @@ module.exports = {
           },
         },
       ],
+      "./plugins/with-fmt-cxx17",
     ],
     extra: {
       eas: {
