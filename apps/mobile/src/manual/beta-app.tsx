@@ -81,6 +81,7 @@ import { OnboardingStateProvider } from "@/state/onboarding-state";
 import { useRecommendations } from "@/state/recommendation-state";
 import { UserProfileProvider, useUserProfile } from "@/state/user-profile-state";
 import { WishlistStateProvider, useWishlistState } from "@/state/wishlist-state";
+import { secureStorage } from "@/storage/secure-storage";
 import { DataSyncBootstrap } from "@/sync/data-sync-bootstrap";
 import { ThemeProvider } from "@/theme/theme-provider";
 import konnesorSymbol from "../../assets/brand/konnesor-symbol.png";
@@ -108,6 +109,7 @@ type LocalConversation = {
   unreadCount: number;
 };
 type LocalTradeProposal = {
+  conversationId?: string | undefined;
   id: string;
   offeredItemId: string | undefined;
   requestedTitle: string;
@@ -214,6 +216,9 @@ const localConversations: LocalConversation[] = [
   },
 ];
 
+const LOCAL_THREADS_STORAGE_KEY = "konnesor_beta_local_threads";
+const LOCAL_TRADES_STORAGE_KEY = "konnesor_beta_local_trades";
+
 export default function BetaApp() {
   return (
     <SafeAreaProvider>
@@ -257,6 +262,8 @@ function BetaShell() {
     mode: "list",
     tradeId: undefined,
   });
+  const [isLocalStateHydrated, setIsLocalStateHydrated] = useState(false);
+  const [localThreads, setLocalThreads] = useState<LocalConversation[]>(localConversations);
   const [localTrades, setLocalTrades] = useState<LocalTradeProposal[]>([]);
 
   useEffect(() => {
@@ -309,6 +316,139 @@ function BetaShell() {
     }
   }
 
+  useEffect(() => {
+    let isMounted = true;
+
+    Promise.all([
+      secureStorage.getItem(LOCAL_THREADS_STORAGE_KEY),
+      secureStorage.getItem(LOCAL_TRADES_STORAGE_KEY),
+    ])
+      .then(([storedThreads, storedTrades]) => {
+        if (!isMounted) {
+          return;
+        }
+
+        try {
+          if (storedThreads) {
+            setLocalThreads(JSON.parse(storedThreads) as LocalConversation[]);
+          }
+          if (storedTrades) {
+            setLocalTrades(JSON.parse(storedTrades) as LocalTradeProposal[]);
+          }
+        } catch {
+          setLocalThreads(localConversations);
+          setLocalTrades([]);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setLocalThreads(localConversations);
+          setLocalTrades([]);
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsLocalStateHydrated(true);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isLocalStateHydrated) {
+      return;
+    }
+
+    void secureStorage.setItem(LOCAL_THREADS_STORAGE_KEY, JSON.stringify(localThreads));
+  }, [isLocalStateHydrated, localThreads]);
+
+  useEffect(() => {
+    if (!isLocalStateHydrated) {
+      return;
+    }
+
+    void secureStorage.setItem(LOCAL_TRADES_STORAGE_KEY, JSON.stringify(localTrades));
+  }, [isLocalStateHydrated, localTrades]);
+
+  function createLocalTradeThread({
+    offeredItem,
+    proposal,
+    requestedItem,
+  }: {
+    offeredItem: TradeableItem;
+    proposal: LocalTradeProposal;
+    requestedItem: WishlistItem;
+  }): string {
+    const conversationId = `conv_${proposal.id}`;
+    const createdAt = proposal.createdAt;
+    const requestedTitle = requestedItem.title || proposal.requestedTitle;
+    const offeredTitle = offeredItem.title || "your offered item";
+    const thread: LocalConversation = {
+      contextSubtitle: `${offeredTitle} for ${requestedTitle}`,
+      contextTitle: proposal.requestedTitle,
+      contextType: "trade",
+      id: conversationId,
+      messages: [
+        {
+          content:
+            "Trade proposal created. Confirm condition, measurements, shipping, and final terms here.",
+          createdAt,
+          id: `msg_${proposal.id}_opened`,
+          isMine: false,
+          sender: "Konnesor",
+          type: "system",
+        },
+        {
+          content: proposal.notes,
+          createdAt,
+          id: `msg_${proposal.id}_terms`,
+          isMine: true,
+          sender: "You",
+        },
+      ],
+      participant: proposal.counterparty,
+      unreadCount: 0,
+    };
+
+    setLocalThreads((threads) => [thread, ...threads.filter((item) => item.id !== conversationId)]);
+    return conversationId;
+  }
+
+  function appendLocalTradeThreadMessage(
+    conversationId: string | undefined,
+    message: LocalMessage,
+  ) {
+    if (!conversationId) {
+      return;
+    }
+
+    setLocalThreads((threads) =>
+      threads.map((thread) =>
+        thread.id === conversationId
+          ? {
+              ...thread,
+              messages: [...thread.messages, message],
+              unreadCount: message.isMine ? thread.unreadCount : thread.unreadCount + 1,
+            }
+          : thread,
+      ),
+    );
+  }
+
+  function openLocalConversation(conversationId: string) {
+    setLocalThreads((threads) =>
+      threads.map((thread) =>
+        thread.id === conversationId ? { ...thread, unreadCount: 0 } : thread,
+      ),
+    );
+    setTab("messages");
+    setMessageRoute({ conversationId, mode: "detail" });
+    setTradeRoute({ mode: "list", tradeId: undefined });
+  }
+
   if (showIntro) {
     return <KonnesorIntro opacity={introOpacity} scale={introScale} />;
   }
@@ -316,7 +456,9 @@ function BetaShell() {
   return (
     <View style={{ backgroundColor: beta.colors.background, flex: 1 }}>
       <View style={{ flex: 1 }}>
-        {tab === "home" ? <HomeTab setTab={openTab} /> : null}
+        {tab === "home" ? (
+          <HomeTab localThreads={localThreads} localTrades={localTrades} setTab={openTab} />
+        ) : null}
         {tab === "inventory" ? (
           <InventoryTab route={inventoryRoute} setRoute={setInventoryRoute} />
         ) : null}
@@ -324,11 +466,19 @@ function BetaShell() {
           <WishlistTab route={wishlistRoute} setRoute={setWishlistRoute} />
         ) : null}
         {tab === "messages" ? (
-          <MessagesTab route={messageRoute} setRoute={setMessageRoute} />
+          <MessagesTab
+            localThreads={localThreads}
+            route={messageRoute}
+            setLocalThreads={setLocalThreads}
+            setRoute={setMessageRoute}
+          />
         ) : null}
         {tab === "trades" ? (
           <TradesTab
+            appendLocalTradeThreadMessage={appendLocalTradeThreadMessage}
+            createLocalTradeThread={createLocalTradeThread}
             localTrades={localTrades}
+            openLocalConversation={openLocalConversation}
             route={tradeRoute}
             setLocalTrades={setLocalTrades}
             setRoute={setTradeRoute}
@@ -391,7 +541,15 @@ function KonnesorIntro({ opacity, scale }: { opacity: Animated.Value; scale: Ani
   );
 }
 
-function HomeTab({ setTab }: { setTab: (tab: Tab) => void }) {
+function HomeTab({
+  localThreads,
+  localTrades,
+  setTab,
+}: {
+  localThreads: LocalConversation[];
+  localTrades: LocalTradeProposal[];
+  setTab: (tab: Tab) => void;
+}) {
   const theme = beta;
   const auth = useAuthSession();
   const { items, summary: collectionSummary } = useCollectionState();
@@ -417,11 +575,21 @@ function HomeTab({ setTab }: { setTab: (tab: Tab) => void }) {
     () => items.filter((item) => item.photos.length >= 2).length,
     [items],
   );
+  const localSentMessageCount = useMemo(
+    () =>
+      localThreads.reduce(
+        (count, thread) => count + thread.messages.filter((message) => message.isMine).length,
+        0,
+      ),
+    [localThreads],
+  );
   const mvpChecklist = useMemo(
     () =>
       buildMvpChecklist({
         auth,
         collectionSummary,
+        localSentMessageCount,
+        localTradeCount: localTrades.length,
         photoReadyCount,
         publishReadyCount,
         recommendationCount: recommendationSummary.total,
@@ -430,6 +598,8 @@ function HomeTab({ setTab }: { setTab: (tab: Tab) => void }) {
     [
       auth,
       collectionSummary,
+      localSentMessageCount,
+      localTrades.length,
       photoReadyCount,
       publishReadyCount,
       recommendationSummary.total,
@@ -953,6 +1123,8 @@ function MvpChecklistPanel({ checklist, title }: { checklist: MvpChecklistItem[]
 function buildMvpChecklist({
   auth,
   collectionSummary,
+  localSentMessageCount,
+  localTradeCount,
   photoReadyCount,
   publishReadyCount,
   recommendationCount,
@@ -960,6 +1132,8 @@ function buildMvpChecklist({
 }: {
   auth: ReturnType<typeof useAuthSession>;
   collectionSummary: CollectionSummary;
+  localSentMessageCount: number;
+  localTradeCount: number;
   photoReadyCount: number;
   publishReadyCount: number;
   recommendationCount: number;
@@ -994,13 +1168,19 @@ function buildMvpChecklist({
       label: "Wishlist/grails",
     },
     {
-      description: "Trade composer and local status controls are available from the Trades tab.",
-      done: collectionSummary.tradeableItems > 0 && wishlistSummary.activeItems > 0,
+      description:
+        localTradeCount > 0
+          ? `${localTradeCount} local beta trade proposal${localTradeCount === 1 ? "" : "s"} created.`
+          : "Create one structured proposal from the Trades tab.",
+      done: localTradeCount > 0,
       label: "Trade proposal flow",
     },
     {
-      description: "Message threads support live API mode plus local beta fallback replies.",
-      done: true,
+      description:
+        localSentMessageCount > 0
+          ? `${localSentMessageCount} local beta message${localSentMessageCount === 1 ? "" : "s"} sent.`
+          : "Send one message in a local or trade-linked thread.",
+      done: localSentMessageCount > 0,
       label: "Messages",
     },
     {
@@ -1730,10 +1910,14 @@ const rankButtonTextStyle = {
 };
 
 function MessagesTab({
+  localThreads,
   route,
+  setLocalThreads,
   setRoute,
 }: {
+  localThreads: LocalConversation[];
   route: MessageRoute;
+  setLocalThreads: (updater: (current: LocalConversation[]) => LocalConversation[]) => void;
   setRoute: (route: MessageRoute) => void;
 }) {
   const theme = beta;
@@ -1746,7 +1930,6 @@ function MessagesTab({
   const [error, setError] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
-  const [localThreads, setLocalThreads] = useState<LocalConversation[]>(localConversations);
   const [source, setSource] = useState<"api" | "local">("local");
 
   useEffect(() => {
@@ -1936,7 +2119,16 @@ function MessagesTab({
           <ConversationRow
             conversation={conversationItem}
             key={conversationItem.id}
-            onPress={() => setRoute({ conversationId: conversationItem.id, mode: "detail" })}
+            onPress={() => {
+              if (source === "local") {
+                setLocalThreads((threads) =>
+                  threads.map((thread) =>
+                    thread.id === conversationItem.id ? { ...thread, unreadCount: 0 } : thread,
+                  ),
+                );
+              }
+              setRoute({ conversationId: conversationItem.id, mode: "detail" });
+            }}
           />
         ))}
 
@@ -3629,12 +3821,25 @@ async function pickItemVideoClip(): Promise<string | undefined> {
 }
 
 function TradesTab({
+  appendLocalTradeThreadMessage,
+  createLocalTradeThread,
   localTrades,
+  openLocalConversation,
   route,
   setLocalTrades,
   setRoute,
 }: {
+  appendLocalTradeThreadMessage: (
+    conversationId: string | undefined,
+    message: LocalMessage,
+  ) => void;
+  createLocalTradeThread: (input: {
+    offeredItem: TradeableItem;
+    proposal: LocalTradeProposal;
+    requestedItem: WishlistItem;
+  }) => string;
   localTrades: LocalTradeProposal[];
+  openLocalConversation: (conversationId: string) => void;
   route: TradeRoute;
   setLocalTrades: (updater: (current: LocalTradeProposal[]) => LocalTradeProposal[]) => void;
   setRoute: (route: TradeRoute) => void;
@@ -3714,7 +3919,7 @@ function TradesTab({
     }
 
     const now = new Date().toISOString();
-    const proposal: LocalTradeProposal = {
+    const proposalBase: LocalTradeProposal = {
       counterparty: requestedItem.isGrail ? "Grail match collector" : "Matching collector",
       createdAt: now,
       id: `local_trade_${Date.now()}`,
@@ -3733,6 +3938,12 @@ function TradesTab({
       status: "pending",
       updatedAt: now,
     };
+    const conversationId = createLocalTradeThread({
+      offeredItem,
+      proposal: proposalBase,
+      requestedItem,
+    });
+    const proposal: LocalTradeProposal = { ...proposalBase, conversationId };
 
     setLocalTrades((current) => [proposal, ...current]);
     setDraftNotes("");
@@ -3741,11 +3952,19 @@ function TradesTab({
   }
 
   function updateLocalTradeStatus(tradeId: string, status: TradeStatus) {
+    const trade = localTrades.find((item) => item.id === tradeId);
+    const now = new Date().toISOString();
     setLocalTrades((current) =>
-      current.map((trade) =>
-        trade.id === tradeId ? { ...trade, status, updatedAt: new Date().toISOString() } : trade,
-      ),
+      current.map((trade) => (trade.id === tradeId ? { ...trade, status, updatedAt: now } : trade)),
     );
+    appendLocalTradeThreadMessage(trade?.conversationId, {
+      content: getTradeStatusUpdateMessage(status),
+      createdAt: now,
+      id: `local_msg_${tradeId}_${status}_${Date.now()}`,
+      isMine: false,
+      sender: "Konnesor",
+      type: "system",
+    });
   }
 
   if (route.mode === "compose") {
@@ -3874,6 +4093,11 @@ function TradesTab({
         <LocalTradeDetail
           getItem={(itemId) => items.find((item) => item.id === itemId)}
           onBack={() => setRoute({ mode: "list", tradeId: undefined })}
+          onOpenConversation={
+            selectedLocalTrade.conversationId
+              ? () => openLocalConversation(selectedLocalTrade.conversationId ?? "")
+              : undefined
+          }
           onUpdateStatus={(status) => updateLocalTradeStatus(selectedLocalTrade.id, status)}
           trade={selectedLocalTrade}
         />
@@ -4295,11 +4519,13 @@ function TradeDetail({ onBack, trade }: { onBack: () => void; trade: Trade }) {
 function LocalTradeDetail({
   getItem,
   onBack,
+  onOpenConversation,
   onUpdateStatus,
   trade,
 }: {
   getItem: (itemId: string | undefined) => TradeableItem | undefined;
   onBack: () => void;
+  onOpenConversation?: (() => void) | undefined;
   onUpdateStatus: (status: TradeStatus) => void;
   trade: LocalTradeProposal;
 }) {
@@ -4344,16 +4570,26 @@ function LocalTradeDetail({
             ["Notes", trade.notes],
             ["Created", new Date(trade.createdAt).toLocaleDateString()],
             ["Updated", new Date(trade.updatedAt).toLocaleDateString()],
+            ["Thread", trade.conversationId ? "Linked to messages" : "Not linked"],
             ["Next step", getTradeNextStep(trade.status)],
           ]}
           title="Proposal checkpoint"
         />
         <View style={{ gap: theme.spacing.md }}>
+          {onOpenConversation ? (
+            <BetaButton
+              accessibilityLabel="Open trade message thread"
+              onPress={onOpenConversation}
+              variant="black"
+            >
+              Open trade thread
+            </BetaButton>
+          ) : null}
           <BetaButton
             accessibilityLabel="Mark proposal accepted"
             disabled={trade.status === "accepted"}
             onPress={() => onUpdateStatus("accepted")}
-            variant="black"
+            variant="secondary"
           >
             Mark accepted
           </BetaButton>
@@ -4372,6 +4608,22 @@ function LocalTradeDetail({
             variant="secondary"
           >
             Mark completed
+          </BetaButton>
+          <BetaButton
+            accessibilityLabel="Mark proposal declined"
+            disabled={trade.status === "declined"}
+            onPress={() => onUpdateStatus("declined")}
+            variant="ghost"
+          >
+            Mark declined
+          </BetaButton>
+          <BetaButton
+            accessibilityLabel="Flag proposal dispute"
+            disabled={trade.status === "disputed"}
+            onPress={() => onUpdateStatus("disputed")}
+            variant="ghost"
+          >
+            Flag dispute
           </BetaButton>
           <BetaButton
             accessibilityLabel="Cancel proposal"
@@ -4484,5 +4736,24 @@ function getTradeNextStep(status: TradeStatus): string {
       return "No action needed unless the collectors reopen terms.";
     case "disputed":
       return "Hold completion until support reviews the issue.";
+  }
+}
+
+function getTradeStatusUpdateMessage(status: TradeStatus): string {
+  switch (status) {
+    case "pending":
+      return "Trade moved back to pending. Confirm condition and terms before acceptance.";
+    case "accepted":
+      return "Trade accepted. Next step: collect shipping details and tracking from both sides.";
+    case "countered":
+      return "Counter requested. Review the terms and adjust the proposal before moving forward.";
+    case "completed":
+      return "Trade marked complete. Archive the outcome and update collector reputation.";
+    case "cancelled":
+      return "Trade cancelled. No action is needed unless both collectors reopen the deal.";
+    case "declined":
+      return "Trade declined. Keep the thread for reference if a new proposal is created.";
+    case "disputed":
+      return "Trade disputed. Pause completion until the issue is reviewed.";
   }
 }
