@@ -126,6 +126,13 @@ type InventoryFilter = "all" | "tradeable" | "draft" | "needs_photos" | "ready";
 type InventorySort = "recent" | "ready" | "value";
 type WishlistFilter = "all" | "grails" | "high" | "medium" | "low";
 type WishlistSort = "rank" | "grails" | "recent";
+type BetaFeedback = {
+  id: string;
+  note: string;
+  role: "collector" | "seller" | "tester";
+  sentiment: "love" | "confusing" | "blocked";
+  createdAt: string;
+};
 type MvpChecklistItem = {
   description: string;
   done: boolean;
@@ -218,6 +225,17 @@ const localConversations: LocalConversation[] = [
 
 const LOCAL_THREADS_STORAGE_KEY = "konnesor_beta_local_threads";
 const LOCAL_TRADES_STORAGE_KEY = "konnesor_beta_local_trades";
+const LOCAL_FEEDBACK_STORAGE_KEY = "konnesor_beta_feedback";
+
+function createDemoPhoto(kind: ItemPhoto["kind"], sortOrder: number): ItemPhoto {
+  return {
+    createdAt: new Date().toISOString(),
+    id: `demo_photo_${kind}_${Date.now()}_${sortOrder}`,
+    kind,
+    sortOrder,
+    uri: Image.resolveAssetSource(konnesorSymbol).uri,
+  };
+}
 
 export default function BetaApp() {
   return (
@@ -263,6 +281,7 @@ function BetaShell() {
     tradeId: undefined,
   });
   const [isLocalStateHydrated, setIsLocalStateHydrated] = useState(false);
+  const [betaFeedback, setBetaFeedback] = useState<BetaFeedback[]>([]);
   const [localThreads, setLocalThreads] = useState<LocalConversation[]>(localConversations);
   const [localTrades, setLocalTrades] = useState<LocalTradeProposal[]>([]);
 
@@ -320,15 +339,19 @@ function BetaShell() {
     let isMounted = true;
 
     Promise.all([
+      secureStorage.getItem(LOCAL_FEEDBACK_STORAGE_KEY),
       secureStorage.getItem(LOCAL_THREADS_STORAGE_KEY),
       secureStorage.getItem(LOCAL_TRADES_STORAGE_KEY),
     ])
-      .then(([storedThreads, storedTrades]) => {
+      .then(([storedFeedback, storedThreads, storedTrades]) => {
         if (!isMounted) {
           return;
         }
 
         try {
+          if (storedFeedback) {
+            setBetaFeedback(JSON.parse(storedFeedback) as BetaFeedback[]);
+          }
           if (storedThreads) {
             setLocalThreads(JSON.parse(storedThreads) as LocalConversation[]);
           }
@@ -336,12 +359,14 @@ function BetaShell() {
             setLocalTrades(JSON.parse(storedTrades) as LocalTradeProposal[]);
           }
         } catch {
+          setBetaFeedback([]);
           setLocalThreads(localConversations);
           setLocalTrades([]);
         }
       })
       .catch(() => {
         if (isMounted) {
+          setBetaFeedback([]);
           setLocalThreads(localConversations);
           setLocalTrades([]);
         }
@@ -356,6 +381,14 @@ function BetaShell() {
       isMounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!isLocalStateHydrated) {
+      return;
+    }
+
+    void secureStorage.setItem(LOCAL_FEEDBACK_STORAGE_KEY, JSON.stringify(betaFeedback));
+  }, [betaFeedback, isLocalStateHydrated]);
 
   useEffect(() => {
     if (!isLocalStateHydrated) {
@@ -449,6 +482,26 @@ function BetaShell() {
     setTradeRoute({ mode: "list", tradeId: undefined });
   }
 
+  function resetLocalBetaWorkflow() {
+    setBetaFeedback([]);
+    setLocalThreads(localConversations);
+    setLocalTrades([]);
+    setMessageRoute({ conversationId: undefined, mode: "list" });
+    setTradeRoute({ mode: "list", tradeId: undefined });
+  }
+
+  function submitBetaFeedback(input: Omit<BetaFeedback, "createdAt" | "id">) {
+    const now = new Date().toISOString();
+    setBetaFeedback((current) => [
+      {
+        ...input,
+        createdAt: now,
+        id: `beta_feedback_${Date.now()}`,
+      },
+      ...current,
+    ]);
+  }
+
   if (showIntro) {
     return <KonnesorIntro opacity={introOpacity} scale={introScale} />;
   }
@@ -457,7 +510,14 @@ function BetaShell() {
     <View style={{ backgroundColor: beta.colors.background, flex: 1 }}>
       <View style={{ flex: 1 }}>
         {tab === "home" ? (
-          <HomeTab localThreads={localThreads} localTrades={localTrades} setTab={openTab} />
+          <HomeTab
+            feedbackItems={betaFeedback}
+            localThreads={localThreads}
+            localTrades={localTrades}
+            onResetLocalWorkflow={resetLocalBetaWorkflow}
+            onSubmitFeedback={submitBetaFeedback}
+            setTab={openTab}
+          />
         ) : null}
         {tab === "inventory" ? (
           <InventoryTab route={inventoryRoute} setRoute={setInventoryRoute} />
@@ -542,18 +602,35 @@ function KonnesorIntro({ opacity, scale }: { opacity: Animated.Value; scale: Ani
 }
 
 function HomeTab({
+  feedbackItems,
   localThreads,
   localTrades,
+  onResetLocalWorkflow,
+  onSubmitFeedback,
   setTab,
 }: {
+  feedbackItems: BetaFeedback[];
   localThreads: LocalConversation[];
   localTrades: LocalTradeProposal[];
+  onResetLocalWorkflow: () => void;
+  onSubmitFeedback: (input: Omit<BetaFeedback, "createdAt" | "id">) => void;
   setTab: (tab: Tab) => void;
 }) {
   const theme = beta;
   const auth = useAuthSession();
-  const { items, summary: collectionSummary } = useCollectionState();
-  const { activeItems, summary: wishlistSummary } = useWishlistState();
+  const {
+    createItem,
+    deleteItem,
+    items,
+    publishItem,
+    summary: collectionSummary,
+  } = useCollectionState();
+  const {
+    activeItems,
+    createWishlistItem,
+    deleteWishlistItem,
+    summary: wishlistSummary,
+  } = useWishlistState();
   const { isLoading: isProfileLoading, profile } = useUserProfile();
   const [showProfile, setShowProfile] = useState(false);
   const {
@@ -624,6 +701,86 @@ function HomeTab({
         checklist={mvpChecklist}
       />
     );
+  }
+
+  function loadDemoData() {
+    const nowLabel = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    const archiveSeeds = [
+      {
+        category: "band" as const,
+        condition: "very_good" as const,
+        era: "1990s",
+        estimatedValue: { currency: "USD" as const, min: 180, max: 260 },
+        size: "xl" as const,
+        tag: "Brockum",
+        title: `Konnesor demo Halloween tee ${nowLabel}`,
+        tradePreference: "wishlist_only" as const,
+      },
+      {
+        category: "rap" as const,
+        condition: "good" as const,
+        era: "1990s",
+        estimatedValue: { currency: "USD" as const, min: 140, max: 220 },
+        size: "l" as const,
+        tag: "Giant",
+        title: `Konnesor demo rap tee ${nowLabel}`,
+        tradePreference: "all_serious_offers" as const,
+      },
+    ];
+
+    archiveSeeds.forEach((seed, index) => {
+      const item = createItem({
+        ...seed,
+        allowsMeasurementRequests: true,
+        allowsPhotoRequests: true,
+        communicationPreference: "approved_traders",
+        flaws: index === 0 ? [] : ["Light cracking on print"],
+        measurements: { chest: index === 0 ? "23" : "22", length: "29", unit: "in" },
+        photos: [createDemoPhoto("front", 0), createDemoPhoto("tag", 1)],
+        status: "draft",
+        tradeNotes:
+          "Demo listing for TestFlight walkthrough. Replace with real item photos before public launch.",
+        verificationStatus: "pending",
+        visibility: "approved_members",
+      });
+      publishItem(item.id);
+    });
+
+    [
+      {
+        category: "sports" as const,
+        isGrail: true,
+        preferredCondition: "good" as const,
+        preferredEra: "1990s",
+        preferredTag: "Salem",
+        priority: "high" as const,
+        size: "xl" as const,
+        title: `Konnesor demo Bulls grail ${nowLabel}`,
+      },
+      {
+        category: "band" as const,
+        isGrail: false,
+        preferredCondition: "very_good" as const,
+        preferredEra: "2000s",
+        preferredTag: "Fruit of the Loom",
+        priority: "medium" as const,
+        size: "l" as const,
+        title: `Konnesor demo Metallica want ${nowLabel}`,
+      },
+    ].forEach((seed) => {
+      createWishlistItem({
+        ...seed,
+        matchPreference: "similar",
+        notes: "Demo want for the TestFlight walkthrough.",
+        visibility: "approved_members",
+      });
+    });
+  }
+
+  function resetDemoRun() {
+    items.forEach((item) => deleteItem(item.id));
+    activeItems.forEach((item) => deleteWishlistItem(item.id));
+    onResetLocalWorkflow();
   }
 
   return (
@@ -704,6 +861,24 @@ function HomeTab({
           onOpenWishlist={() => setTab("wishlist")}
         />
 
+        <TesterWalkthroughPanel
+          checklist={mvpChecklist}
+          onLoadDemo={loadDemoData}
+          onOpenArchive={() => setTab("inventory")}
+          onOpenMessages={() => setTab("messages")}
+          onOpenTrades={() => setTab("trades")}
+          onOpenWishlist={() => setTab("wishlist")}
+        />
+
+        <DemoDataPanel
+          archiveCount={collectionSummary.totalItems}
+          feedbackCount={feedbackItems.length}
+          onLoadDemo={loadDemoData}
+          onResetDemo={resetDemoRun}
+          tradeCount={localTrades.length}
+          wishlistCount={wishlistSummary.activeItems}
+        />
+
         <RecommendationPreview
           error={recommendationError}
           isLoading={isRecommendationsLoading}
@@ -748,6 +923,10 @@ function HomeTab({
             },
           ]}
         />
+
+        <TrustSafetyPanel />
+
+        <BetaFeedbackPanel feedbackItems={feedbackItems} onSubmit={onSubmitFeedback} />
 
         <View style={{ gap: theme.spacing.sm }}>
           <BetaButton accessibilityLabel="Open inventory" onPress={() => setTab("inventory")}>
@@ -1052,6 +1231,245 @@ function MvpLaunchPanel({
         <MiniActionButton label="Wishlist" onPress={onOpenWishlist} />
         <MiniActionButton label="Trades" onPress={onOpenTrades} />
         <MiniActionButton label="Messages" onPress={onOpenMessages} />
+      </View>
+    </BetaPanel>
+  );
+}
+
+function TesterWalkthroughPanel({
+  checklist,
+  onLoadDemo,
+  onOpenArchive,
+  onOpenMessages,
+  onOpenTrades,
+  onOpenWishlist,
+}: {
+  checklist: MvpChecklistItem[];
+  onLoadDemo: () => void;
+  onOpenArchive: () => void;
+  onOpenMessages: () => void;
+  onOpenTrades: () => void;
+  onOpenWishlist: () => void;
+}) {
+  const nextStep = checklist.find((item) => !item.done);
+  const walkthroughSteps = [
+    {
+      action: onOpenArchive,
+      detail: "Create or inspect one item with photos, size, tag, condition, and trade terms.",
+      label: "1. Archive",
+    },
+    {
+      action: onOpenWishlist,
+      detail: "Add one grail so the app has a target for matching.",
+      label: "2. Wishlist",
+    },
+    {
+      action: onOpenTrades,
+      detail: "Compose a structured proposal and move it through the trade checkpoints.",
+      label: "3. Trade",
+    },
+    {
+      action: onOpenMessages,
+      detail: "Open the linked thread and send a note so the conversation loop is proven.",
+      label: "4. Messages",
+    },
+  ];
+
+  return (
+    <BetaPanel>
+      <View style={{ gap: beta.spacing.xs }}>
+        <BetaKicker>TESTER WALKTHROUGH</BetaKicker>
+        <Text style={{ color: beta.colors.ink, fontSize: 22, fontWeight: "900" }}>
+          Run the core loop in four taps.
+        </Text>
+        <BetaBody>
+          {nextStep
+            ? `Next checkpoint: ${nextStep.label}.`
+            : "All checklist items are covered for this beta run."}
+        </BetaBody>
+      </View>
+      <View style={{ gap: beta.spacing.sm }}>
+        {walkthroughSteps.map((step) => (
+          <Pressable
+            accessibilityLabel={`Open ${step.label}`}
+            accessibilityRole="button"
+            key={step.label}
+            onPress={step.action}
+            style={({ pressed }) => ({
+              backgroundColor: beta.colors.surfaceElevated,
+              borderColor: beta.colors.border,
+              borderRadius: beta.radius.md,
+              borderWidth: 1,
+              gap: 4,
+              opacity: pressed ? 0.86 : 1,
+              padding: beta.spacing.md,
+            })}
+          >
+            <Text style={{ color: beta.colors.ink, fontSize: 15, fontWeight: "900" }}>
+              {step.label}
+            </Text>
+            <Text style={{ color: beta.colors.inkMuted, fontSize: 13, lineHeight: 18 }}>
+              {step.detail}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+      <BetaButton accessibilityLabel="Load guided demo data" onPress={onLoadDemo} variant="black">
+        Load demo loop
+      </BetaButton>
+    </BetaPanel>
+  );
+}
+
+function DemoDataPanel({
+  archiveCount,
+  feedbackCount,
+  onLoadDemo,
+  onResetDemo,
+  tradeCount,
+  wishlistCount,
+}: {
+  archiveCount: number;
+  feedbackCount: number;
+  onLoadDemo: () => void;
+  onResetDemo: () => void;
+  tradeCount: number;
+  wishlistCount: number;
+}) {
+  return (
+    <BetaPanel tone="black">
+      <View style={{ gap: beta.spacing.xs }}>
+        <BetaKicker>BETA DEMO CONTROLS</BetaKicker>
+        <Text style={{ color: beta.colors.ink, fontSize: 22, fontWeight: "900" }}>
+          Start clean or preload the loop.
+        </Text>
+        <BetaBody>
+          Archive {archiveCount} / Wishlist {wishlistCount} / Trades {tradeCount} / Feedback{" "}
+          {feedbackCount}
+        </BetaBody>
+      </View>
+      <View style={{ flexDirection: "row", gap: beta.spacing.sm }}>
+        <View style={{ flex: 1 }}>
+          <BetaButton accessibilityLabel="Load demo data" onPress={onLoadDemo}>
+            Seed
+          </BetaButton>
+        </View>
+        <View style={{ flex: 1 }}>
+          <BetaButton
+            accessibilityLabel="Reset local beta data"
+            onPress={onResetDemo}
+            variant="secondary"
+          >
+            Reset
+          </BetaButton>
+        </View>
+      </View>
+    </BetaPanel>
+  );
+}
+
+function BetaFeedbackPanel({
+  feedbackItems,
+  onSubmit,
+}: {
+  feedbackItems: BetaFeedback[];
+  onSubmit: (input: Omit<BetaFeedback, "createdAt" | "id">) => void;
+}) {
+  const [note, setNote] = useState("");
+  const [role, setRole] = useState<BetaFeedback["role"]>("collector");
+  const [sentiment, setSentiment] = useState<BetaFeedback["sentiment"]>("love");
+  const latest = feedbackItems[0];
+
+  function submit() {
+    if (!note.trim()) {
+      Alert.alert("Add a note", "Write the tester feedback before saving it.");
+      return;
+    }
+
+    onSubmit({ note: note.trim(), role, sentiment });
+    setNote("");
+  }
+
+  return (
+    <BetaPanel>
+      <View style={{ gap: beta.spacing.xs }}>
+        <BetaKicker>SELLER FEEDBACK</BetaKicker>
+        <Text style={{ color: beta.colors.ink, fontSize: 22, fontWeight: "900" }}>
+          Capture reactions while testers use it.
+        </Text>
+        <BetaBody>
+          Save short notes from sellers, collectors, and beta testers so we know what to polish
+          next.
+        </BetaBody>
+      </View>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: beta.spacing.sm }}>
+        {(["collector", "seller", "tester"] as BetaFeedback["role"][]).map((item) => (
+          <BetaChip
+            key={item}
+            label={item === "collector" ? "Collector" : item === "seller" ? "Seller" : "Tester"}
+            onPress={() => setRole(item)}
+            selected={role === item}
+          />
+        ))}
+      </View>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: beta.spacing.sm }}>
+        {(["love", "confusing", "blocked"] as BetaFeedback["sentiment"][]).map((item) => (
+          <BetaChip
+            key={item}
+            label={item === "love" ? "Loved it" : item === "confusing" ? "Confusing" : "Blocked"}
+            onPress={() => setSentiment(item)}
+            selected={sentiment === item}
+          />
+        ))}
+      </View>
+      <BetaTextField
+        label="Feedback note"
+        multiline
+        numberOfLines={4}
+        onChangeText={setNote}
+        placeholder="What did they like, what confused them, or what stopped them?"
+        style={{ minHeight: 94, textAlignVertical: "top" }}
+        value={note}
+      />
+      <BetaButton accessibilityLabel="Save beta feedback" onPress={submit} variant="black">
+        Save feedback
+      </BetaButton>
+      {latest ? (
+        <Text style={{ color: beta.colors.inkMuted, fontSize: 12, lineHeight: 17 }}>
+          Latest: {latest.role} / {latest.sentiment} - {latest.note}
+        </Text>
+      ) : null}
+    </BetaPanel>
+  );
+}
+
+function TrustSafetyPanel({ compact = false }: { compact?: boolean }) {
+  const rows = [
+    "Keep final trade terms inside the Konnesor thread.",
+    "Require front, back, tag, flaw, and measurement proof before shipping.",
+    "Use tracking for both sides and pause if terms change.",
+  ];
+
+  return (
+    <BetaPanel tone={compact ? "white" : "black"}>
+      <View style={{ gap: beta.spacing.xs }}>
+        <BetaKicker>TRUST LAYER</BetaKicker>
+        <Text style={{ color: beta.colors.ink, fontSize: compact ? 18 : 22, fontWeight: "900" }}>
+          Trade safety checkpoints
+        </Text>
+      </View>
+      <View style={{ gap: beta.spacing.sm }}>
+        {rows.map((row) => (
+          <View
+            key={row}
+            style={{ alignItems: "flex-start", flexDirection: "row", gap: beta.spacing.sm }}
+          >
+            <Text style={{ color: beta.colors.orange, fontSize: 14, fontWeight: "900" }}>OK</Text>
+            <Text style={{ color: beta.colors.inkMuted, flex: 1, fontSize: 13, lineHeight: 19 }}>
+              {row}
+            </Text>
+          </View>
+        ))}
       </View>
     </BetaPanel>
   );
@@ -1626,8 +2044,8 @@ function InventoryTab({
 
         {visibleItems.length === 0 ? (
           <BetaEmptyState
-            message="Tap Add archive item to create the first local beta collection record."
-            title="No collection records yet"
+            message="Add one shirt with front/tag photos, size, condition, and trade preference. This unlocks matches and trade proposals."
+            title="Build your first archive piece"
           />
         ) : filteredItems.length === 0 ? (
           <BetaEmptyState
@@ -1789,8 +2207,8 @@ function WishlistTab({
 
         {activeItems.length === 0 ? (
           <BetaEmptyState
-            message="Tap Add sample want to create the first local beta wishlist record."
-            title="No wants yet"
+            message="Add the first grail or target shirt. The wishlist is how Konnesor knows what trades to surface."
+            title="Rank your first want"
           />
         ) : filteredWants.length === 0 ? (
           <BetaEmptyState
@@ -2110,8 +2528,8 @@ function MessagesTab({
           />
         ) : conversations.length === 0 ? (
           <BetaEmptyState
-            message="Start a thread from an item or trade once the backend has conversation records."
-            title="No live conversations yet"
+            message="Create a trade proposal or open an item question to start the first beta conversation thread."
+            title="No conversations yet"
           />
         ) : null}
 
@@ -2594,6 +3012,7 @@ function InventoryDetail({
           ]}
           title="Readiness"
         />
+        <ItemUploadReadinessPanel item={item} missing={publishCheck.missing} />
         <PublishReadinessChecklist missing={publishCheck.missing} />
         {syncMessage ? <BetaEmptyState message={syncMessage} title="Sync status" /> : null}
 
@@ -3700,6 +4119,82 @@ function PublishReadinessChecklist({ missing }: { missing: string[] }) {
   );
 }
 
+function ItemUploadReadinessPanel({ item, missing }: { item: TradeableItem; missing: string[] }) {
+  const hasKind = (kind: ItemPhoto["kind"]) => item.photos.some((photo) => photo.kind === kind);
+  const requirements = [
+    {
+      complete: hasKind("front"),
+      label: "Front photo",
+      note: "Clear full front image.",
+    },
+    {
+      complete: hasKind("back"),
+      label: "Back photo",
+      note: "Show print, blank, or back condition.",
+    },
+    {
+      complete: hasKind("tag"),
+      label: "Tag photo",
+      note: "Brand, size, and era proof.",
+    },
+    {
+      complete: hasKind("flaw") || item.flaws.length === 0,
+      label: "Flaws disclosed",
+      note: item.flaws.length === 0 ? "No flaws listed." : "Add flaw photos for listed issues.",
+    },
+    {
+      complete: Boolean(item.measurements.chest && item.measurements.length),
+      label: "Measurements",
+      note: "Chest and length are enough for beta testing.",
+    },
+    {
+      complete: Boolean(item.verificationVideoUrl),
+      label: "5 sec loop",
+      note: "Optional now, important for premium listings.",
+    },
+  ];
+
+  return (
+    <BetaPanel>
+      <View style={{ gap: beta.spacing.xs }}>
+        <BetaKicker>UPLOAD QUALITY</BetaKicker>
+        <Text style={{ color: beta.colors.ink, fontSize: 20, fontWeight: "900" }}>
+          {missing.length === 0 ? "Listing proof looks strong." : "Proof checklist for testers"}
+        </Text>
+        <BetaBody>This is the flow sellers should understand before Konnesor leaves beta.</BetaBody>
+      </View>
+      <View style={{ gap: beta.spacing.sm }}>
+        {requirements.map((requirement) => (
+          <View
+            key={requirement.label}
+            style={{
+              borderColor: requirement.complete ? beta.colors.orange : beta.colors.border,
+              borderRadius: beta.radius.md,
+              borderWidth: 1,
+              gap: 4,
+              padding: beta.spacing.sm,
+            }}
+          >
+            <Text
+              style={{
+                color: requirement.complete ? beta.colors.ink : beta.colors.inkMuted,
+                fontSize: 14,
+                fontWeight: "900",
+              }}
+            >
+              {requirement.complete ? "OK " : "TODO "}
+              {requirement.label}
+            </Text>
+            <Text style={{ color: beta.colors.inkMuted, fontSize: 12, lineHeight: 17 }}>
+              {requirement.note}
+            </Text>
+          </View>
+        ))}
+      </View>
+    </BetaPanel>
+  );
+}
+
 function getPhotoSummary(photos: ItemPhoto[]): string {
   if (photos.length === 0) {
     return "No photos attached";
@@ -4015,26 +4510,29 @@ function TradesTab({
           ) : null}
 
           {composeStep === "terms" ? (
-            <BetaPanel>
-              <BetaKicker>TERMS</BetaKicker>
-              <BetaTextField
-                label="Proposal note"
-                multiline
-                numberOfLines={5}
-                onChangeText={setDraftNotes}
-                placeholder="Explain condition, fit, what you want confirmed, and why the swap makes sense."
-                style={{ minHeight: 124, textAlignVertical: "top" }}
-                value={draftNotes}
-              />
-              <DetailPanel
-                rows={[
-                  ["Shipping", "Confirm both addresses after acceptance"],
-                  ["Condition", "Ask for measurements, tag, flaw, and back photos"],
-                  ["Safety", "Keep final terms in this trade thread"],
-                ]}
-                title="Terms checklist"
-              />
-            </BetaPanel>
+            <View style={{ gap: theme.spacing.md }}>
+              <BetaPanel>
+                <BetaKicker>TERMS</BetaKicker>
+                <BetaTextField
+                  label="Proposal note"
+                  multiline
+                  numberOfLines={5}
+                  onChangeText={setDraftNotes}
+                  placeholder="Explain condition, fit, what you want confirmed, and why the swap makes sense."
+                  style={{ minHeight: 124, textAlignVertical: "top" }}
+                  value={draftNotes}
+                />
+                <DetailPanel
+                  rows={[
+                    ["Shipping", "Confirm both addresses after acceptance"],
+                    ["Condition", "Ask for measurements, tag, flaw, and back photos"],
+                    ["Safety", "Keep final terms in this trade thread"],
+                  ]}
+                  title="Terms checklist"
+                />
+              </BetaPanel>
+              <TrustSafetyPanel compact />
+            </View>
           ) : null}
 
           {composeStep === "review" ? (
@@ -4160,8 +4658,8 @@ function TradesTab({
 
         {liveTrades.length === 0 && localTrades.length === 0 && !isLoading ? (
           <BetaEmptyState
-            message="Compose a local proposal after adding one archive item and one want."
-            title="No trades yet"
+            message="Add one archive item and one wishlist target, then compose a proposal to test the full swap flow."
+            title="No trade proposals yet"
           />
         ) : null}
 
@@ -4478,6 +4976,58 @@ function TradeRow({
   );
 }
 
+function TradeNextActionPanel({ status }: { status: TradeStatus }) {
+  const copy: Record<TradeStatus, { title: string; detail: string }> = {
+    accepted: {
+      detail:
+        "Confirm final condition proof, shipping timing, and tracking before either side sends.",
+      title: "Acceptance needs shipping proof.",
+    },
+    cancelled: {
+      detail:
+        "Keep the thread for reference and create a new proposal if the match still makes sense.",
+      title: "Proposal cancelled.",
+    },
+    completed: {
+      detail:
+        "Capture feedback, confirm both sides received their items, and mark any issues immediately.",
+      title: "Complete the post-trade loop.",
+    },
+    countered: {
+      detail:
+        "Use the message thread to adjust item terms, add cash notes if needed, or pick a new target.",
+      title: "Counter terms are open.",
+    },
+    declined: {
+      detail: "No action needed. Use the archive and wishlist screens to find the next match.",
+      title: "Offer declined.",
+    },
+    disputed: {
+      detail:
+        "Pause shipping, keep all proof in the thread, and document the reason before moving forward.",
+      title: "Dispute needs review.",
+    },
+    pending: {
+      detail:
+        "Open the thread, confirm measurements/photos, then move the proposal to accepted or countered.",
+      title: "Waiting on review.",
+    },
+  };
+  const current = copy[status] ?? copy.pending;
+
+  return (
+    <BetaPanel>
+      <BetaKicker>NEXT ACTION</BetaKicker>
+      <Text style={{ color: beta.colors.ink, fontSize: 20, fontWeight: "900" }}>
+        {current.title}
+      </Text>
+      <Text style={{ color: beta.colors.inkMuted, fontSize: 14, lineHeight: 20 }}>
+        {current.detail}
+      </Text>
+    </BetaPanel>
+  );
+}
+
 function TradeDetail({ onBack, trade }: { onBack: () => void; trade: Trade }) {
   const theme = beta;
 
@@ -4511,6 +5061,8 @@ function TradeDetail({ onBack, trade }: { onBack: () => void; trade: Trade }) {
           ]}
           title="Live trade details"
         />
+        <TradeNextActionPanel status={trade.status} />
+        <TrustSafetyPanel compact />
       </ScrollView>
     </BetaScreen>
   );
@@ -4575,6 +5127,8 @@ function LocalTradeDetail({
           ]}
           title="Proposal checkpoint"
         />
+        <TradeNextActionPanel status={trade.status} />
+        <TrustSafetyPanel compact />
         <View style={{ gap: theme.spacing.md }}>
           {onOpenConversation ? (
             <BetaButton
