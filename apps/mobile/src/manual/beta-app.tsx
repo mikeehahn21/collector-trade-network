@@ -53,6 +53,11 @@ import { getPublishCheck } from "@/lib/item-validation";
 import { tradeStatusLabels } from "@/lib/trade-display";
 import { betaTokens as beta } from "@/manual/beta-tokens";
 import {
+  getRecordSyncDescription,
+  getRecordSyncState,
+  isLocalRecordId,
+} from "@/manual/sync-status";
+import {
   BetaBody,
   BetaButton,
   BetaChip,
@@ -64,6 +69,7 @@ import {
   BetaPanel,
   BetaScreen,
   BetaStatPanel,
+  BetaSyncBadge,
   BetaTabBar,
   BetaTextField,
   BetaTitle,
@@ -2059,6 +2065,7 @@ function InventoryTab({
                 <BetaItemCard
                   item={item}
                   onPress={() => setRoute({ mode: "detail", itemId: item.id })}
+                  syncState={getRecordSyncState(item.id)}
                 />
               </View>
             ))}
@@ -2297,6 +2304,7 @@ function MockupWishlistRow({
         <Text style={{ color: beta.colors.inkMuted, fontSize: 12 }}>
           {wishlistMatchPreferenceLabels[item.matchPreference]}
         </Text>
+        <BetaSyncBadge state={getRecordSyncState(item.id)} />
         <View style={{ flexDirection: "row", gap: beta.spacing.sm }}>
           <Pressable accessibilityRole="button" onPress={onMoveUp} style={rankButtonStyle}>
             <Text style={rankButtonTextStyle}>↑</Text>
@@ -2919,7 +2927,7 @@ function InventoryDetail({
           ? await api.publishItem({ ...nextItem, status: "tradeable" })
           : await api.updateItem(nextItem.id, { ...nextItem, status: "tradeable" });
         upsertItemFromServer(response.item, isLocalRecordId(nextItem.id) ? nextItem.id : undefined);
-        setSyncMessage("Saved live as tradeable.");
+        setSyncMessage("Published live to your Konnesor archive.");
         return;
       }
 
@@ -2927,9 +2935,11 @@ function InventoryDetail({
         ? await api.createItem(nextItem)
         : await api.updateItem(nextItem.id, nextItem);
       upsertItemFromServer(response.item, isLocalRecordId(nextItem.id) ? nextItem.id : undefined);
-      setSyncMessage("Draft saved live.");
+      setSyncMessage("Saved live to your Konnesor archive.");
     } catch {
-      setSyncMessage("Live sync unavailable. Local record is still saved on this phone.");
+      setSyncMessage(
+        "Saved locally on this phone. Tap Save draft live again to retry syncing to Konnesor.",
+      );
     } finally {
       setIsSyncing(false);
     }
@@ -3008,7 +3018,7 @@ function InventoryDetail({
             ["Missing", publishCheck.missing.length > 0 ? publishCheck.missing.join(", ") : "None"],
             ["Photos", getPhotoSummary(item.photos)],
             ["Item clip", item.verificationVideoUrl ? "5 sec loop attached" : "Not attached"],
-            ["Live record", isLocalRecordId(item.id) ? "Not yet synced" : "Synced ID"],
+            ["Sync status", getRecordSyncDescription(item.id)],
           ]}
           title="Readiness"
         />
@@ -3126,9 +3136,11 @@ function InventoryEdit({ item, onBack }: { item: TradeableItem | undefined; onBa
         response.item,
         isLocalRecordId(currentItem.id) ? currentItem.id : undefined,
       );
-      setSyncMessage("Draft saved live.");
+      setSyncMessage("Saved live to your Konnesor archive.");
     } catch {
-      setSyncMessage("Live sync unavailable. Local edits are still saved on this phone.");
+      setSyncMessage(
+        "Saved locally on this phone. Tap Save live again to retry syncing to Konnesor.",
+      );
     } finally {
       setIsSyncing(false);
     }
@@ -3367,9 +3379,11 @@ function WishlistDetail({
         response.wishlistItem,
         isLocalRecordId(currentItem.id) ? currentItem.id : undefined,
       );
-      setSyncMessage("Want saved live.");
+      setSyncMessage("Saved live to your Konnesor wishlist.");
     } catch {
-      setSyncMessage("Live sync unavailable. Local want is still saved on this phone.");
+      setSyncMessage(
+        "Saved locally on this phone. Tap Save want live again to retry syncing to Konnesor.",
+      );
     } finally {
       setIsSyncing(false);
     }
@@ -3425,7 +3439,7 @@ function WishlistDetail({
         {item.notes ? <DetailPanel rows={[["Collector note", item.notes]]} title="Notes" /> : null}
         <DetailPanel
           rows={[
-            ["Live record", isLocalRecordId(item.id) ? "Not yet synced" : "Synced ID"],
+            ["Sync status", getRecordSyncDescription(item.id)],
             ["Minimum fields", item.title.trim().length >= 3 ? "Ready" : "Needs title"],
             ["Visibility", wishlistVisibilityLabels[item.visibility]],
           ]}
@@ -3489,9 +3503,11 @@ function WishlistEdit({ item, onBack }: { item: WishlistItem | undefined; onBack
         response.wishlistItem,
         isLocalRecordId(currentItem.id) ? currentItem.id : undefined,
       );
-      setSyncMessage("Want saved live.");
+      setSyncMessage("Saved live to your Konnesor wishlist.");
     } catch {
-      setSyncMessage("Live sync unavailable. Local edits are still saved on this phone.");
+      setSyncMessage(
+        "Saved locally on this phone. Tap Save live again to retry syncing to Konnesor.",
+      );
     } finally {
       setIsSyncing(false);
     }
@@ -4226,10 +4242,6 @@ function MissingRecord({ onBack, title }: { onBack: () => void; title: string })
       </View>
     </BetaScreen>
   );
-}
-
-function isLocalRecordId(id: string): boolean {
-  return id.startsWith("item_") || id.startsWith("wish_") || id.startsWith("local_");
 }
 
 async function pickItemPhoto(

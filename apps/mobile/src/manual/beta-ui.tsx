@@ -24,6 +24,8 @@ type LoopingVideoProps = {
 
 const LoopingVideo = Video as unknown as ComponentType<LoopingVideoProps>;
 
+export type BetaSyncState = "live" | "local";
+
 type BetaButtonProps = PropsWithChildren<{
   accessibilityLabel: string;
   disabled?: boolean;
@@ -109,6 +111,48 @@ export function BetaButton({
     >
       {loading ? <ActivityIndicator color={color} /> : content}
     </Pressable>
+  );
+}
+
+export function BetaSyncBadge({ state }: { state: BetaSyncState }) {
+  const isLive = state === "live";
+  const label = isLive ? "LIVE" : "LOCAL";
+  const description = isLive ? "Synced to your Konnesor account" : "Saved on this phone only";
+
+  return (
+    <View
+      accessibilityLabel={`Sync status: ${description}`}
+      style={{
+        alignItems: "center",
+        alignSelf: "flex-start",
+        backgroundColor: isLive ? "#11301D" : beta.colors.orangeSoft,
+        borderColor: isLive ? beta.colors.success : beta.colors.orange,
+        borderRadius: 999,
+        borderWidth: 1,
+        flexDirection: "row",
+        gap: 5,
+        paddingHorizontal: beta.spacing.sm,
+        paddingVertical: 3,
+      }}
+    >
+      <View
+        style={{
+          backgroundColor: isLive ? beta.colors.success : beta.colors.warning,
+          borderRadius: 99,
+          height: 6,
+          width: 6,
+        }}
+      />
+      <Text
+        style={{
+          color: isLive ? beta.colors.success : beta.colors.warning,
+          fontSize: 10,
+          fontWeight: "900",
+        }}
+      >
+        {label}
+      </Text>
+    </View>
   );
 }
 
@@ -304,7 +348,15 @@ export function BetaStatPanel({
   );
 }
 
-export function BetaItemCard({ item, onPress }: { item: TradeableItem; onPress: () => void }) {
+export function BetaItemCard({
+  item,
+  onPress,
+  syncState,
+}: {
+  item: TradeableItem;
+  onPress: () => void;
+  syncState?: BetaSyncState;
+}) {
   const title = item.title.trim() || "Untitled draft";
   const category = item.category ? categoryLabels[item.category] : "No category";
   const size = item.size ? sizeLabels[item.size] : "No size";
@@ -384,6 +436,7 @@ export function BetaItemCard({ item, onPress }: { item: TradeableItem; onPress: 
             {statusLabels[item.status]}
           </Text>
         </View>
+        {syncState ? <BetaSyncBadge state={syncState} /> : null}
       </View>
     </Pressable>
   );
