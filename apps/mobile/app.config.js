@@ -25,6 +25,7 @@ module.exports = {
       buildNumber: "1",
       itsAppUsesNonExemptEncryption: false,
       infoPlist: {
+        ITSAppUsesNonExemptEncryption: false,
         NSCameraUsageDescription:
           "Konnesor needs camera access so you can take photos of your items and record verification videos.",
         NSPhotoLibraryUsageDescription:
@@ -55,6 +56,7 @@ module.exports = {
           },
         },
       ],
+      "./plugins/with-fmt-cxx17",
     ],
     extra: {
       eas: {
