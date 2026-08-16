@@ -223,7 +223,9 @@ export async function createItemForOwner(
     throw new Error("Failed to create item.");
   }
 
-  return mapItem(row, []);
+  await replaceItemPhotos(db, row.id, input.photos);
+
+  return (await findItemByOwner(db, ownerId, row.id)) ?? mapItem(row, []);
 }
 
 export async function updateItemForOwner(
@@ -289,6 +291,10 @@ export async function updateItemForOwner(
 
   if (!row) {
     return undefined;
+  }
+
+  if (input.photos) {
+    await replaceItemPhotos(db, row.id, input.photos);
   }
 
   return findItemByOwner(db, ownerId, row.id);
@@ -423,6 +429,28 @@ function mapVerificationSummary(row: ItemRow): VerificationStatusSummary {
     verifiedAt: row.verified_at?.toISOString(),
     aiMetadata: row.ai_metadata ?? undefined,
   };
+}
+
+async function replaceItemPhotos(
+  db: Queryable,
+  itemId: string,
+  photos: ItemPhoto[] | undefined,
+): Promise<void> {
+  if (!photos) {
+    return;
+  }
+
+  await db.query("delete from item_photos where item_id = $1", [itemId]);
+
+  for (const photo of photos) {
+    await db.query(
+      `
+        insert into item_photos (item_id, storage_key, public_url, kind, sort_order, created_at)
+        values ($1, $2, $3, $4, $5, $6)
+      `,
+      [itemId, photo.uri, photo.uri, photo.kind, photo.sortOrder, new Date(photo.createdAt)],
+    );
+  }
 }
 
 function canViewItem(
