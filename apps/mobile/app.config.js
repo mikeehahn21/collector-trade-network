@@ -8,6 +8,7 @@ module.exports = {
   expo: {
     name: "Konnesor",
     slug: "konnesor",
+    owner: "mhjr17s-team",
     scheme: "konnesor",
     version: "1.0.0",
     orientation: "portrait",
