@@ -72,7 +72,8 @@
     "testflight": {
       "ios": {
         "appleId": "mikeehahn@gmail.com",
-        "appleTeamId": "BBXEYZXMDG"
+        "appleTeamId": "BBXEYZXMDG",
+        "ascAppId": "6801677640"
       }
     },
     "production": {}
