@@ -15,10 +15,11 @@ This is the release path for testers outside the development build flow.
 
 1. Confirm the app opens in the current development build.
 2. On Home, tap `Load demo loop` and confirm Archive, Wishlist, Trades, Messages, and Feedback all have data.
-3. Confirm photo/video upload still works on a real item.
-4. Tap `Reset` on Home and confirm local beta records clear without deleting the app.
-5. Confirm the app uses the production API URL.
-6. Run the local checks:
+3. On Home, confirm the `Stability Check` card shows the intended API URL and a backend status.
+4. Confirm photo/video upload still works on a real item.
+5. Tap `Reset` on Home and confirm local beta records clear without deleting the app.
+6. Confirm the app uses the production API URL.
+7. Run the local checks:
 
 ```powershell
 pnpm.cmd --filter @ctn/mobile typecheck

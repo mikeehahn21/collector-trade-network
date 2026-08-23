@@ -76,6 +76,8 @@ import {
 import { useApiClient } from "@/api/use-api-client";
 import { MobileAuthProvider } from "@/auth/clerk-provider";
 import { useAuthSession } from "@/auth/use-auth-session";
+import { AppErrorBoundary } from "@/components/error-boundary";
+import { getMobileEnv } from "@/config/env";
 import { CollectionStateProvider, useCollectionState } from "@/state/collection-state";
 import { OnboardingStateProvider } from "@/state/onboarding-state";
 import { useRecommendations } from "@/state/recommendation-state";
@@ -126,6 +128,7 @@ type InventoryFilter = "all" | "tradeable" | "draft" | "needs_photos" | "ready";
 type InventorySort = "recent" | "ready" | "value";
 type WishlistFilter = "all" | "grails" | "high" | "medium" | "low";
 type WishlistSort = "rank" | "grails" | "recent";
+type BackendHealthStatus = "checking" | "online" | "offline";
 type BetaFeedback = {
   id: string;
   note: string;
@@ -248,7 +251,9 @@ export default function BetaApp() {
                 <UserProfileProvider>
                   <DataSyncBootstrap />
                   <StatusBar barStyle="light-content" />
-                  <BetaShell />
+                  <AppErrorBoundary>
+                    <BetaShell />
+                  </AppErrorBoundary>
                 </UserProfileProvider>
               </WishlistStateProvider>
             </CollectionStateProvider>
@@ -617,6 +622,7 @@ function HomeTab({
   setTab: (tab: Tab) => void;
 }) {
   const theme = beta;
+  const api = useApiClient();
   const auth = useAuthSession();
   const {
     createItem,
@@ -633,6 +639,9 @@ function HomeTab({
   } = useWishlistState();
   const { isLoading: isProfileLoading, profile } = useUserProfile();
   const [showProfile, setShowProfile] = useState(false);
+  const [backendCheckedAt, setBackendCheckedAt] = useState<string | undefined>();
+  const [backendStatus, setBackendStatus] = useState<BackendHealthStatus>("checking");
+  const apiBaseUrl = useMemo(() => getMobileEnv().apiBaseUrl, []);
   const {
     error: recommendationError,
     isLoading: isRecommendationsLoading,
@@ -683,6 +692,22 @@ function HomeTab({
       wishlistSummary,
     ],
   );
+
+  const checkBackendStatus = useCallback(async () => {
+    setBackendStatus("checking");
+    try {
+      await api.getSystemConfig();
+      setBackendStatus("online");
+    } catch {
+      setBackendStatus("offline");
+    } finally {
+      setBackendCheckedAt(new Date().toISOString());
+    }
+  }, [api]);
+
+  useEffect(() => {
+    void checkBackendStatus();
+  }, [checkBackendStatus]);
 
   if (showProfile) {
     return (
@@ -877,6 +902,13 @@ function HomeTab({
           onResetDemo={resetDemoRun}
           tradeCount={localTrades.length}
           wishlistCount={wishlistSummary.activeItems}
+        />
+
+        <BackendStatusPanel
+          apiBaseUrl={apiBaseUrl}
+          checkedAt={backendCheckedAt}
+          onRefresh={() => void checkBackendStatus()}
+          status={backendStatus}
         />
 
         <RecommendationPreview
@@ -1364,6 +1396,78 @@ function DemoDataPanel({
           </BetaButton>
         </View>
       </View>
+    </BetaPanel>
+  );
+}
+
+function BackendStatusPanel({
+  apiBaseUrl,
+  checkedAt,
+  onRefresh,
+  status,
+}: {
+  apiBaseUrl: string;
+  checkedAt: string | undefined;
+  onRefresh: () => void;
+  status: BackendHealthStatus;
+}) {
+  const isRailway = apiBaseUrl.includes("railway.app");
+  const statusCopy =
+    status === "online"
+      ? "Backend reachable"
+      : status === "offline"
+        ? "Backend unavailable; local fallback is active"
+        : "Checking backend";
+  const checkedLabel = checkedAt
+    ? new Date(checkedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+    : "Not checked yet";
+
+  return (
+    <BetaPanel tone={status === "offline" ? "peach" : "white"}>
+      <View style={{ gap: beta.spacing.xs }}>
+        <BetaKicker>STABILITY CHECK</BetaKicker>
+        <Text style={{ color: beta.colors.ink, fontSize: 22, fontWeight: "900" }}>
+          {statusCopy}
+        </Text>
+        <Text style={{ color: beta.colors.inkMuted, fontSize: 13, lineHeight: 19 }}>
+          API: {apiBaseUrl}
+        </Text>
+      </View>
+      <View style={{ gap: beta.spacing.sm }}>
+        {[
+          ["Last checked", checkedLabel],
+          ["Build target", isRailway ? "Railway URL" : "Custom API URL"],
+          [
+            "Fallback",
+            status === "online" ? "Available if API fails" : "Currently protecting beta",
+          ],
+        ].map(([label, value]) => (
+          <View
+            key={label}
+            style={{
+              flexDirection: "row",
+              gap: beta.spacing.md,
+              justifyContent: "space-between",
+            }}
+          >
+            <Text style={{ color: beta.colors.inkMuted, flex: 1, fontSize: 13 }}>{label}</Text>
+            <Text
+              style={{
+                color: beta.colors.ink,
+                flex: 1,
+                fontSize: 13,
+                fontWeight: "900",
+                textAlign: "right",
+              }}
+            >
+              {value}
+            </Text>
+          </View>
+        ))}
+      </View>
+      <BetaButton accessibilityLabel="Recheck backend status" onPress={onRefresh} variant="black">
+        Recheck API
+      </BetaButton>
     </BetaPanel>
   );
 }
