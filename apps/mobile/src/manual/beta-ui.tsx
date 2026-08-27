@@ -40,7 +40,7 @@ export function BetaScreen({ children }: PropsWithChildren) {
           alignSelf: "center",
           flex: 1,
           maxWidth: 430,
-          paddingHorizontal: 18,
+          paddingHorizontal: 16,
           paddingTop: beta.spacing.lg,
           width: "100%",
         }}
@@ -105,6 +105,7 @@ export function BetaButton({
         minHeight: 44,
         opacity: isDisabled ? 0.45 : pressed ? 0.9 : 1,
         paddingHorizontal: beta.spacing.lg,
+        paddingVertical: beta.spacing.sm,
       })}
     >
       {loading ? <ActivityIndicator color={color} /> : content}
@@ -148,7 +149,7 @@ export function BetaPanel({
             : isBlack
               ? beta.colors.surfaceElevated
               : beta.colors.surface,
-        borderColor: tone === "peach" || isBlack ? beta.colors.orange : beta.colors.border,
+        borderColor: tone === "peach" || isBlack ? beta.colors.borderStrong : beta.colors.border,
         borderRadius: beta.radius.lg,
         borderWidth: 1,
         gap: beta.spacing.md,

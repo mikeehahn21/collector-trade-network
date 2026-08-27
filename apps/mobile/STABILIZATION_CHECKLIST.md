@@ -15,12 +15,17 @@ Do not start a TestFlight build until the current development build opens on a r
    - Tester Walkthrough
    - Beta Demo Controls
    - Stability Check
+   - Home comp scanner
    - Trust Layer
    - Seller Feedback
 4. Tap `Load demo loop`.
-5. Open Archive, Wishlist, Trades, Messages, and return Home.
-6. Save one feedback note.
-7. Tap `Reset` and confirm local beta records clear without reinstalling.
+5. Open Archive and add one front photo using `Camera`.
+6. Add one tag or detail photo using `Library`.
+7. If either upload is blocked, confirm the app shows a clear permission/settings message instead of silently failing.
+8. Add Comp Finder clues, open eBay sold comps, and save a value range.
+9. Open Wishlist, Trades, Messages, and return Home.
+10. Save one feedback note.
+11. Tap `Reset` and confirm local beta records clear without reinstalling.
 
 ## Backend Check
 

@@ -16,15 +16,18 @@ This is the release path for testers outside the development build flow.
 1. Confirm the app opens in the current development build.
 2. On Home, tap `Load demo loop` and confirm Archive, Wishlist, Trades, Messages, and Feedback all have data.
 3. On Home, confirm the `Stability Check` card shows the intended API URL and a backend status.
-4. Confirm photo/video upload still works on a real item.
-5. Tap `Reset` on Home and confirm local beta records clear without deleting the app.
-6. Confirm the app uses the production API URL.
-7. Run the local checks:
+4. Open an Archive item and confirm Comp Finder generates search terms and opens eBay sold results in Safari.
+5. Save a low/high comp range and confirm the item value updates.
+6. Confirm Camera and Library photo upload both work on a real item, or show a clear permission recovery message.
+7. Tap `Reset` on Home and confirm local beta records clear without deleting the app.
+8. Confirm the app uses the production API URL.
+9. Run the local checks:
 
 ```powershell
 pnpm.cmd --filter @ctn/mobile typecheck
 pnpm.cmd --filter @ctn/mobile lint
 pnpm.cmd --filter @ctn/mobile test
+pnpm.cmd --filter @ctn/mobile exec expo export --platform ios --clear --output-dir dist-testflight-check
 ```
 
 ## App Store Connect
@@ -72,16 +75,18 @@ Ask each tester to complete this exact loop:
 1. Open Konnesor and wait for the logo intro to finish.
 2. Tap `Load demo loop` on Home.
 3. Open Archive and inspect one item readiness checklist.
-4. Open Wishlist and confirm the ranked grail view makes sense.
-5. Open Trades, compose one proposal, then mark it accepted or countered.
-6. Open Messages from the trade detail and send one note.
-7. Return Home and save one feedback note.
+4. Use Comp Finder to search eBay sold and one other source, then save a researched value range.
+5. Open Wishlist and confirm the ranked grail view makes sense.
+6. Open Trades, compose one proposal, then mark it accepted or countered.
+7. Open Messages from the trade detail and send one note.
+8. Return Home and save one feedback note.
 
 ## Beta Review Notes
 
 - Konnesor is a private beta for collectors to organize tradeable vintage apparel, rank wishlist grails, compose structured swaps, and keep trade messages in one place.
 - The TestFlight build includes demo/local fallback workflows so testers can complete the app loop even if the live API is unavailable.
 - Photo and short video upload are used to document item condition and trade proof.
+- Comp Finder opens third-party marketplace searches so testers can research comps, but all pricing remains beta research until verified by the collector.
 - No real purchases, payments, or shipping labels are executed in this beta build.
 
 ## Notes

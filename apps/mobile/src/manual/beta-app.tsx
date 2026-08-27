@@ -129,11 +129,23 @@ type InventorySort = "recent" | "ready" | "value";
 type WishlistFilter = "all" | "grails" | "high" | "medium" | "low";
 type WishlistSort = "rank" | "grails" | "recent";
 type BackendHealthStatus = "checking" | "online" | "offline";
+type ImageSource = "camera" | "library";
+type CompSourceId =
+  "google" | "ebaySold" | "ebayActive" | "grailed" | "depop" | "etsy" | "mercari" | "poshmark";
+type CompSource = {
+  id: CompSourceId;
+  label: string;
+  note: string;
+  url: (query: string) => string;
+};
 type BetaFeedback = {
+  blocker?: string | undefined;
   id: string;
   note: string;
   role: "collector" | "seller" | "tester";
+  screenshotNote?: string | undefined;
   sentiment: "love" | "confusing" | "blocked";
+  worked?: string | undefined;
   createdAt: string;
 };
 type MvpChecklistItem = {
@@ -639,6 +651,7 @@ function HomeTab({
   } = useWishlistState();
   const { isLoading: isProfileLoading, profile } = useUserProfile();
   const [showProfile, setShowProfile] = useState(false);
+  const [showTesterGuide, setShowTesterGuide] = useState(false);
   const [backendCheckedAt, setBackendCheckedAt] = useState<string | undefined>();
   const [backendStatus, setBackendStatus] = useState<BackendHealthStatus>("checking");
   const apiBaseUrl = useMemo(() => getMobileEnv().apiBaseUrl, []);
@@ -724,6 +737,33 @@ function HomeTab({
         publishReadyCount={publishReadyCount}
         wishlistSummary={wishlistSummary}
         checklist={mvpChecklist}
+      />
+    );
+  }
+
+  if (showTesterGuide) {
+    return (
+      <TesterGuideScreen
+        checklist={mvpChecklist}
+        feedbackCount={feedbackItems.length}
+        onBack={() => setShowTesterGuide(false)}
+        onLoadDemo={loadDemoData}
+        onOpenArchive={() => {
+          setShowTesterGuide(false);
+          setTab("inventory");
+        }}
+        onOpenMessages={() => {
+          setShowTesterGuide(false);
+          setTab("messages");
+        }}
+        onOpenTrades={() => {
+          setShowTesterGuide(false);
+          setTab("trades");
+        }}
+        onOpenWishlist={() => {
+          setShowTesterGuide(false);
+          setTab("wishlist");
+        }}
       />
     );
   }
@@ -870,6 +910,8 @@ function HomeTab({
           wishlistItem={activeItems[0]}
         />
 
+        <CompFinderPanel compact item={tradeableItems[0]} seedLabel="Home comp scanner" />
+
         <BetaStatPanel
           stats={[
             { label: "Tradeable", value: collectionSummary.tradeableItems },
@@ -885,6 +927,26 @@ function HomeTab({
           onOpenTrades={() => setTab("trades")}
           onOpenWishlist={() => setTab("wishlist")}
         />
+
+        <BetaPanel tone="black">
+          <View style={{ gap: beta.spacing.xs }}>
+            <BetaKicker>TESTFLIGHT GUIDE</BetaKicker>
+            <Text style={{ color: beta.colors.ink, fontSize: 22, fontWeight: "900" }}>
+              Give testers a clean script.
+            </Text>
+            <BetaBody>
+              Open the guided beta screen before handing the app to a seller, collector, or family
+              tester.
+            </BetaBody>
+          </View>
+          <BetaButton
+            accessibilityLabel="Open beta tester guide"
+            onPress={() => setShowTesterGuide(true)}
+            variant="secondary"
+          >
+            Open tester guide
+          </BetaButton>
+        </BetaPanel>
 
         <TesterWalkthroughPanel
           checklist={mvpChecklist}
@@ -1353,6 +1415,108 @@ function TesterWalkthroughPanel({
   );
 }
 
+function TesterGuideScreen({
+  checklist,
+  feedbackCount,
+  onBack,
+  onLoadDemo,
+  onOpenArchive,
+  onOpenMessages,
+  onOpenTrades,
+  onOpenWishlist,
+}: {
+  checklist: MvpChecklistItem[];
+  feedbackCount: number;
+  onBack: () => void;
+  onLoadDemo: () => void;
+  onOpenArchive: () => void;
+  onOpenMessages: () => void;
+  onOpenTrades: () => void;
+  onOpenWishlist: () => void;
+}) {
+  const completeCount = checklist.filter((item) => item.done).length;
+  const guideSteps = [
+    {
+      action: onOpenArchive,
+      detail:
+        "Add or inspect one tee with front, back, tag, flaw/detail photos, measurements, and estimated value.",
+      label: "Archive proof",
+    },
+    {
+      action: onOpenWishlist,
+      detail: "Add a grail and rank it. This is what powers the collector match story.",
+      label: "Wishlist signal",
+    },
+    {
+      action: onOpenTrades,
+      detail:
+        "Compose one trade proposal, review both sides, and test accepted/countered/completed status.",
+      label: "Trade workflow",
+    },
+    {
+      action: onOpenMessages,
+      detail: "Open the linked thread and ask for condition, measurements, or shipping proof.",
+      label: "Message loop",
+    },
+  ];
+
+  return (
+    <BetaScreen>
+      <ScrollView contentContainerStyle={{ gap: beta.spacing.lg, paddingBottom: beta.spacing.xl }}>
+        <BetaButton accessibilityLabel="Back to home" onPress={onBack} variant="ghost">
+          Back to home
+        </BetaButton>
+
+        <BetaPanel tone="black">
+          <BetaKicker>BETA TEST SCRIPT</BetaKicker>
+          <Text style={{ color: beta.colors.ink, fontSize: 30, fontWeight: "900", lineHeight: 35 }}>
+            Run the app like a real seller would.
+          </Text>
+          <BetaBody>
+            The goal is to prove the complete loop: document an item, compare value, request a
+            grail, propose a trade, message, and record feedback.
+          </BetaBody>
+          <BetaStatPanel
+            stats={[
+              { label: "Checks", value: `${completeCount}/${checklist.length}` },
+              { label: "Feedback", value: feedbackCount },
+              { label: "Mode", value: "Beta" },
+            ]}
+          />
+        </BetaPanel>
+
+        <BetaPanel>
+          <BetaKicker>QUICK START</BetaKicker>
+          <Text style={{ color: beta.colors.ink, fontSize: 22, fontWeight: "900" }}>
+            No setup needed for first testers.
+          </Text>
+          <BetaBody>
+            Use Seed if the phone has no data yet. Then walk through each module and write down what
+            feels confusing or missing.
+          </BetaBody>
+          <BetaButton accessibilityLabel="Load guided demo data" onPress={onLoadDemo}>
+            Seed demo data
+          </BetaButton>
+        </BetaPanel>
+
+        <View style={{ gap: beta.spacing.md }}>
+          {guideSteps.map((step, index) => (
+            <ReleaseEmptyState
+              actionLabel={`Open ${step.label}`}
+              key={step.label}
+              message={step.detail}
+              onAction={step.action}
+              title={`${index + 1}. ${step.label}`}
+            />
+          ))}
+        </View>
+
+        <MvpChecklistPanel checklist={checklist} title="Tester completion checks" />
+      </ScrollView>
+    </BetaScreen>
+  );
+}
+
 function DemoDataPanel({
   archiveCount,
   feedbackCount,
@@ -1479,19 +1643,32 @@ function BetaFeedbackPanel({
   feedbackItems: BetaFeedback[];
   onSubmit: (input: Omit<BetaFeedback, "createdAt" | "id">) => void;
 }) {
+  const [blocker, setBlocker] = useState("");
   const [note, setNote] = useState("");
   const [role, setRole] = useState<BetaFeedback["role"]>("collector");
+  const [screenshotNote, setScreenshotNote] = useState("");
   const [sentiment, setSentiment] = useState<BetaFeedback["sentiment"]>("love");
+  const [worked, setWorked] = useState("");
   const latest = feedbackItems[0];
 
   function submit() {
-    if (!note.trim()) {
-      Alert.alert("Add a note", "Write the tester feedback before saving it.");
+    if (!note.trim() && !worked.trim() && !blocker.trim()) {
+      Alert.alert("Add feedback", "Write at least one tester note before saving it.");
       return;
     }
 
-    onSubmit({ note: note.trim(), role, sentiment });
+    onSubmit({
+      blocker: blocker.trim() || undefined,
+      note: note.trim() || "Tester checkpoint saved.",
+      role,
+      screenshotNote: screenshotNote.trim() || undefined,
+      sentiment,
+      worked: worked.trim() || undefined,
+    });
+    setBlocker("");
     setNote("");
+    setScreenshotNote("");
+    setWorked("");
   }
 
   return (
@@ -1527,22 +1704,169 @@ function BetaFeedbackPanel({
         ))}
       </View>
       <BetaTextField
-        label="Feedback note"
+        label="What worked?"
+        multiline
+        numberOfLines={3}
+        onChangeText={setWorked}
+        placeholder="Example: photo upload felt clear, comps made sense, trade card looked good."
+        style={{ minHeight: 76, textAlignVertical: "top" }}
+        value={worked}
+      />
+      <BetaTextField
+        label="What broke or confused them?"
+        multiline
+        numberOfLines={3}
+        onChangeText={setBlocker}
+        placeholder="Example: upload permission, wording, missing button, slow screen, unclear next step."
+        style={{ minHeight: 76, textAlignVertical: "top" }}
+        value={blocker}
+      />
+      <BetaTextField
+        label="Release note"
         multiline
         numberOfLines={4}
         onChangeText={setNote}
-        placeholder="What did they like, what confused them, or what stopped them?"
+        placeholder="What should we change before the next TestFlight build?"
         style={{ minHeight: 94, textAlignVertical: "top" }}
         value={note}
+      />
+      <BetaTextField
+        label="Screenshot or screen"
+        onChangeText={setScreenshotNote}
+        placeholder="Example: Archive detail, Trade compose, Home match card"
+        value={screenshotNote}
       />
       <BetaButton accessibilityLabel="Save beta feedback" onPress={submit} variant="black">
         Save feedback
       </BetaButton>
       {latest ? (
-        <Text style={{ color: beta.colors.inkMuted, fontSize: 12, lineHeight: 17 }}>
-          Latest: {latest.role} / {latest.sentiment} - {latest.note}
-        </Text>
+        <View style={{ gap: beta.spacing.xs }}>
+          <Text style={{ color: beta.colors.ink, fontSize: 13, fontWeight: "900" }}>
+            Latest: {latest.role} / {latest.sentiment}
+          </Text>
+          <Text style={{ color: beta.colors.inkMuted, fontSize: 12, lineHeight: 17 }}>
+            {latest.note}
+          </Text>
+          {latest.blocker ? (
+            <Text style={{ color: beta.colors.warning, fontSize: 12, lineHeight: 17 }}>
+              Blocker: {latest.blocker}
+            </Text>
+          ) : null}
+        </View>
       ) : null}
+    </BetaPanel>
+  );
+}
+
+function ReleaseEmptyState({
+  actionLabel,
+  message,
+  onAction,
+  title,
+}: {
+  actionLabel?: string | undefined;
+  message: string;
+  onAction?: (() => void) | undefined;
+  title: string;
+}) {
+  return (
+    <BetaPanel>
+      <View style={{ alignItems: "flex-start", flexDirection: "row", gap: beta.spacing.md }}>
+        <View
+          style={{
+            alignItems: "center",
+            backgroundColor: beta.colors.orangeSoft,
+            borderColor: beta.colors.orange,
+            borderRadius: beta.radius.md,
+            borderWidth: 1,
+            height: 42,
+            justifyContent: "center",
+            width: 42,
+          }}
+        >
+          <Text style={{ color: beta.colors.orange, fontSize: 22, fontWeight: "900" }}>K</Text>
+        </View>
+        <View style={{ flex: 1, gap: beta.spacing.xs }}>
+          <Text style={{ color: beta.colors.ink, fontSize: 20, fontWeight: "900" }}>{title}</Text>
+          <Text style={{ color: beta.colors.inkMuted, fontSize: 14, lineHeight: 20 }}>
+            {message}
+          </Text>
+        </View>
+      </View>
+      {actionLabel && onAction ? (
+        <BetaButton accessibilityLabel={actionLabel} onPress={onAction} variant="secondary">
+          {actionLabel}
+        </BetaButton>
+      ) : null}
+    </BetaPanel>
+  );
+}
+
+function TradeSafetyChecklist({ status }: { status: TradeStatus }) {
+  const rows = [
+    {
+      done: status !== "pending",
+      label: "Both item sides reviewed",
+      note: "Compare front, back, tag, flaw/detail photos, and comp notes before acceptance.",
+    },
+    {
+      done: ["accepted", "completed"].includes(status),
+      label: "Measurements confirmed",
+      note: "Chest, length, and any fit-critical measurements should be in the message thread.",
+    },
+    {
+      done: ["accepted", "completed"].includes(status),
+      label: "Shipping terms locked",
+      note: "No one ships until address, carrier, tracking, and final trade terms are written down.",
+    },
+    {
+      done: status === "completed",
+      label: "Receipt confirmed",
+      note: "Complete only after both collectors confirm the items arrived as described.",
+    },
+  ];
+
+  return (
+    <BetaPanel>
+      <BetaKicker>TRADE SAFETY REVIEW</BetaKicker>
+      <Text style={{ color: beta.colors.ink, fontSize: 21, fontWeight: "900" }}>
+        Protect the swap before it leaves either closet.
+      </Text>
+      <View style={{ gap: beta.spacing.sm }}>
+        {rows.map((row) => (
+          <View
+            key={row.label}
+            style={{
+              alignItems: "flex-start",
+              backgroundColor: row.done ? beta.colors.orangeSoft : beta.colors.surfaceElevated,
+              borderColor: row.done ? beta.colors.orange : beta.colors.border,
+              borderRadius: beta.radius.md,
+              borderWidth: 1,
+              flexDirection: "row",
+              gap: beta.spacing.sm,
+              padding: beta.spacing.md,
+            }}
+          >
+            <Text
+              style={{
+                color: row.done ? beta.colors.orange : beta.colors.inkMuted,
+                fontSize: 14,
+                fontWeight: "900",
+              }}
+            >
+              {row.done ? "OK" : "TODO"}
+            </Text>
+            <View style={{ flex: 1, gap: 3 }}>
+              <Text style={{ color: beta.colors.ink, fontSize: 14, fontWeight: "900" }}>
+                {row.label}
+              </Text>
+              <Text style={{ color: beta.colors.inkMuted, fontSize: 12, lineHeight: 17 }}>
+                {row.note}
+              </Text>
+            </View>
+          </View>
+        ))}
+      </View>
     </BetaPanel>
   );
 }
@@ -2147,12 +2471,14 @@ function InventoryTab({
         </BetaPanel>
 
         {visibleItems.length === 0 ? (
-          <BetaEmptyState
+          <ReleaseEmptyState
+            actionLabel="Add archive item"
             message="Add one shirt with front/tag photos, size, condition, and trade preference. This unlocks matches and trade proposals."
+            onAction={addSampleItem}
             title="Build your first archive piece"
           />
         ) : filteredItems.length === 0 ? (
-          <BetaEmptyState
+          <ReleaseEmptyState
             message="No archive records match this search. Clear filters or add another piece."
             title="Nothing found"
           />
@@ -2310,12 +2636,14 @@ function WishlistTab({
         </BetaPanel>
 
         {activeItems.length === 0 ? (
-          <BetaEmptyState
+          <ReleaseEmptyState
+            actionLabel="Add want"
             message="Add the first grail or target shirt. The wishlist is how Konnesor knows what trades to surface."
+            onAction={addSampleWish}
             title="Rank your first want"
           />
         ) : filteredWants.length === 0 ? (
-          <BetaEmptyState
+          <ReleaseEmptyState
             message="No wants match this search. Clear filters or add another grail."
             title="Nothing found"
           />
@@ -2631,7 +2959,7 @@ function MessagesTab({
             title="Loading messages"
           />
         ) : conversations.length === 0 ? (
-          <BetaEmptyState
+          <ReleaseEmptyState
             message="Create a trade proposal or open an item question to start the first beta conversation thread."
             title="No conversations yet"
           />
@@ -2967,8 +3295,8 @@ function InventoryDetail({
       ? `$${currentItem.estimatedValue.min ?? "?"} - $${currentItem.estimatedValue.max ?? "?"}`
       : "Not estimated";
 
-  async function addPhoto(kind: ItemPhoto["kind"]) {
-    const photo = await pickItemPhoto(kind, currentItem.photos.length);
+  async function addPhoto(kind: ItemPhoto["kind"], source: ImageSource) {
+    const photo = await pickItemPhoto(kind, currentItem.photos.length, source);
     if (!photo) {
       return;
     }
@@ -3069,17 +3397,23 @@ function InventoryDetail({
         <BetaButton accessibilityLabel="Back to inventory" onPress={onBack} variant="ghost">
           Back to inventory
         </BetaButton>
+        <ItemDetailHero item={currentItem} publishReady={publishCheck.isValid} value={value} />
         <ItemPhotoGallery
           onRemovePhoto={removePhoto}
           onSetCover={setCoverPhoto}
           photos={item.photos}
           title={item.title || "Item"}
         />
-        <PhotoActionGrid onAddPhoto={(kind) => void addPhoto(kind)} />
+        <PhotoActionGrid onAddPhoto={(kind, source) => void addPhoto(kind, source)} />
         <ItemVideoClip
           onAddVideo={() => void addVideoClip()}
           onRemoveVideo={removeVideoClip}
           videoUrl={item.verificationVideoUrl}
+        />
+        <CompFinderPanel
+          item={currentItem}
+          onApplyValue={(estimatedValue) => updateItem(currentItem.id, { estimatedValue })}
+          seedLabel="Archive item comps"
         />
 
         <View style={{ gap: theme.spacing.sm }}>
@@ -3154,6 +3488,93 @@ function InventoryDetail({
   );
 }
 
+function ItemDetailHero({
+  item,
+  publishReady,
+  value,
+}: {
+  item: TradeableItem;
+  publishReady: boolean;
+  value: string;
+}) {
+  const title = item.title || "Untitled draft";
+  const primaryPhoto = item.photos[0];
+  const details = [
+    item.category ? categoryLabels[item.category] : "No category",
+    item.size ? sizeLabels[item.size] : "No size",
+    item.condition ? conditionLabels[item.condition] : "Condition needed",
+  ];
+
+  return (
+    <BetaPanel tone="black">
+      <View style={{ flexDirection: "row", gap: beta.spacing.md }}>
+        <View
+          style={{
+            alignItems: "center",
+            aspectRatio: 0.78,
+            backgroundColor: beta.colors.surfaceWarm,
+            borderColor: beta.colors.borderStrong,
+            borderRadius: beta.radius.md,
+            borderWidth: 1,
+            flex: 0.92,
+            justifyContent: "center",
+            overflow: "hidden",
+          }}
+        >
+          {primaryPhoto ? (
+            <Image
+              accessibilityLabel={`${title} cover photo`}
+              resizeMode="cover"
+              source={{ uri: primaryPhoto.uri }}
+              style={{ height: "100%", width: "100%" }}
+            />
+          ) : (
+            <Text style={{ color: beta.colors.inkMuted, fontSize: 13, fontWeight: "900" }}>
+              Add cover
+            </Text>
+          )}
+        </View>
+        <View style={{ flex: 1, gap: beta.spacing.sm, justifyContent: "space-between" }}>
+          <View style={{ gap: beta.spacing.xs }}>
+            <BetaKicker>{publishReady ? "READY TO TRADE" : "DRAFT CHECK"}</BetaKicker>
+            <Text
+              style={{ color: beta.colors.ink, fontSize: 24, fontWeight: "900", lineHeight: 28 }}
+            >
+              {title}
+            </Text>
+            <Text style={{ color: beta.colors.inkMuted, fontSize: 13, lineHeight: 18 }}>
+              {details.join(" / ")}
+            </Text>
+          </View>
+          <View
+            style={{
+              backgroundColor: beta.colors.orangeSoft,
+              borderColor: beta.colors.orange,
+              borderRadius: beta.radius.md,
+              borderWidth: 1,
+              padding: beta.spacing.sm,
+            }}
+          >
+            <Text style={{ color: beta.colors.orange, fontSize: 12, fontWeight: "900" }}>
+              ESTIMATED VALUE
+            </Text>
+            <Text style={{ color: beta.colors.ink, fontSize: 20, fontWeight: "900" }}>{value}</Text>
+          </View>
+          <Text
+            style={{
+              color: publishReady ? beta.colors.success : beta.colors.warning,
+              fontSize: 12,
+              fontWeight: "900",
+            }}
+          >
+            {publishReady ? "All publish checks pass" : "Needs more listing proof"}
+          </Text>
+        </View>
+      </View>
+    </BetaPanel>
+  );
+}
+
 function InventoryEdit({ item, onBack }: { item: TradeableItem | undefined; onBack: () => void }) {
   const theme = beta;
   const api = useApiClient();
@@ -3172,8 +3593,8 @@ function InventoryEdit({ item, onBack }: { item: TradeableItem | undefined; onBa
     Alert.alert("AI suggestions ready", "Suggestions were added for review.");
   }
 
-  async function addPhoto(kind: ItemPhoto["kind"]) {
-    const photo = await pickItemPhoto(kind, currentItem.photos.length);
+  async function addPhoto(kind: ItemPhoto["kind"], source: ImageSource) {
+    const photo = await pickItemPhoto(kind, currentItem.photos.length, source);
     if (!photo) {
       return;
     }
@@ -3274,11 +3695,16 @@ function InventoryEdit({ item, onBack }: { item: TradeableItem | undefined; onBa
           photos={currentItem.photos}
           title={currentItem.title || "Item"}
         />
-        <PhotoActionGrid onAddPhoto={(kind) => void addPhoto(kind)} />
+        <PhotoActionGrid onAddPhoto={(kind, source) => void addPhoto(kind, source)} />
         <ItemVideoClip
           onAddVideo={() => void addVideoClip()}
           onRemoveVideo={removeVideoClip}
           videoUrl={currentItem.verificationVideoUrl}
+        />
+        <CompFinderPanel
+          item={currentItem}
+          onApplyValue={(estimatedValue) => updateItem(currentItem.id, { estimatedValue })}
+          seedLabel="Builder comp search"
         />
         <DetailPanel
           rows={[
@@ -4084,23 +4510,65 @@ function ItemPhotoGallery({
   );
 }
 
-function PhotoActionGrid({ onAddPhoto }: { onAddPhoto: (kind: ItemPhoto["kind"]) => void }) {
+function PhotoActionGrid({
+  onAddPhoto,
+}: {
+  onAddPhoto: (kind: ItemPhoto["kind"], source: ImageSource) => void;
+}) {
   const photoKinds: ItemPhoto["kind"][] = ["front", "back", "tag", "flaw", "detail"];
 
   return (
-    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: beta.spacing.sm }}>
-      {photoKinds.map((kind) => (
-        <View key={kind} style={{ flexGrow: 1, minWidth: "31%" }}>
-          <BetaButton
-            accessibilityLabel={`Add ${itemPhotoKindLabels[kind]} photo`}
-            onPress={() => onAddPhoto(kind)}
-            variant={kind === "front" ? "black" : "secondary"}
+    <BetaPanel>
+      <View style={{ gap: beta.spacing.xs }}>
+        <BetaKicker>PHOTO UPLOADS</BetaKicker>
+        <Text style={{ color: beta.colors.ink, fontSize: 20, fontWeight: "900" }}>
+          Add proof shots
+        </Text>
+        <Text style={{ color: beta.colors.inkMuted, fontSize: 13, lineHeight: 19 }}>
+          Use Camera for a new shot or Library for an existing image. If iOS blocks access, open
+          Settings and allow Photos or Camera for Konnesor.
+        </Text>
+      </View>
+      <View style={{ gap: beta.spacing.sm }}>
+        {photoKinds.map((kind) => (
+          <View
+            key={kind}
+            style={{
+              backgroundColor: beta.colors.background,
+              borderColor: beta.colors.borderStrong,
+              borderRadius: beta.radius.md,
+              borderWidth: 1,
+              gap: beta.spacing.sm,
+              padding: beta.spacing.sm,
+            }}
           >
-            {itemPhotoKindLabels[kind]}
-          </BetaButton>
-        </View>
-      ))}
-    </View>
+            <Text style={{ color: beta.colors.ink, fontSize: 14, fontWeight: "900" }}>
+              {itemPhotoKindLabels[kind]}
+            </Text>
+            <View style={{ flexDirection: "row", gap: beta.spacing.sm }}>
+              <View style={{ flex: 1 }}>
+                <BetaButton
+                  accessibilityLabel={`Take ${itemPhotoKindLabels[kind]} photo`}
+                  onPress={() => onAddPhoto(kind, "camera")}
+                  variant={kind === "front" ? "black" : "secondary"}
+                >
+                  Camera
+                </BetaButton>
+              </View>
+              <View style={{ flex: 1 }}>
+                <BetaButton
+                  accessibilityLabel={`Choose ${itemPhotoKindLabels[kind]} photo`}
+                  onPress={() => onAddPhoto(kind, "library")}
+                  variant="secondary"
+                >
+                  Library
+                </BetaButton>
+              </View>
+            </View>
+          </View>
+        ))}
+      </View>
+    </BetaPanel>
   );
 }
 
@@ -4299,6 +4767,443 @@ function ItemUploadReadinessPanel({ item, missing }: { item: TradeableItem; miss
   );
 }
 
+const compSources: CompSource[] = [
+  {
+    id: "google",
+    label: "Google",
+    note: "Broad web scan",
+    url: (query) => `https://www.google.com/search?q=${encodeURIComponent(query)}`,
+  },
+  {
+    id: "ebaySold",
+    label: "eBay sold",
+    note: "Best quick comp",
+    url: (query) =>
+      `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(query)}&LH_Complete=1&LH_Sold=1`,
+  },
+  {
+    id: "ebayActive",
+    label: "eBay active",
+    note: "Current asks",
+    url: (query) => `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(query)}`,
+  },
+  {
+    id: "grailed",
+    label: "Grailed",
+    note: "Menswear market",
+    url: (query) => `https://www.grailed.com/shop/${encodeURIComponent(query)}`,
+  },
+  {
+    id: "depop",
+    label: "Depop",
+    note: "Street resale",
+    url: (query) => `https://www.depop.com/search/?q=${encodeURIComponent(query)}`,
+  },
+  {
+    id: "etsy",
+    label: "Etsy",
+    note: "Vintage sellers",
+    url: (query) => `https://www.etsy.com/search?q=${encodeURIComponent(query)}`,
+  },
+  {
+    id: "mercari",
+    label: "Mercari",
+    note: "Casual comps",
+    url: (query) => `https://www.mercari.com/search/?keyword=${encodeURIComponent(query)}`,
+  },
+  {
+    id: "poshmark",
+    label: "Poshmark",
+    note: "Listing range",
+    url: (query) =>
+      `https://poshmark.com/search?query=${encodeURIComponent(query)}&type=listings&src=dir`,
+  },
+];
+
+function CompFinderPanel({
+  compact = false,
+  item,
+  onApplyValue,
+  seedLabel,
+}: {
+  compact?: boolean;
+  item: TradeableItem | undefined;
+  onApplyValue?: (estimatedValue: TradeableItem["estimatedValue"]) => void;
+  seedLabel: string;
+}) {
+  const [manualClues, setManualClues] = useState("");
+  const [note, setNote] = useState("");
+  const [rangeMax, setRangeMax] = useState(item?.estimatedValue.max?.toString() ?? "");
+  const [rangeMin, setRangeMin] = useState(item?.estimatedValue.min?.toString() ?? "");
+  const [scanPhotoUri, setScanPhotoUri] = useState<string | undefined>();
+  const compQuery = useMemo(() => buildCompSearchQuery(item, manualClues), [item, manualClues]);
+  const queryParts = useMemo(() => getCompQueryParts(item, manualClues), [item, manualClues]);
+  const readiness = useMemo(
+    () => getCompReadiness(item, manualClues, scanPhotoUri),
+    [item, manualClues, scanPhotoUri],
+  );
+
+  async function addScanPhoto(source: "camera" | "library") {
+    const uri = await pickCompScanPhoto(source);
+    if (uri) {
+      setScanPhotoUri(uri);
+    }
+  }
+
+  async function openSource(source: CompSource) {
+    const query = compQuery.trim();
+    if (!query) {
+      Alert.alert(
+        "Add search details",
+        "Enter a brand, graphic, team, band, tag, or era before opening comps.",
+      );
+      return;
+    }
+
+    await Linking.openURL(source.url(query));
+  }
+
+  function applyValueRange() {
+    const min = parseOptionalDollarAmount(rangeMin);
+    const max = parseOptionalDollarAmount(rangeMax);
+    if (min === undefined && max === undefined) {
+      Alert.alert("Add a comp range", "Enter a low or high comp value before saving.");
+      return;
+    }
+    if (min !== undefined && max !== undefined && min > max) {
+      Alert.alert("Range needs review", "The low comp value should be below the high comp value.");
+      return;
+    }
+    if (!onApplyValue) {
+      Alert.alert("Open an item first", "Save a value range from an archive item detail screen.");
+      return;
+    }
+
+    onApplyValue({ currency: "USD", max, min });
+    Alert.alert("Comp range saved", "The item value range was updated on this listing.");
+  }
+
+  return (
+    <BetaPanel tone="black">
+      <View style={{ gap: beta.spacing.xs }}>
+        <BetaKicker>{seedLabel.toUpperCase()}</BetaKicker>
+        <Text style={{ color: beta.colors.ink, fontSize: compact ? 22 : 24, fontWeight: "900" }}>
+          Comp Finder
+        </Text>
+        <Text style={{ color: beta.colors.inkMuted, fontSize: 14, lineHeight: 20 }}>
+          Build a smart search from the item record, then open comps across resale marketplaces.
+        </Text>
+      </View>
+
+      {scanPhotoUri ? (
+        <View
+          style={{
+            alignItems: "center",
+            flexDirection: "row",
+            gap: beta.spacing.md,
+          }}
+        >
+          <Image
+            accessibilityLabel="Comp scan photo"
+            source={{ uri: scanPhotoUri }}
+            style={{
+              backgroundColor: beta.colors.surfaceWarm,
+              borderColor: beta.colors.borderStrong,
+              borderRadius: beta.radius.md,
+              borderWidth: 1,
+              height: 76,
+              width: 76,
+            }}
+          />
+          <View style={{ flex: 1, gap: beta.spacing.xs }}>
+            <Text style={{ color: beta.colors.ink, fontSize: 15, fontWeight: "900" }}>
+              Photo attached for manual review
+            </Text>
+            <Text style={{ color: beta.colors.inkMuted, fontSize: 12, lineHeight: 17 }}>
+              MVP comps use search terms now. Full visual recognition can plug into this panel
+              later.
+            </Text>
+          </View>
+        </View>
+      ) : null}
+
+      <View style={{ flexDirection: "row", gap: beta.spacing.sm }}>
+        <View style={{ flex: 1 }}>
+          <BetaButton
+            accessibilityLabel="Take comp scan photo"
+            onPress={() => void addScanPhoto("camera")}
+            variant="secondary"
+          >
+            Camera
+          </BetaButton>
+        </View>
+        <View style={{ flex: 1 }}>
+          <BetaButton
+            accessibilityLabel="Choose comp scan photo"
+            onPress={() => void addScanPhoto("library")}
+            variant="secondary"
+          >
+            Library
+          </BetaButton>
+        </View>
+      </View>
+
+      <BetaTextField
+        autoCapitalize="words"
+        label="Search clues"
+        onChangeText={setManualClues}
+        placeholder="Add graphic text, band, team, tag, year, color"
+        value={manualClues}
+      />
+
+      {!compact ? <CompReadinessChecklist items={readiness} /> : null}
+
+      <View
+        style={{
+          backgroundColor: beta.colors.background,
+          borderColor: beta.colors.borderStrong,
+          borderRadius: beta.radius.md,
+          borderWidth: 1,
+          gap: beta.spacing.sm,
+          padding: beta.spacing.md,
+        }}
+      >
+        <Text style={{ color: beta.colors.orange, fontSize: 11, fontWeight: "900" }}>
+          GENERATED SEARCH
+        </Text>
+        <Text style={{ color: beta.colors.ink, fontSize: 15, fontWeight: "900", lineHeight: 21 }}>
+          {compQuery || "Add an item or search clues to generate comps."}
+        </Text>
+        {queryParts.length > 0 ? (
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: beta.spacing.xs }}>
+            {queryParts.slice(0, compact ? 5 : 8).map((part) => (
+              <View
+                key={part}
+                style={{
+                  backgroundColor: beta.colors.orangeSoft,
+                  borderColor: beta.colors.borderStrong,
+                  borderRadius: 999,
+                  borderWidth: 1,
+                  paddingHorizontal: beta.spacing.sm,
+                  paddingVertical: 4,
+                }}
+              >
+                <Text style={{ color: beta.colors.ink, fontSize: 11, fontWeight: "800" }}>
+                  {part}
+                </Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
+      </View>
+
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: beta.spacing.sm }}>
+        {compSources.map((source) => (
+          <Pressable
+            accessibilityLabel={`Open ${source.label} comps`}
+            accessibilityRole="button"
+            key={source.id}
+            onPress={() => void openSource(source)}
+            style={({ pressed }) => ({
+              backgroundColor: beta.colors.surface,
+              borderColor: beta.colors.borderStrong,
+              borderRadius: beta.radius.md,
+              borderWidth: 1,
+              minWidth: "47%",
+              opacity: pressed ? 0.82 : 1,
+              padding: beta.spacing.md,
+            })}
+          >
+            <Text
+              style={{
+                color: source.id === "ebaySold" ? beta.colors.orange : beta.colors.ink,
+                fontSize: 15,
+                fontWeight: "900",
+              }}
+            >
+              {source.label}
+            </Text>
+            <Text style={{ color: beta.colors.inkMuted, fontSize: 11, marginTop: 4 }}>
+              {source.note}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+
+      {!compact ? (
+        <View style={{ gap: beta.spacing.md }}>
+          <View style={{ flexDirection: "row", gap: beta.spacing.sm }}>
+            <View style={{ flex: 1 }}>
+              <BetaTextField
+                keyboardType="numeric"
+                label="Low comp"
+                onChangeText={setRangeMin}
+                placeholder="120"
+                value={rangeMin}
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <BetaTextField
+                keyboardType="numeric"
+                label="High comp"
+                onChangeText={setRangeMax}
+                placeholder="220"
+                value={rangeMax}
+              />
+            </View>
+          </View>
+          <BetaTextField
+            label="Comp note"
+            multiline
+            numberOfLines={3}
+            onChangeText={setNote}
+            placeholder="Sold listing, tag match, condition difference, missing measurements"
+            style={{ minHeight: 92, textAlignVertical: "top" }}
+            value={note}
+          />
+          <BetaButton
+            accessibilityLabel="Save comp value range"
+            disabled={!onApplyValue}
+            onPress={applyValueRange}
+          >
+            Save value range
+          </BetaButton>
+        </View>
+      ) : null}
+
+      <Text style={{ color: beta.colors.inkMuted, fontSize: 12, lineHeight: 18 }}>
+        Comp Finder opens outside search results for beta. Treat values as research leads until tag,
+        condition, measurements, sold-price evidence, and listing dates are verified.
+      </Text>
+    </BetaPanel>
+  );
+}
+
+function CompReadinessChecklist({
+  items,
+}: {
+  items: Array<{ complete: boolean; label: string; note: string }>;
+}) {
+  const completeCount = items.filter((item) => item.complete).length;
+
+  return (
+    <View
+      style={{
+        backgroundColor: beta.colors.background,
+        borderColor: beta.colors.borderStrong,
+        borderRadius: beta.radius.md,
+        borderWidth: 1,
+        gap: beta.spacing.sm,
+        padding: beta.spacing.md,
+      }}
+    >
+      <View style={{ flexDirection: "row", gap: beta.spacing.sm, justifyContent: "space-between" }}>
+        <Text style={{ color: beta.colors.ink, fontSize: 16, fontWeight: "900" }}>
+          Research readiness
+        </Text>
+        <Text style={{ color: beta.colors.orange, fontSize: 12, fontWeight: "900" }}>
+          {completeCount}/{items.length}
+        </Text>
+      </View>
+      {items.map((item) => (
+        <View
+          key={item.label}
+          style={{ alignItems: "flex-start", flexDirection: "row", gap: beta.spacing.sm }}
+        >
+          <View
+            style={{
+              backgroundColor: item.complete ? beta.colors.orange : "transparent",
+              borderColor: item.complete ? beta.colors.orange : beta.colors.borderStrong,
+              borderRadius: 999,
+              borderWidth: 1,
+              height: 12,
+              marginTop: 4,
+              width: 12,
+            }}
+          />
+          <View style={{ flex: 1, gap: 2 }}>
+            <Text style={{ color: beta.colors.ink, fontSize: 13, fontWeight: "900" }}>
+              {item.label}
+            </Text>
+            <Text style={{ color: beta.colors.inkMuted, fontSize: 12, lineHeight: 17 }}>
+              {item.note}
+            </Text>
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function getCompQueryParts(item: TradeableItem | undefined, manualClues: string): string[] {
+  const parts = [
+    manualClues.trim(),
+    item?.title,
+    item?.era,
+    item?.tag,
+    item?.category ? categoryLabels[item.category] : undefined,
+    item?.size ? sizeLabels[item.size] : undefined,
+    item?.condition ? conditionLabels[item.condition] : undefined,
+    "vintage t shirt",
+  ];
+
+  return Array.from(
+    new Set(
+      parts
+        .filter((part): part is string => Boolean(part?.trim()))
+        .map((part) => part.trim().replace(/\s+/g, " ")),
+    ),
+  );
+}
+
+function buildCompSearchQuery(item: TradeableItem | undefined, manualClues: string): string {
+  return getCompQueryParts(item, manualClues).join(" ");
+}
+
+function getCompReadiness(
+  item: TradeableItem | undefined,
+  manualClues: string,
+  scanPhotoUri: string | undefined,
+): Array<{ complete: boolean; label: string; note: string }> {
+  return [
+    {
+      complete: Boolean(item?.title.trim() || manualClues.trim()),
+      label: "Search phrase",
+      note: "Use exact graphic text, team, band, movie, or event words.",
+    },
+    {
+      complete: Boolean(item?.tag || manualClues.toLowerCase().includes("tag")),
+      label: "Tag or maker",
+      note: "Tag matches are often the difference between weak and strong comps.",
+    },
+    {
+      complete: Boolean(item?.era || /\b(19|20)\d{2}s?\b/.test(manualClues)),
+      label: "Era clue",
+      note: "Add decade or year if the graphic, tag, or copyright gives one.",
+    },
+    {
+      complete: Boolean(item?.size || item?.measurements.chest || item?.measurements.length),
+      label: "Size evidence",
+      note: "Compare listed size and flat measurements before trusting price.",
+    },
+    {
+      complete: Boolean(scanPhotoUri || item?.photos.length),
+      label: "Photo reference",
+      note: "Keep the item photo visible while checking sold listings.",
+    },
+  ];
+}
+
+function parseOptionalDollarAmount(value: string): number | undefined {
+  const trimmed = value.trim().replace(/[$,]/g, "");
+  if (!trimmed) {
+    return undefined;
+  }
+
+  const amount = Number(trimmed);
+  return Number.isFinite(amount) && amount >= 0 ? Math.round(amount) : undefined;
+}
+
 function getPhotoSummary(photos: ItemPhoto[]): string {
   if (photos.length === 0) {
     return "No photos attached";
@@ -4339,33 +5244,26 @@ function isLocalRecordId(id: string): boolean {
 async function pickItemPhoto(
   kind: ItemPhoto["kind"],
   sortOrder: number,
+  source: ImageSource,
 ): Promise<ItemPhoto | undefined> {
-  const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-  if (!permission.granted) {
-    Alert.alert(
-      "Photo permission needed",
-      "Allow photo access so Konnesor can attach front, back, tag, flaw, and detail photos to your listing.",
-      [
-        { text: "Not now", style: "cancel" },
-        { text: "Open Settings", onPress: () => void Linking.openSettings() },
-      ],
-    );
-    return undefined;
-  }
-
-  const result = await ImagePicker.launchImageLibraryAsync({
-    allowsEditing: true,
+  const uri = await pickImageUri({
     aspect: [4, 5],
-    mediaTypes: ImagePicker.MediaTypeOptions.Images,
-    quality: 0.82,
+    permissionCopy:
+      source === "camera"
+        ? "Allow camera access so Konnesor can take front, back, tag, flaw, and detail photos."
+        : "Allow photo access so Konnesor can attach front, back, tag, flaw, and detail photos to your listing.",
+    source,
   });
 
-  if (result.canceled || result.assets.length === 0) {
+  if (!uri) {
     return undefined;
   }
 
-  const asset = result.assets[0];
-  if (!asset?.uri) {
+  if (!isUsableLocalAssetUri(uri)) {
+    Alert.alert(
+      "Photo could not be used",
+      "The image picker returned a file Konnesor could not read. Try the other upload option or choose a different photo.",
+    );
     return undefined;
   }
 
@@ -4374,8 +5272,19 @@ async function pickItemPhoto(
     id: `photo_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
     kind,
     sortOrder,
-    uri: asset.uri,
+    uri,
   };
+}
+
+async function pickCompScanPhoto(source: "camera" | "library"): Promise<string | undefined> {
+  return pickImageUri({
+    aspect: [4, 5],
+    permissionCopy:
+      source === "camera"
+        ? "Allow camera access so Konnesor can scan item photos for comp research."
+        : "Allow photo access so Konnesor can use item photos for comp research.",
+    source,
+  });
 }
 
 async function pickItemVideoClip(): Promise<string | undefined> {
@@ -4417,6 +5326,78 @@ async function pickItemVideoClip(): Promise<string | undefined> {
   }
 
   return asset.uri;
+}
+
+async function pickImageUri({
+  aspect,
+  permissionCopy,
+  source,
+}: {
+  aspect: [number, number];
+  permissionCopy: string;
+  source: ImageSource;
+}): Promise<string | undefined> {
+  try {
+    const permission =
+      source === "camera"
+        ? await ImagePicker.requestCameraPermissionsAsync()
+        : await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permission.granted) {
+      Alert.alert(
+        source === "camera" ? "Camera permission needed" : "Photo permission needed",
+        permission.canAskAgain
+          ? permissionCopy
+          : `${permissionCopy} Open iPhone Settings, choose Konnesor, then allow access.`,
+        [
+          { text: "Not now", style: "cancel" },
+          { text: "Open Settings", onPress: () => void Linking.openSettings() },
+        ],
+      );
+      return undefined;
+    }
+
+    const result =
+      source === "camera"
+        ? await ImagePicker.launchCameraAsync({
+            allowsEditing: true,
+            aspect,
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            quality: 0.82,
+          })
+        : await ImagePicker.launchImageLibraryAsync({
+            allowsEditing: true,
+            aspect,
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            quality: 0.82,
+          });
+
+    if (result.canceled) {
+      return undefined;
+    }
+
+    const uri = result.assets[0]?.uri;
+    if (!uri || !isUsableLocalAssetUri(uri)) {
+      Alert.alert(
+        "Photo did not attach",
+        "Konnesor did not receive a usable image from iOS. Try again, or use the other upload option.",
+      );
+      return undefined;
+    }
+
+    return uri;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "The image picker could not open.";
+    Alert.alert(
+      source === "camera" ? "Camera upload failed" : "Photo upload failed",
+      `${message}\n\nTry the other upload option, then check iPhone Settings > Konnesor if it still fails.`,
+    );
+    return undefined;
+  }
+}
+
+function isUsableLocalAssetUri(uri: string): boolean {
+  return uri.startsWith("file:") || uri.startsWith("ph:") || uri.startsWith("assets-library:");
 }
 
 function TradesTab({
@@ -4761,8 +5742,10 @@ function TradesTab({
         </BetaButton>
 
         {liveTrades.length === 0 && localTrades.length === 0 && !isLoading ? (
-          <BetaEmptyState
+          <ReleaseEmptyState
+            actionLabel="Compose trade"
             message="Add one archive item and one wishlist target, then compose a proposal to test the full swap flow."
+            onAction={() => setRoute({ mode: "compose", tradeId: undefined })}
             title="No trade proposals yet"
           />
         ) : null}
@@ -5166,6 +6149,7 @@ function TradeDetail({ onBack, trade }: { onBack: () => void; trade: Trade }) {
           title="Live trade details"
         />
         <TradeNextActionPanel status={trade.status} />
+        <TradeSafetyChecklist status={trade.status} />
         <TrustSafetyPanel compact />
       </ScrollView>
     </BetaScreen>
@@ -5232,6 +6216,7 @@ function LocalTradeDetail({
           title="Proposal checkpoint"
         />
         <TradeNextActionPanel status={trade.status} />
+        <TradeSafetyChecklist status={trade.status} />
         <TrustSafetyPanel compact />
         <View style={{ gap: theme.spacing.md }}>
           {onOpenConversation ? (
