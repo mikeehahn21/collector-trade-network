@@ -3323,8 +3323,8 @@ function InventoryDetail({
     updateItem(currentItem.id, { photos: [...currentItem.photos, photo] });
   }
 
-  async function addVideoClip() {
-    const clipUri = await pickItemVideoClip();
+  async function addVideoClip(source: ImageSource) {
+    const clipUri = await pickItemVideoClip(source);
     if (!clipUri) {
       return;
     }
@@ -3425,7 +3425,7 @@ function InventoryDetail({
         />
         <PhotoActionGrid onAddPhoto={(kind, source) => void addPhoto(kind, source)} />
         <ItemVideoClip
-          onAddVideo={() => void addVideoClip()}
+          onAddVideo={(source) => void addVideoClip(source)}
           onRemoveVideo={removeVideoClip}
           videoUrl={item.verificationVideoUrl}
         />
@@ -3621,8 +3621,8 @@ function InventoryEdit({ item, onBack }: { item: TradeableItem | undefined; onBa
     updateItem(currentItem.id, { photos: [...currentItem.photos, photo] });
   }
 
-  async function addVideoClip() {
-    const clipUri = await pickItemVideoClip();
+  async function addVideoClip(source: ImageSource) {
+    const clipUri = await pickItemVideoClip(source);
     if (!clipUri) {
       return;
     }
@@ -3716,7 +3716,7 @@ function InventoryEdit({ item, onBack }: { item: TradeableItem | undefined; onBa
         />
         <PhotoActionGrid onAddPhoto={(kind, source) => void addPhoto(kind, source)} />
         <ItemVideoClip
-          onAddVideo={() => void addVideoClip()}
+          onAddVideo={(source) => void addVideoClip(source)}
           onRemoveVideo={removeVideoClip}
           videoUrl={currentItem.verificationVideoUrl}
         />
@@ -4596,7 +4596,7 @@ function ItemVideoClip({
   onRemoveVideo,
   videoUrl,
 }: {
-  onAddVideo: () => void;
+  onAddVideo: (source: ImageSource) => void;
   onRemoveVideo: () => void;
   videoUrl?: string | undefined;
 }) {
@@ -4628,18 +4628,33 @@ function ItemVideoClip({
         </View>
       ) : null}
 
-      <View style={{ flexDirection: "row", gap: beta.spacing.sm }}>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: beta.spacing.sm }}>
         <View style={{ flex: 1 }}>
           <BetaButton
-            accessibilityLabel={videoUrl ? "Replace item video clip" : "Add item video clip"}
-            onPress={onAddVideo}
+            accessibilityLabel={
+              videoUrl ? "Record replacement item video clip" : "Record item video clip"
+            }
+            onPress={() => onAddVideo("camera")}
+            variant="black"
+          >
+            Record 5 sec
+          </BetaButton>
+        </View>
+        <View style={{ flex: 1 }}>
+          <BetaButton
+            accessibilityLabel={
+              videoUrl
+                ? "Choose replacement item video clip"
+                : "Choose item video clip from library"
+            }
+            onPress={() => onAddVideo("library")}
             variant={videoUrl ? "secondary" : "black"}
           >
-            {videoUrl ? "Replace clip" : "Add clip"}
+            Choose clip
           </BetaButton>
         </View>
         {videoUrl ? (
-          <View style={{ flex: 1 }}>
+          <View style={{ width: "100%" }}>
             <BetaButton
               accessibilityLabel="Remove item video clip"
               onPress={onRemoveVideo}
@@ -5306,12 +5321,21 @@ async function pickCompScanPhoto(source: "camera" | "library"): Promise<string |
   });
 }
 
-async function pickItemVideoClip(): Promise<string | undefined> {
-  const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+async function pickItemVideoClip(source: ImageSource): Promise<string | undefined> {
+  const permission =
+    source === "camera"
+      ? await ImagePicker.requestCameraPermissionsAsync()
+      : await ImagePicker.requestMediaLibraryPermissionsAsync();
   if (!permission.granted) {
+    const permissionCopy =
+      source === "camera"
+        ? "Allow camera access so Konnesor can record 5 second item clips."
+        : "Allow photo access so Konnesor can attach short item clips to your listing.";
     Alert.alert(
-      "Photo permission needed",
-      "Allow photo access so Konnesor can attach short item clips to your listing.",
+      source === "camera" ? "Camera permission needed" : "Photo permission needed",
+      permission.canAskAgain
+        ? permissionCopy
+        : `${permissionCopy} Open iPhone Settings, choose Konnesor, then allow access.`,
       [
         { text: "Not now", style: "cancel" },
         { text: "Open Settings", onPress: () => void Linking.openSettings() },
@@ -5320,12 +5344,20 @@ async function pickItemVideoClip(): Promise<string | undefined> {
     return undefined;
   }
 
-  const result = await ImagePicker.launchImageLibraryAsync({
-    allowsEditing: true,
-    mediaTypes: ["videos"],
-    quality: 0.72,
-    videoMaxDuration: 5,
-  });
+  const result =
+    source === "camera"
+      ? await ImagePicker.launchCameraAsync({
+          allowsEditing: true,
+          mediaTypes: ["videos"],
+          quality: 0.72,
+          videoMaxDuration: 5,
+        })
+      : await ImagePicker.launchImageLibraryAsync({
+          allowsEditing: true,
+          mediaTypes: ["videos"],
+          quality: 0.72,
+          videoMaxDuration: 5,
+        });
 
   if (result.canceled || result.assets.length === 0) {
     return undefined;
