@@ -10,29 +10,20 @@ Do not start a TestFlight build until the current development build opens on a r
 
 1. Open Konnesor on the iPhone development build.
 2. Confirm the logo intro completes.
-3. Confirm Home renders the following cards:
-   - MVP Path
-   - Tester Walkthrough
-   - Beta Demo Controls
-   - Stability Check
-   - Home comp scanner
-   - Trust Layer
-   - Seller Feedback
-4. Tap `Load demo loop`.
-5. Open Archive and add one front photo using `Camera`.
+3. Confirm Home renders the logo, match card, stats, and six action tiles.
+4. Open `Guide` and tap `Seed demo data`.
+5. Open Collection and add one front photo using `Camera`.
 6. Add one tag or detail photo using `Library`.
 7. If either upload is blocked, confirm the app shows a clear permission/settings message instead of silently failing.
 8. Add Comp Finder clues, open eBay sold comps, and save a value range.
 9. Open Wishlist, Trades, Messages, and return Home.
 10. Save one feedback note.
-11. Tap `Reset` and confirm local beta records clear without reinstalling.
+11. Confirm the tester can return Home without reinstalling.
 
 ## Backend Check
 
-1. On Home, read the `Stability Check` card.
-2. Confirm the API URL is the intended backend for the build.
-3. Tap `Recheck API`.
-4. If it says backend unavailable, keep testing local fallback but do not submit that build to outside testers until the intended backend URL is confirmed.
+1. Confirm the API URL in `apps/mobile/app.config.js` is the intended backend for the build.
+2. If the live API is unavailable, keep testing local fallback but do not submit that build to outside testers until the intended backend URL is confirmed.
 
 ## Local Gates
 

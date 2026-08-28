@@ -14,12 +14,12 @@ This is the release path for testers outside the development build flow.
 ## Before Building
 
 1. Confirm the app opens in the current development build.
-2. On Home, tap `Load demo loop` and confirm Archive, Wishlist, Trades, Messages, and Feedback all have data.
-3. On Home, confirm the `Stability Check` card shows the intended API URL and a backend status.
-4. Open an Archive item and confirm Comp Finder generates search terms and opens eBay sold results in Safari.
+2. On Home, open `Guide`, tap `Seed demo data`, and confirm Collection, Wishlist, Trades, Messages, and Feedback all have data.
+3. On Home, confirm the logo, match card, stats, and action tiles render cleanly.
+4. Open a Collection item and confirm Comp Finder generates search terms and opens eBay sold results in Safari.
 5. Save a low/high comp range and confirm the item value updates.
 6. Confirm Camera and Library photo upload both work on a real item, or show a clear permission recovery message.
-7. Tap `Reset` on Home and confirm local beta records clear without deleting the app.
+7. Confirm testers can move through the loop without deleting the app.
 8. Confirm the app uses the production API URL.
 9. Run the local checks:
 
@@ -73,8 +73,8 @@ In App Store Connect:
 Ask each tester to complete this exact loop:
 
 1. Open Konnesor and wait for the logo intro to finish.
-2. Tap `Load demo loop` on Home.
-3. Open Archive and inspect one item readiness checklist.
+2. Tap `Guide`, then `Seed demo data` if the phone needs sample records.
+3. Open Collection and inspect one item readiness checklist.
 4. Use Comp Finder to search eBay sold and one other source, then save a researched value range.
 5. Open Wishlist and confirm the ranked grail view makes sense.
 6. Open Trades, compose one proposal, then mark it accepted or countered.

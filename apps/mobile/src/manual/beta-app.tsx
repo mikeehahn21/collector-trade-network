@@ -77,7 +77,6 @@ import { useApiClient } from "@/api/use-api-client";
 import { MobileAuthProvider } from "@/auth/clerk-provider";
 import { useAuthSession } from "@/auth/use-auth-session";
 import { AppErrorBoundary } from "@/components/error-boundary";
-import { getMobileEnv } from "@/config/env";
 import { CollectionStateProvider, useCollectionState } from "@/state/collection-state";
 import { OnboardingStateProvider } from "@/state/onboarding-state";
 import { useRecommendations } from "@/state/recommendation-state";
@@ -156,7 +155,7 @@ type MvpChecklistItem = {
 
 const tabs: Array<{ icon: string; id: Tab; label: string }> = [
   { icon: "⌂", id: "home", label: "Home" },
-  { icon: "▤", id: "inventory", label: "Archive" },
+  { icon: "▤", id: "inventory", label: "Collection" },
   { icon: "★", id: "wishlist", label: "Wishlist" },
   { icon: "○", id: "messages", label: "Messages" },
   { icon: "≋", id: "trades", label: "Trades" },
@@ -278,8 +277,12 @@ export default function BetaApp() {
 
 function BetaShell() {
   const [showIntro, setShowIntro] = useState(true);
+  const introBar = useRef(new Animated.Value(0)).current;
+  const introLift = useRef(new Animated.Value(18)).current;
   const introOpacity = useRef(new Animated.Value(0)).current;
-  const introScale = useRef(new Animated.Value(0.92)).current;
+  const introPulse = useRef(new Animated.Value(0)).current;
+  const introScale = useRef(new Animated.Value(0.82)).current;
+  const introSymbolScale = useRef(new Animated.Value(0.55)).current;
   const [tab, setTab] = useState<Tab>("home");
   const [inventoryRoute, setInventoryRoute] = useState<ManualRoute>({
     itemId: undefined,
@@ -312,19 +315,62 @@ function BetaShell() {
           useNativeDriver: true,
         }),
         Animated.timing(introScale, {
-          duration: 520,
+          duration: 680,
+          easing: Easing.out(Easing.back(1.45)),
+          toValue: 1,
+          useNativeDriver: true,
+        }),
+        Animated.timing(introSymbolScale, {
+          duration: 760,
+          easing: Easing.out(Easing.back(1.8)),
+          toValue: 1,
+          useNativeDriver: true,
+        }),
+        Animated.timing(introLift, {
+          duration: 700,
+          easing: Easing.out(Easing.cubic),
+          toValue: 0,
+          useNativeDriver: true,
+        }),
+        Animated.timing(introBar, {
+          duration: 820,
           easing: Easing.out(Easing.cubic),
           toValue: 1,
           useNativeDriver: true,
         }),
       ]),
-      Animated.delay(1600),
-      Animated.timing(introOpacity, {
-        duration: 360,
-        easing: Easing.in(Easing.cubic),
-        toValue: 0,
-        useNativeDriver: true,
-      }),
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(introPulse, {
+            duration: 420,
+            easing: Easing.inOut(Easing.quad),
+            toValue: 1,
+            useNativeDriver: true,
+          }),
+          Animated.timing(introPulse, {
+            duration: 420,
+            easing: Easing.inOut(Easing.quad),
+            toValue: 0,
+            useNativeDriver: true,
+          }),
+        ]),
+        { iterations: 1 },
+      ),
+      Animated.delay(720),
+      Animated.parallel([
+        Animated.timing(introOpacity, {
+          duration: 360,
+          easing: Easing.in(Easing.cubic),
+          toValue: 0,
+          useNativeDriver: true,
+        }),
+        Animated.timing(introLift, {
+          duration: 360,
+          easing: Easing.in(Easing.cubic),
+          toValue: -18,
+          useNativeDriver: true,
+        }),
+      ]),
     ]);
 
     animation.start(({ finished }) => {
@@ -334,7 +380,7 @@ function BetaShell() {
     });
 
     return () => animation.stop();
-  }, [introOpacity, introScale]);
+  }, [introBar, introLift, introOpacity, introPulse, introScale, introSymbolScale]);
 
   function openTab(nextTab: Tab) {
     setTab(nextTab);
@@ -499,14 +545,6 @@ function BetaShell() {
     setTradeRoute({ mode: "list", tradeId: undefined });
   }
 
-  function resetLocalBetaWorkflow() {
-    setBetaFeedback([]);
-    setLocalThreads(localConversations);
-    setLocalTrades([]);
-    setMessageRoute({ conversationId: undefined, mode: "list" });
-    setTradeRoute({ mode: "list", tradeId: undefined });
-  }
-
   function submitBetaFeedback(input: Omit<BetaFeedback, "createdAt" | "id">) {
     const now = new Date().toISOString();
     setBetaFeedback((current) => [
@@ -520,7 +558,16 @@ function BetaShell() {
   }
 
   if (showIntro) {
-    return <KonnesorIntro opacity={introOpacity} scale={introScale} />;
+    return (
+      <KonnesorIntro
+        bar={introBar}
+        lift={introLift}
+        opacity={introOpacity}
+        pulse={introPulse}
+        scale={introScale}
+        symbolScale={introSymbolScale}
+      />
+    );
   }
 
   return (
@@ -531,7 +578,6 @@ function BetaShell() {
             feedbackItems={betaFeedback}
             localThreads={localThreads}
             localTrades={localTrades}
-            onResetLocalWorkflow={resetLocalBetaWorkflow}
             onSubmitFeedback={submitBetaFeedback}
             setTab={openTab}
           />
@@ -567,7 +613,30 @@ function BetaShell() {
   );
 }
 
-function KonnesorIntro({ opacity, scale }: { opacity: Animated.Value; scale: Animated.Value }) {
+function KonnesorIntro({
+  bar,
+  lift,
+  opacity,
+  pulse,
+  scale,
+  symbolScale,
+}: {
+  bar: Animated.Value;
+  lift: Animated.Value;
+  opacity: Animated.Value;
+  pulse: Animated.Value;
+  scale: Animated.Value;
+  symbolScale: Animated.Value;
+}) {
+  const glowScale = pulse.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.92, 1.12],
+  });
+  const glowOpacity = pulse.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.18, 0.46],
+  });
+
   return (
     <View
       style={{
@@ -581,38 +650,50 @@ function KonnesorIntro({ opacity, scale }: { opacity: Animated.Value; scale: Ani
       <Animated.View
         style={{
           alignItems: "center",
-          gap: beta.spacing.lg,
+          gap: beta.spacing.xl,
           opacity,
-          transform: [{ scale }],
+          transform: [{ translateY: lift }, { scale }],
           width: "100%",
         }}
       >
-        <Image
-          accessibilityLabel="Konnesor intro logo"
-          resizeMode="contain"
-          source={konnesorWordmark}
-          style={{ height: 92, width: "100%" }}
-        />
-        <View
-          style={{
-            backgroundColor: beta.colors.surface,
-            borderRadius: 999,
-            height: 3,
-            overflow: "hidden",
-            width: 132,
-          }}
-        >
+        <View style={{ alignItems: "center", justifyContent: "center" }}>
           <Animated.View
             style={{
-              backgroundColor: beta.colors.orange,
+              backgroundColor: beta.colors.orangeGlow,
               borderRadius: 999,
-              height: 3,
-              opacity,
-              transform: [{ scaleX: scale }],
+              height: 190,
+              opacity: glowOpacity,
+              position: "absolute",
+              transform: [{ scale: glowScale }],
+              width: 190,
+            }}
+          />
+          <Animated.Image
+            accessibilityLabel="Konnesor intro symbol"
+            resizeMode="contain"
+            source={konnesorSymbol}
+            style={{
+              height: 132,
+              transform: [{ scale: symbolScale }],
               width: 132,
             }}
           />
         </View>
+        <Image
+          accessibilityLabel="Konnesor intro logo"
+          resizeMode="contain"
+          source={konnesorWordmark}
+          style={{ height: 78, width: "100%" }}
+        />
+        <Animated.View
+          style={{
+            backgroundColor: beta.colors.orange,
+            borderRadius: 999,
+            height: 4,
+            transform: [{ scaleX: bar }],
+            width: 210,
+          }}
+        />
       </Animated.View>
     </View>
   );
@@ -622,46 +703,24 @@ function HomeTab({
   feedbackItems,
   localThreads,
   localTrades,
-  onResetLocalWorkflow,
   onSubmitFeedback,
   setTab,
 }: {
   feedbackItems: BetaFeedback[];
   localThreads: LocalConversation[];
   localTrades: LocalTradeProposal[];
-  onResetLocalWorkflow: () => void;
   onSubmitFeedback: (input: Omit<BetaFeedback, "createdAt" | "id">) => void;
   setTab: (tab: Tab) => void;
 }) {
   const theme = beta;
-  const api = useApiClient();
   const auth = useAuthSession();
-  const {
-    createItem,
-    deleteItem,
-    items,
-    publishItem,
-    summary: collectionSummary,
-  } = useCollectionState();
-  const {
-    activeItems,
-    createWishlistItem,
-    deleteWishlistItem,
-    summary: wishlistSummary,
-  } = useWishlistState();
-  const { isLoading: isProfileLoading, profile } = useUserProfile();
+  const { createItem, items, publishItem, summary: collectionSummary } = useCollectionState();
+  const { activeItems, createWishlistItem, summary: wishlistSummary } = useWishlistState();
+  const { profile } = useUserProfile();
   const [showProfile, setShowProfile] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
   const [showTesterGuide, setShowTesterGuide] = useState(false);
-  const [backendCheckedAt, setBackendCheckedAt] = useState<string | undefined>();
-  const [backendStatus, setBackendStatus] = useState<BackendHealthStatus>("checking");
-  const apiBaseUrl = useMemo(() => getMobileEnv().apiBaseUrl, []);
-  const {
-    error: recommendationError,
-    isLoading: isRecommendationsLoading,
-    recommendations,
-    refresh: refreshRecommendations,
-    summary: recommendationSummary,
-  } = useRecommendations();
+  const { summary: recommendationSummary } = useRecommendations();
   const tradeableItems = useMemo(
     () => items.filter((item) => item.status === "tradeable"),
     [items],
@@ -706,22 +765,6 @@ function HomeTab({
     ],
   );
 
-  const checkBackendStatus = useCallback(async () => {
-    setBackendStatus("checking");
-    try {
-      await api.getSystemConfig();
-      setBackendStatus("online");
-    } catch {
-      setBackendStatus("offline");
-    } finally {
-      setBackendCheckedAt(new Date().toISOString());
-    }
-  }, [api]);
-
-  useEffect(() => {
-    void checkBackendStatus();
-  }, [checkBackendStatus]);
-
   if (showProfile) {
     return (
       <CollectorProfilePanel
@@ -764,6 +807,16 @@ function HomeTab({
           setShowTesterGuide(false);
           setTab("wishlist");
         }}
+      />
+    );
+  }
+
+  if (showFeedback) {
+    return (
+      <FeedbackScreen
+        feedbackItems={feedbackItems}
+        onBack={() => setShowFeedback(false)}
+        onSubmit={onSubmitFeedback}
       />
     );
   }
@@ -842,12 +895,6 @@ function HomeTab({
     });
   }
 
-  function resetDemoRun() {
-    items.forEach((item) => deleteItem(item.id));
-    activeItems.forEach((item) => deleteWishlistItem(item.id));
-    onResetLocalWorkflow();
-  }
-
   return (
     <BetaScreen>
       <ScrollView
@@ -855,16 +902,16 @@ function HomeTab({
       >
         <View
           style={{
-            alignItems: "center",
+            alignItems: "flex-start",
             flexDirection: "row",
-            justifyContent: "space-between",
+            justifyContent: "flex-start",
           }}
         >
           <Image
             accessibilityLabel="Konnesor logo"
             resizeMode="contain"
             source={konnesorWordmark}
-            style={{ height: 48, width: 260 }}
+            style={{ height: 64, width: 320 }}
           />
           <Pressable
             accessibilityLabel="Open collector profile"
@@ -878,7 +925,6 @@ function HomeTab({
               height: 36,
               justifyContent: "center",
               marginLeft: "auto",
-              marginRight: theme.spacing.sm,
               opacity: pressed ? 0.82 : 1,
               width: 36,
             })}
@@ -894,12 +940,9 @@ function HomeTab({
 
         <View style={{ gap: 5 }}>
           <Text
-            style={{ color: theme.colors.ink, fontSize: 26, fontWeight: "900", lineHeight: 30 }}
+            style={{ color: theme.colors.ink, fontSize: 22, fontWeight: "900", lineHeight: 26 }}
           >
-            Welcome back,{"\n"}Collector.
-          </Text>
-          <Text style={{ color: theme.colors.inkMuted, fontSize: 14 }}>
-            Good finds. Better connections.
+            Welcome back.
           </Text>
         </View>
 
@@ -910,8 +953,6 @@ function HomeTab({
           wishlistItem={activeItems[0]}
         />
 
-        <CompFinderPanel compact item={tradeableItems[0]} seedLabel="Home comp scanner" />
-
         <BetaStatPanel
           stats={[
             { label: "Tradeable", value: collectionSummary.tradeableItems },
@@ -920,127 +961,14 @@ function HomeTab({
           ]}
         />
 
-        <MvpLaunchPanel
-          checklist={mvpChecklist}
-          onOpenArchive={() => setTab("inventory")}
+        <HomeActionGrid
+          onOpenCollection={() => setTab("inventory")}
+          onOpenFeedback={() => setShowFeedback(true)}
+          onOpenGuide={() => setShowTesterGuide(true)}
           onOpenMessages={() => setTab("messages")}
           onOpenTrades={() => setTab("trades")}
           onOpenWishlist={() => setTab("wishlist")}
         />
-
-        <BetaPanel tone="black">
-          <View style={{ gap: beta.spacing.xs }}>
-            <BetaKicker>TESTFLIGHT GUIDE</BetaKicker>
-            <Text style={{ color: beta.colors.ink, fontSize: 22, fontWeight: "900" }}>
-              Give testers a clean script.
-            </Text>
-            <BetaBody>
-              Open the guided beta screen before handing the app to a seller, collector, or family
-              tester.
-            </BetaBody>
-          </View>
-          <BetaButton
-            accessibilityLabel="Open beta tester guide"
-            onPress={() => setShowTesterGuide(true)}
-            variant="secondary"
-          >
-            Open tester guide
-          </BetaButton>
-        </BetaPanel>
-
-        <TesterWalkthroughPanel
-          checklist={mvpChecklist}
-          onLoadDemo={loadDemoData}
-          onOpenArchive={() => setTab("inventory")}
-          onOpenMessages={() => setTab("messages")}
-          onOpenTrades={() => setTab("trades")}
-          onOpenWishlist={() => setTab("wishlist")}
-        />
-
-        <DemoDataPanel
-          archiveCount={collectionSummary.totalItems}
-          feedbackCount={feedbackItems.length}
-          onLoadDemo={loadDemoData}
-          onResetDemo={resetDemoRun}
-          tradeCount={localTrades.length}
-          wishlistCount={wishlistSummary.activeItems}
-        />
-
-        <BackendStatusPanel
-          apiBaseUrl={apiBaseUrl}
-          checkedAt={backendCheckedAt}
-          onRefresh={() => void checkBackendStatus()}
-          status={backendStatus}
-        />
-
-        <RecommendationPreview
-          error={recommendationError}
-          isLoading={isRecommendationsLoading}
-          onRefresh={() => void refreshRecommendations()}
-          recommendations={recommendations}
-          summary={recommendationSummary}
-        />
-
-        <BetaReadinessPanel
-          metrics={[
-            {
-              detail:
-                profile?.displayName ??
-                (isProfileLoading ? "Checking live account" : "Local beta identity"),
-              label: "Account",
-              status: profile ? "Live" : "Local",
-            },
-            {
-              detail: `${publishReadyCount} of ${collectionSummary.totalItems} records pass publish checks`,
-              label: "Collection",
-              status: publishReadyCount > 0 ? "Ready" : "Needs records",
-            },
-            {
-              detail: `${wishlistSummary.activeItems} active wants, ${wishlistSummary.grailItems} grails`,
-              label: "Wishlist",
-              status: wishlistSummary.activeItems > 0 ? "Ready" : "Needs wants",
-            },
-            {
-              detail: "Live API attempt with local fallback",
-              label: "Messages",
-              status: "Beta wired",
-            },
-            {
-              detail: `${recommendationSummary.total} live opportunities checked`,
-              label: "Recommendations",
-              status: recommendationSummary.total > 0 ? "Live" : "Checking",
-            },
-            {
-              detail: "Live API attempt with local proposal fallback",
-              label: "Trades",
-              status: "Beta wired",
-            },
-          ]}
-        />
-
-        <TrustSafetyPanel />
-
-        <BetaFeedbackPanel feedbackItems={feedbackItems} onSubmit={onSubmitFeedback} />
-
-        <View style={{ gap: theme.spacing.sm }}>
-          <BetaButton accessibilityLabel="Open inventory" onPress={() => setTab("inventory")}>
-            Open collection
-          </BetaButton>
-          <BetaButton
-            accessibilityLabel="Open wishlist"
-            onPress={() => setTab("wishlist")}
-            variant="secondary"
-          >
-            Open wants
-          </BetaButton>
-          <BetaButton
-            accessibilityLabel="Open messages"
-            onPress={() => setTab("messages")}
-            variant="black"
-          >
-            Open messages
-          </BetaButton>
-        </View>
       </ScrollView>
     </BetaScreen>
   );
@@ -1105,24 +1033,22 @@ function HomeTradeMatchCard({
         <HomeMatchImage item={wishlistItem} label="Their want" />
       </View>
 
-      <View style={{ gap: beta.spacing.xs }}>
-        <Text style={{ color: beta.colors.ink, fontSize: 13, fontWeight: "900" }}>
-          These pieces match because:
-        </Text>
-        {["Similar era and theme", "Size compatible", "High grail alignment"].map((reason) => (
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: beta.spacing.sm }}>
+        {["Era", "Size", "Grail"].map((reason) => (
           <View
             key={reason}
-            style={{ alignItems: "center", flexDirection: "row", gap: beta.spacing.xs }}
+            style={{
+              backgroundColor: beta.colors.orangeSoft,
+              borderColor: beta.colors.orange,
+              borderRadius: 999,
+              borderWidth: 1,
+              paddingHorizontal: beta.spacing.md,
+              paddingVertical: beta.spacing.xs,
+            }}
           >
-            <View
-              style={{
-                backgroundColor: beta.colors.orange,
-                borderRadius: 999,
-                height: 7,
-                width: 7,
-              }}
-            />
-            <Text style={{ color: beta.colors.inkMuted, fontSize: 12 }}>{reason}</Text>
+            <Text style={{ color: beta.colors.ink, fontSize: 12, fontWeight: "900" }}>
+              {reason}
+            </Text>
           </View>
         ))}
       </View>
@@ -1131,6 +1057,99 @@ function HomeTradeMatchCard({
         Review match
       </BetaButton>
     </BetaPanel>
+  );
+}
+
+function HomeActionGrid({
+  onOpenCollection,
+  onOpenFeedback,
+  onOpenGuide,
+  onOpenMessages,
+  onOpenTrades,
+  onOpenWishlist,
+}: {
+  onOpenCollection: () => void;
+  onOpenFeedback: () => void;
+  onOpenGuide: () => void;
+  onOpenMessages: () => void;
+  onOpenTrades: () => void;
+  onOpenWishlist: () => void;
+}) {
+  const actions = [
+    { action: onOpenCollection, label: "Collection", stat: "Pieces" },
+    { action: onOpenWishlist, label: "Wishlist", stat: "Grails" },
+    { action: onOpenTrades, label: "Trades", stat: "Swaps" },
+    { action: onOpenMessages, label: "Messages", stat: "Threads" },
+    { action: onOpenGuide, label: "Guide", stat: "Test" },
+    { action: onOpenFeedback, label: "Feedback", stat: "Beta" },
+  ];
+
+  return (
+    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: beta.spacing.sm }}>
+      {actions.map((item) => (
+        <Pressable
+          accessibilityLabel={`Open ${item.label}`}
+          accessibilityRole="button"
+          key={item.label}
+          onPress={item.action}
+          style={({ pressed }) => ({
+            backgroundColor: beta.colors.surface,
+            borderColor: item.label === "Collection" ? beta.colors.orange : beta.colors.border,
+            borderRadius: beta.radius.lg,
+            borderWidth: 1,
+            minHeight: 104,
+            opacity: pressed ? 0.84 : 1,
+            overflow: "hidden",
+            padding: beta.spacing.md,
+            transform: [{ scale: pressed ? 0.98 : 1 }],
+            width: "48%",
+          })}
+        >
+          <Image
+            accessibilityIgnoresInvertColors
+            resizeMode="contain"
+            source={konnesorSymbol}
+            style={{
+              height: 48,
+              opacity: 0.95,
+              position: "absolute",
+              right: -4,
+              top: 10,
+              width: 54,
+            }}
+          />
+          <View style={{ flex: 1, justifyContent: "space-between" }}>
+            <Text style={{ color: beta.colors.orange, fontSize: 11, fontWeight: "900" }}>
+              {item.stat.toUpperCase()}
+            </Text>
+            <Text style={{ color: beta.colors.ink, fontSize: 20, fontWeight: "900" }}>
+              {item.label}
+            </Text>
+          </View>
+        </Pressable>
+      ))}
+    </View>
+  );
+}
+
+function FeedbackScreen({
+  feedbackItems,
+  onBack,
+  onSubmit,
+}: {
+  feedbackItems: BetaFeedback[];
+  onBack: () => void;
+  onSubmit: (input: Omit<BetaFeedback, "createdAt" | "id">) => void;
+}) {
+  return (
+    <BetaScreen>
+      <ScrollView contentContainerStyle={{ gap: beta.spacing.lg, paddingBottom: beta.spacing.xl }}>
+        <BetaButton accessibilityLabel="Back to home" onPress={onBack} variant="ghost">
+          Back to home
+        </BetaButton>
+        <BetaFeedbackPanel feedbackItems={feedbackItems} onSubmit={onSubmit} />
+      </ScrollView>
+    </BetaScreen>
   );
 }
 
@@ -1179,7 +1198,7 @@ function HomeMatchImage({
   );
 }
 
-function RecommendationPreview({
+function _RecommendationPreview({
   error,
   isLoading,
   onRefresh,
@@ -1228,7 +1247,7 @@ function RecommendationPreview({
         </View>
       ) : (
         <BetaBody>
-          {error ?? "Add tradeable inventory and wants, then refresh for backend match signals."}
+          {error ?? "Add tradeable pieces and wants, then refresh for match signals."}
         </BetaBody>
       )}
 
@@ -1243,7 +1262,7 @@ function RecommendationPreview({
   );
 }
 
-function BetaReadinessPanel({
+function _BetaReadinessPanel({
   metrics,
 }: {
   metrics: Array<{ detail: string; label: string; status: string }>;
@@ -1293,7 +1312,7 @@ function BetaReadinessPanel({
   );
 }
 
-function MvpLaunchPanel({
+function _MvpLaunchPanel({
   checklist,
   onOpenArchive,
   onOpenMessages,
@@ -1321,7 +1340,7 @@ function MvpLaunchPanel({
         </BetaBody>
       </View>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: beta.spacing.sm }}>
-        <MiniActionButton label="Archive" onPress={onOpenArchive} />
+        <MiniActionButton label="Collection" onPress={onOpenArchive} />
         <MiniActionButton label="Wishlist" onPress={onOpenWishlist} />
         <MiniActionButton label="Trades" onPress={onOpenTrades} />
         <MiniActionButton label="Messages" onPress={onOpenMessages} />
@@ -1330,7 +1349,7 @@ function MvpLaunchPanel({
   );
 }
 
-function TesterWalkthroughPanel({
+function _TesterWalkthroughPanel({
   checklist,
   onLoadDemo,
   onOpenArchive,
@@ -1350,7 +1369,7 @@ function TesterWalkthroughPanel({
     {
       action: onOpenArchive,
       detail: "Create or inspect one item with photos, size, tag, condition, and trade terms.",
-      label: "1. Archive",
+      label: "1. Collection",
     },
     {
       action: onOpenWishlist,
@@ -1409,7 +1428,7 @@ function TesterWalkthroughPanel({
         ))}
       </View>
       <BetaButton accessibilityLabel="Load guided demo data" onPress={onLoadDemo} variant="black">
-        Load demo loop
+        Seed demo
       </BetaButton>
     </BetaPanel>
   );
@@ -1440,7 +1459,7 @@ function TesterGuideScreen({
       action: onOpenArchive,
       detail:
         "Add or inspect one tee with front, back, tag, flaw/detail photos, measurements, and estimated value.",
-      label: "Archive proof",
+      label: "Collection proof",
     },
     {
       action: onOpenWishlist,
@@ -1517,7 +1536,7 @@ function TesterGuideScreen({
   );
 }
 
-function DemoDataPanel({
+function _DemoDataPanel({
   archiveCount,
   feedbackCount,
   onLoadDemo,
@@ -1540,7 +1559,7 @@ function DemoDataPanel({
           Start clean or preload the loop.
         </Text>
         <BetaBody>
-          Archive {archiveCount} / Wishlist {wishlistCount} / Trades {tradeCount} / Feedback{" "}
+          Collection {archiveCount} / Wishlist {wishlistCount} / Trades {tradeCount} / Feedback{" "}
           {feedbackCount}
         </BetaBody>
       </View>
@@ -1564,7 +1583,7 @@ function DemoDataPanel({
   );
 }
 
-function BackendStatusPanel({
+function _BackendStatusPanel({
   apiBaseUrl,
   checkedAt,
   onRefresh,
@@ -1733,7 +1752,7 @@ function BetaFeedbackPanel({
       <BetaTextField
         label="Screenshot or screen"
         onChangeText={setScreenshotNote}
-        placeholder="Example: Archive detail, Trade compose, Home match card"
+        placeholder="Example: Collection detail, Trade compose, Home match card"
         value={screenshotNote}
       />
       <BetaButton accessibilityLabel="Save beta feedback" onPress={submit} variant="black">
@@ -1994,12 +2013,12 @@ function buildMvpChecklist({
       label: "Onboarding/account",
     },
     {
-      description: `${collectionSummary.totalItems} active archive records, ${collectionSummary.tradeableItems} tradeable.`,
+      description: `${collectionSummary.totalItems} collection records, ${collectionSummary.tradeableItems} tradeable.`,
       done: collectionSummary.totalItems > 0,
-      label: "Archive/listings",
+      label: "Collection/listings",
     },
     {
-      description: `${photoReadyCount} archive records have at least two photos attached.`,
+      description: `${photoReadyCount} collection records have at least two photos attached.`,
       done: photoReadyCount > 0,
       label: "Photo upload/readiness",
     },
@@ -2132,7 +2151,7 @@ function CollectorProfilePanel({
 
         <BetaStatPanel
           stats={[
-            { label: "Archive", value: collectionSummary.totalItems },
+            { label: "Collection", value: collectionSummary.totalItems },
             { label: "Ready", value: publishReadyCount },
             { label: "Wants", value: wishlistSummary.activeItems },
           ]}
@@ -2156,7 +2175,7 @@ function CollectorProfilePanel({
           <BetaKicker>NEXT BEST ACTIONS</BetaKicker>
           <ProfileActionRow
             detail={`${collectionSummary.tradeableItems} tradeable pieces, ${collectionSummary.draftItems} drafts`}
-            label="Review archive"
+            label="Review collection"
             onPress={() => onOpenTab("inventory")}
           />
           <ProfileActionRow
@@ -2405,8 +2424,8 @@ function InventoryTab({
         contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}
       >
         <View style={{ gap: theme.spacing.sm }}>
-          <BetaTitle size={31}>ARCHIVE</BetaTitle>
-          <BetaBody>Your tradeable collection.</BetaBody>
+          <BetaTitle size={31}>COLLECTION</BetaTitle>
+          <BetaBody>Your tradeable pieces.</BetaBody>
         </View>
 
         <BetaStatPanel
@@ -2418,14 +2437,14 @@ function InventoryTab({
         />
 
         <BetaButton accessibilityLabel="Add sample item" onPress={addSampleItem}>
-          Add archive item
+          Add collection item
         </BetaButton>
 
         <BetaPanel>
           <BetaKicker>FIND RECORDS</BetaKicker>
           <BetaTextField
             autoCapitalize="none"
-            label="Search archive"
+            label="Search collection"
             onChangeText={setQuery}
             placeholder="Search title, era, tag, category, size"
             value={query}
@@ -2466,20 +2485,20 @@ function InventoryTab({
             ))}
           </View>
           <BetaBody>
-            Showing {filteredItems.length} of {visibleItems.length} archive records.
+            Showing {filteredItems.length} of {visibleItems.length} collection records.
           </BetaBody>
         </BetaPanel>
 
         {visibleItems.length === 0 ? (
           <ReleaseEmptyState
-            actionLabel="Add archive item"
+            actionLabel="Add collection item"
             message="Add one shirt with front/tag photos, size, condition, and trade preference. This unlocks matches and trade proposals."
             onAction={addSampleItem}
-            title="Build your first archive piece"
+            title="Build your first collection piece"
           />
         ) : filteredItems.length === 0 ? (
           <ReleaseEmptyState
-            message="No archive records match this search. Clear filters or add another piece."
+            message="No collection records match this search. Clear filters or add another piece."
             title="Nothing found"
           />
         ) : (
@@ -3394,8 +3413,8 @@ function InventoryDetail({
       <ScrollView
         contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}
       >
-        <BetaButton accessibilityLabel="Back to inventory" onPress={onBack} variant="ghost">
-          Back to inventory
+        <BetaButton accessibilityLabel="Back to collection" onPress={onBack} variant="ghost">
+          Back to collection
         </BetaButton>
         <ItemDetailHero item={currentItem} publishReady={publishCheck.isValid} value={value} />
         <ItemPhotoGallery
@@ -3413,7 +3432,7 @@ function InventoryDetail({
         <CompFinderPanel
           item={currentItem}
           onApplyValue={(estimatedValue) => updateItem(currentItem.id, { estimatedValue })}
-          seedLabel="Archive item comps"
+          seedLabel="Collection item comps"
         />
 
         <View style={{ gap: theme.spacing.sm }}>
@@ -3476,11 +3495,11 @@ function InventoryDetail({
             Publish as Tradeable
           </BetaButton>
           <BetaButton
-            accessibilityLabel="Archive item"
+            accessibilityLabel="Hide item"
             onPress={() => void handleArchive()}
             variant="ghost"
           >
-            Archive item
+            Hide item
           </BetaButton>
         </View>
       </ScrollView>
@@ -3948,7 +3967,7 @@ function WishlistDetail({
               item.preferredCondition ? conditionLabels[item.preferredCondition] : "Flexible",
             ],
             ["Visibility", wishlistVisibilityLabels[item.visibility]],
-            ["Archived", item.isArchived ? "Yes" : "No"],
+            ["Hidden", item.isArchived ? "Yes" : "No"],
           ]}
           title="Wishlist details"
         />
@@ -3976,11 +3995,11 @@ function WishlistDetail({
             Save want live
           </BetaButton>
           <BetaButton
-            accessibilityLabel="Archive wishlist item"
+            accessibilityLabel="Hide wishlist item"
             onPress={() => void handleArchiveWant()}
             variant="secondary"
           >
-            Archive want
+            Hide want
           </BetaButton>
         </View>
       </ScrollView>
@@ -4875,7 +4894,7 @@ function CompFinderPanel({
       return;
     }
     if (!onApplyValue) {
-      Alert.alert("Open an item first", "Save a value range from an archive item detail screen.");
+      Alert.alert("Open an item first", "Save a value range from a collection item detail screen.");
       return;
     }
 
@@ -5493,7 +5512,7 @@ function TradesTab({
     if (!offeredItem || !requestedItem) {
       Alert.alert(
         "Trade needs two sides",
-        "Add one archive item and one want before composing a proposal.",
+        "Add one collection item and one want before composing a proposal.",
       );
       return;
     }
@@ -5574,7 +5593,7 @@ function TradesTab({
 
           {composeStep === "offer" ? (
             <TradeComposeSelection
-              emptyMessage="Publish or create one archive item before composing a trade."
+              emptyMessage="Publish or create one collection item before composing a trade."
               items={offerCandidates}
               onSelect={(itemId) => setSelectedOfferId(itemId)}
               selectedId={offeredItem?.id}
@@ -5623,7 +5642,7 @@ function TradesTab({
           {composeStep === "review" ? (
             <View style={{ gap: theme.spacing.md }}>
               <TradeObjectPanel
-                emptyMessage="Choose an archive item before creating the proposal."
+                emptyMessage="Choose a collection item before creating the proposal."
                 item={offeredItem}
                 label="Your offer"
               />
@@ -5744,7 +5763,7 @@ function TradesTab({
         {liveTrades.length === 0 && localTrades.length === 0 && !isLoading ? (
           <ReleaseEmptyState
             actionLabel="Compose trade"
-            message="Add one archive item and one wishlist target, then compose a proposal to test the full swap flow."
+            message="Add one collection item and one wishlist target, then compose a proposal to test the full swap flow."
             onAction={() => setRoute({ mode: "compose", tradeId: undefined })}
             title="No trade proposals yet"
           />
@@ -6086,7 +6105,7 @@ function TradeNextActionPanel({ status }: { status: TradeStatus }) {
       title: "Counter terms are open.",
     },
     declined: {
-      detail: "No action needed. Use the archive and wishlist screens to find the next match.",
+      detail: "No action needed. Use the collection and wishlist screens to find the next match.",
       title: "Offer declined.",
     },
     disputed: {
@@ -6192,7 +6211,7 @@ function LocalTradeDetail({
           </Text>
         </BetaPanel>
         <TradeObjectPanel
-          emptyMessage="The offered archive item is no longer available."
+          emptyMessage="The offered collection item is no longer available."
           item={offeredItem}
           label="Your offer"
         />
@@ -6373,7 +6392,7 @@ function getTradeNextStep(status: TradeStatus): string {
     case "countered":
       return "Review the counter offer and adjust the item side.";
     case "completed":
-      return "Archive the trade and update collector reputation.";
+      return "Save the completed trade and update collector reputation.";
     case "cancelled":
     case "declined":
       return "No action needed unless the collectors reopen terms.";
@@ -6391,7 +6410,7 @@ function getTradeStatusUpdateMessage(status: TradeStatus): string {
     case "countered":
       return "Counter requested. Review the terms and adjust the proposal before moving forward.";
     case "completed":
-      return "Trade marked complete. Archive the outcome and update collector reputation.";
+      return "Trade marked complete. Save the outcome and update collector reputation.";
     case "cancelled":
       return "Trade cancelled. No action is needed unless both collectors reopen the deal.";
     case "declined":
