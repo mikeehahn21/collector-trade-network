@@ -710,6 +710,7 @@ function HomeTab({
   const { profile } = useUserProfile();
   const [showProfile, setShowProfile] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
+  const [showCompFinder, setShowCompFinder] = useState(false);
   const [showTesterGuide, setShowTesterGuide] = useState(false);
   const { summary: recommendationSummary } = useRecommendations();
   const tradeableItems = useMemo(
@@ -782,6 +783,10 @@ function HomeTab({
         checklist={mvpChecklist}
         feedbackCount={feedbackItems.length}
         onBack={() => setShowTesterGuide(false)}
+        onOpenFeedback={() => {
+          setShowTesterGuide(false);
+          setShowFeedback(true);
+        }}
         onLoadDemo={loadDemoData}
         onOpenArchive={() => {
           setShowTesterGuide(false);
@@ -801,6 +806,10 @@ function HomeTab({
         }}
       />
     );
+  }
+
+  if (showCompFinder) {
+    return <CompFinderScreen item={tradeableItems[0]} onBack={() => setShowCompFinder(false)} />;
   }
 
   if (showFeedback) {
@@ -952,7 +961,7 @@ function HomeTab({
 
         <HomeActionGrid
           onOpenCollection={() => setTab("inventory")}
-          onOpenFeedback={() => setShowFeedback(true)}
+          onOpenCompFinder={() => setShowCompFinder(true)}
           onOpenGuide={() => setShowTesterGuide(true)}
           onOpenMessages={() => setTab("messages")}
           onOpenTrades={() => setTab("trades")}
@@ -1120,14 +1129,14 @@ function MatchReviewButton({
 
 function HomeActionGrid({
   onOpenCollection,
-  onOpenFeedback,
+  onOpenCompFinder,
   onOpenGuide,
   onOpenMessages,
   onOpenTrades,
   onOpenWishlist,
 }: {
   onOpenCollection: () => void;
-  onOpenFeedback: () => void;
+  onOpenCompFinder: () => void;
   onOpenGuide: () => void;
   onOpenMessages: () => void;
   onOpenTrades: () => void;
@@ -1138,8 +1147,8 @@ function HomeActionGrid({
     { action: onOpenWishlist, label: "Wishlist" },
     { action: onOpenTrades, label: "Trades" },
     { action: onOpenMessages, label: "Messages" },
+    { action: onOpenCompFinder, label: "Comp Finder" },
     { action: onOpenGuide, label: "Guide" },
-    { action: onOpenFeedback, label: "Feedback" },
   ];
 
   return (
@@ -1194,6 +1203,23 @@ function FeedbackScreen({
       <ScrollView contentContainerStyle={{ gap: beta.spacing.lg, paddingBottom: beta.spacing.xl }}>
         <BackArrowButton accessibilityLabel="Back to home" onPress={onBack} />
         <BetaFeedbackPanel feedbackItems={feedbackItems} onSubmit={onSubmit} />
+      </ScrollView>
+    </BetaScreen>
+  );
+}
+
+function CompFinderScreen({
+  item,
+  onBack,
+}: {
+  item: TradeableItem | undefined;
+  onBack: () => void;
+}) {
+  return (
+    <BetaScreen>
+      <ScrollView contentContainerStyle={{ gap: beta.spacing.lg, paddingBottom: beta.spacing.xl }}>
+        <BackArrowButton accessibilityLabel="Back to home" onPress={onBack} />
+        <CompFinderPanel item={item} seedLabel="Home comp finder" />
       </ScrollView>
     </BetaScreen>
   );
@@ -1486,6 +1512,7 @@ function TesterGuideScreen({
   onBack,
   onLoadDemo,
   onOpenArchive,
+  onOpenFeedback,
   onOpenMessages,
   onOpenTrades,
   onOpenWishlist,
@@ -1495,6 +1522,7 @@ function TesterGuideScreen({
   onBack: () => void;
   onLoadDemo: () => void;
   onOpenArchive: () => void;
+  onOpenFeedback: () => void;
   onOpenMessages: () => void;
   onOpenTrades: () => void;
   onOpenWishlist: () => void;
@@ -1559,6 +1587,13 @@ function TesterGuideScreen({
           </BetaBody>
           <BetaButton accessibilityLabel="Load guided demo data" onPress={onLoadDemo}>
             Seed demo data
+          </BetaButton>
+          <BetaButton
+            accessibilityLabel="Open beta feedback"
+            onPress={onOpenFeedback}
+            variant="secondary"
+          >
+            Feedback
           </BetaButton>
         </BetaPanel>
 
