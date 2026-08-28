@@ -11,6 +11,7 @@ import {
   StatusBar,
   Switch,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -277,12 +278,10 @@ export default function BetaApp() {
 
 function BetaShell() {
   const [showIntro, setShowIntro] = useState(true);
-  const introBar = useRef(new Animated.Value(0)).current;
   const introLift = useRef(new Animated.Value(18)).current;
   const introOpacity = useRef(new Animated.Value(0)).current;
   const introPulse = useRef(new Animated.Value(0)).current;
   const introScale = useRef(new Animated.Value(0.82)).current;
-  const introSymbolScale = useRef(new Animated.Value(0.55)).current;
   const [tab, setTab] = useState<Tab>("home");
   const [inventoryRoute, setInventoryRoute] = useState<ManualRoute>({
     itemId: undefined,
@@ -320,43 +319,31 @@ function BetaShell() {
           toValue: 1,
           useNativeDriver: true,
         }),
-        Animated.timing(introSymbolScale, {
-          duration: 760,
-          easing: Easing.out(Easing.back(1.8)),
-          toValue: 1,
-          useNativeDriver: true,
-        }),
         Animated.timing(introLift, {
           duration: 700,
           easing: Easing.out(Easing.cubic),
           toValue: 0,
           useNativeDriver: true,
         }),
-        Animated.timing(introBar, {
-          duration: 820,
-          easing: Easing.out(Easing.cubic),
-          toValue: 1,
-          useNativeDriver: true,
-        }),
       ]),
       Animated.loop(
         Animated.sequence([
           Animated.timing(introPulse, {
-            duration: 420,
+            duration: 260,
             easing: Easing.inOut(Easing.quad),
             toValue: 1,
             useNativeDriver: true,
           }),
           Animated.timing(introPulse, {
-            duration: 420,
+            duration: 260,
             easing: Easing.inOut(Easing.quad),
             toValue: 0,
             useNativeDriver: true,
           }),
         ]),
-        { iterations: 1 },
+        { iterations: 3 },
       ),
-      Animated.delay(720),
+      Animated.delay(500),
       Animated.parallel([
         Animated.timing(introOpacity, {
           duration: 360,
@@ -380,7 +367,7 @@ function BetaShell() {
     });
 
     return () => animation.stop();
-  }, [introBar, introLift, introOpacity, introPulse, introScale, introSymbolScale]);
+  }, [introLift, introOpacity, introPulse, introScale]);
 
   function openTab(nextTab: Tab) {
     setTab(nextTab);
@@ -560,12 +547,10 @@ function BetaShell() {
   if (showIntro) {
     return (
       <KonnesorIntro
-        bar={introBar}
         lift={introLift}
         opacity={introOpacity}
         pulse={introPulse}
         scale={introScale}
-        symbolScale={introSymbolScale}
       />
     );
   }
@@ -614,27 +599,23 @@ function BetaShell() {
 }
 
 function KonnesorIntro({
-  bar,
   lift,
   opacity,
   pulse,
   scale,
-  symbolScale,
 }: {
-  bar: Animated.Value;
   lift: Animated.Value;
   opacity: Animated.Value;
   pulse: Animated.Value;
   scale: Animated.Value;
-  symbolScale: Animated.Value;
 }) {
-  const glowScale = pulse.interpolate({
+  const washScale = pulse.interpolate({
     inputRange: [0, 1],
-    outputRange: [0.92, 1.12],
+    outputRange: [0.92, 1.18],
   });
-  const glowOpacity = pulse.interpolate({
+  const washOpacity = pulse.interpolate({
     inputRange: [0, 1],
-    outputRange: [0.18, 0.46],
+    outputRange: [0.06, 0.42],
   });
 
   return (
@@ -649,53 +630,63 @@ function KonnesorIntro({
     >
       <Animated.View
         style={{
+          backgroundColor: beta.colors.orange,
+          borderRadius: 999,
+          height: 520,
+          opacity: washOpacity,
+          position: "absolute",
+          transform: [{ scale: washScale }],
+          width: 520,
+        }}
+      />
+      <Animated.View
+        style={{
           alignItems: "center",
-          gap: beta.spacing.xl,
           opacity,
           transform: [{ translateY: lift }, { scale }],
           width: "100%",
         }}
       >
-        <View style={{ alignItems: "center", justifyContent: "center" }}>
-          <Animated.View
-            style={{
-              backgroundColor: beta.colors.orangeGlow,
-              borderRadius: 999,
-              height: 190,
-              opacity: glowOpacity,
-              position: "absolute",
-              transform: [{ scale: glowScale }],
-              width: 190,
-            }}
-          />
-          <Animated.Image
-            accessibilityLabel="Konnesor intro symbol"
-            resizeMode="contain"
-            source={konnesorSymbol}
-            style={{
-              height: 132,
-              transform: [{ scale: symbolScale }],
-              width: 132,
-            }}
-          />
-        </View>
         <Image
           accessibilityLabel="Konnesor intro logo"
           resizeMode="contain"
           source={konnesorWordmark}
-          style={{ height: 78, width: "100%" }}
-        />
-        <Animated.View
-          style={{
-            backgroundColor: beta.colors.orange,
-            borderRadius: 999,
-            height: 4,
-            transform: [{ scaleX: bar }],
-            width: 210,
-          }}
+          style={{ height: 96, width: "100%" }}
         />
       </Animated.View>
     </View>
+  );
+}
+
+function BackArrowButton({
+  accessibilityLabel,
+  onPress,
+}: {
+  accessibilityLabel: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => ({
+        alignItems: "center",
+        backgroundColor: beta.colors.surface,
+        borderColor: beta.colors.border,
+        borderRadius: 999,
+        borderWidth: 1,
+        height: 42,
+        justifyContent: "center",
+        opacity: pressed ? 0.78 : 1,
+        transform: [{ scale: pressed ? 0.96 : 1 }],
+        width: 42,
+      })}
+    >
+      <Text style={{ color: beta.colors.ink, fontSize: 28, fontWeight: "900", lineHeight: 30 }}>
+        ‹
+      </Text>
+    </Pressable>
   );
 }
 
@@ -725,6 +716,7 @@ function HomeTab({
     () => items.filter((item) => item.status === "tradeable"),
     [items],
   );
+  const profileLabel = profile?.displayName?.split(" ")[0] ?? "Profile";
   const publishReadyCount = useMemo(
     () => items.filter((item) => getPublishCheck(item).isValid).length,
     [items],
@@ -902,16 +894,16 @@ function HomeTab({
       >
         <View
           style={{
-            alignItems: "flex-start",
+            alignItems: "center",
             flexDirection: "row",
-            justifyContent: "flex-start",
+            justifyContent: "space-between",
           }}
         >
           <Image
             accessibilityLabel="Konnesor logo"
             resizeMode="contain"
             source={konnesorWordmark}
-            style={{ height: 64, width: 320 }}
+            style={{ height: 34, width: 170 }}
           />
           <Pressable
             accessibilityLabel="Open collector profile"
@@ -919,22 +911,27 @@ function HomeTab({
             onPress={() => setShowProfile(true)}
             style={({ pressed }) => ({
               alignItems: "center",
+              backgroundColor: theme.colors.surface,
               borderColor: theme.colors.border,
-              borderRadius: 999,
+              borderRadius: theme.radius.md,
               borderWidth: 1,
-              height: 36,
+              flexDirection: "row",
+              gap: theme.spacing.xs,
               justifyContent: "center",
-              marginLeft: "auto",
               opacity: pressed ? 0.82 : 1,
-              width: 36,
+              paddingHorizontal: theme.spacing.sm,
+              paddingVertical: 6,
             })}
           >
             <Image
               accessibilityLabel="Konnesor symbol"
               resizeMode="contain"
               source={konnesorSymbol}
-              style={{ height: 28, width: 28 }}
+              style={{ height: 24, width: 24 }}
             />
+            <Text style={{ color: theme.colors.ink, fontSize: 12, fontWeight: "900" }}>
+              {profileLabel}
+            </Text>
           </Pressable>
         </View>
 
@@ -951,14 +948,6 @@ function HomeTab({
           onReview={() => setTab("trades")}
           tradeableItem={tradeableItems[0]}
           wishlistItem={activeItems[0]}
-        />
-
-        <BetaStatPanel
-          stats={[
-            { label: "Tradeable", value: collectionSummary.tradeableItems },
-            { label: "Wishlist", value: wishlistSummary.activeItems },
-            { label: "Grails", value: wishlistSummary.grailItems },
-          ]}
         />
 
         <HomeActionGrid
@@ -985,21 +974,70 @@ function HomeTradeMatchCard({
   tradeableItem: TradeableItem | undefined;
   wishlistItem: WishlistItem | undefined;
 }) {
+  const pulse = useRef(new Animated.Value(0)).current;
+  const pulseScale = pulse.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 1.035],
+  });
+  const pulseOpacity = pulse.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.12, 0.34],
+  });
+
+  useEffect(() => {
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, {
+          duration: 780,
+          easing: Easing.inOut(Easing.quad),
+          toValue: 1,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulse, {
+          duration: 780,
+          easing: Easing.inOut(Easing.quad),
+          toValue: 0,
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    animation.start();
+    return () => animation.stop();
+  }, [pulse]);
+
   return (
     <BetaPanel>
       <View style={{ gap: beta.spacing.xs }}>
         <BetaKicker>YOUR TRADE MATCH</BetaKicker>
-        <Text
+        <Animated.View
           style={{
-            color: beta.colors.orange,
-            fontSize: 44,
-            fontWeight: "900",
-            lineHeight: 50,
-            textAlign: "center",
+            alignItems: "center",
+            justifyContent: "center",
+            transform: [{ scale: pulseScale }],
           }}
         >
-          {matchPercent}%
-        </Text>
+          <Animated.View
+            style={{
+              backgroundColor: beta.colors.orange,
+              borderRadius: 999,
+              height: 82,
+              opacity: pulseOpacity,
+              position: "absolute",
+              width: 162,
+            }}
+          />
+          <Text
+            style={{
+              color: beta.colors.orange,
+              fontSize: 48,
+              fontWeight: "900",
+              lineHeight: 54,
+              textAlign: "center",
+            }}
+          >
+            {matchPercent}%
+          </Text>
+        </Animated.View>
         <Text
           style={{
             color: beta.colors.orange,
@@ -1033,30 +1071,50 @@ function HomeTradeMatchCard({
         <HomeMatchImage item={wishlistItem} label="Their want" />
       </View>
 
-      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: beta.spacing.sm }}>
-        {["Era", "Size", "Grail"].map((reason) => (
-          <View
-            key={reason}
-            style={{
-              backgroundColor: beta.colors.orangeSoft,
-              borderColor: beta.colors.orange,
-              borderRadius: 999,
-              borderWidth: 1,
-              paddingHorizontal: beta.spacing.md,
-              paddingVertical: beta.spacing.xs,
-            }}
-          >
-            <Text style={{ color: beta.colors.ink, fontSize: 12, fontWeight: "900" }}>
-              {reason}
-            </Text>
-          </View>
-        ))}
-      </View>
-
-      <BetaButton accessibilityLabel="Review trade match" onPress={onReview}>
-        Review match
-      </BetaButton>
+      <Animated.View style={{ transform: [{ scale: pulseScale }] }}>
+        <MatchReviewButton onPress={onReview} pulseOpacity={pulseOpacity} />
+      </Animated.View>
     </BetaPanel>
+  );
+}
+
+function MatchReviewButton({
+  onPress,
+  pulseOpacity,
+}: {
+  onPress: () => void;
+  pulseOpacity: Animated.AnimatedInterpolation<number>;
+}) {
+  return (
+    <Pressable
+      accessibilityLabel="Review trade match"
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => ({
+        alignItems: "center",
+        backgroundColor: pressed ? beta.colors.orangePressed : beta.colors.orange,
+        borderRadius: beta.radius.md,
+        minHeight: 52,
+        overflow: "hidden",
+        justifyContent: "center",
+        transform: [{ scale: pressed ? 0.98 : 1 }],
+      })}
+    >
+      <Animated.View
+        style={{
+          backgroundColor: beta.colors.ink,
+          bottom: 0,
+          left: 0,
+          opacity: pulseOpacity,
+          position: "absolute",
+          right: 0,
+          top: 0,
+        }}
+      />
+      <Text style={{ color: beta.colors.background, fontSize: 16, fontWeight: "900" }}>
+        Review match
+      </Text>
+    </Pressable>
   );
 }
 
@@ -1076,12 +1134,12 @@ function HomeActionGrid({
   onOpenWishlist: () => void;
 }) {
   const actions = [
-    { action: onOpenCollection, label: "Collection", stat: "Pieces" },
-    { action: onOpenWishlist, label: "Wishlist", stat: "Grails" },
-    { action: onOpenTrades, label: "Trades", stat: "Swaps" },
-    { action: onOpenMessages, label: "Messages", stat: "Threads" },
-    { action: onOpenGuide, label: "Guide", stat: "Test" },
-    { action: onOpenFeedback, label: "Feedback", stat: "Beta" },
+    { action: onOpenCollection, label: "Collection" },
+    { action: onOpenWishlist, label: "Wishlist" },
+    { action: onOpenTrades, label: "Trades" },
+    { action: onOpenMessages, label: "Messages" },
+    { action: onOpenGuide, label: "Guide" },
+    { action: onOpenFeedback, label: "Feedback" },
   ];
 
   return (
@@ -1097,35 +1155,25 @@ function HomeActionGrid({
             borderColor: item.label === "Collection" ? beta.colors.orange : beta.colors.border,
             borderRadius: beta.radius.lg,
             borderWidth: 1,
-            minHeight: 104,
+            minHeight: 120,
             opacity: pressed ? 0.84 : 1,
             overflow: "hidden",
-            padding: beta.spacing.md,
+            paddingHorizontal: beta.spacing.md,
+            paddingVertical: beta.spacing.lg,
             transform: [{ scale: pressed ? 0.98 : 1 }],
             width: "48%",
           })}
         >
-          <Image
-            accessibilityIgnoresInvertColors
-            resizeMode="contain"
-            source={konnesorSymbol}
+          <Text
             style={{
-              height: 48,
-              opacity: 0.95,
-              position: "absolute",
-              right: -4,
-              top: 10,
-              width: 54,
+              color: item.label === "Collection" ? beta.colors.orange : beta.colors.ink,
+              fontSize: 22,
+              fontWeight: "900",
+              lineHeight: 27,
             }}
-          />
-          <View style={{ flex: 1, justifyContent: "space-between" }}>
-            <Text style={{ color: beta.colors.orange, fontSize: 11, fontWeight: "900" }}>
-              {item.stat.toUpperCase()}
-            </Text>
-            <Text style={{ color: beta.colors.ink, fontSize: 20, fontWeight: "900" }}>
-              {item.label}
-            </Text>
-          </View>
+          >
+            {item.label}
+          </Text>
         </Pressable>
       ))}
     </View>
@@ -1144,9 +1192,7 @@ function FeedbackScreen({
   return (
     <BetaScreen>
       <ScrollView contentContainerStyle={{ gap: beta.spacing.lg, paddingBottom: beta.spacing.xl }}>
-        <BetaButton accessibilityLabel="Back to home" onPress={onBack} variant="ghost">
-          Back to home
-        </BetaButton>
+        <BackArrowButton accessibilityLabel="Back to home" onPress={onBack} />
         <BetaFeedbackPanel feedbackItems={feedbackItems} onSubmit={onSubmit} />
       </ScrollView>
     </BetaScreen>
@@ -1482,9 +1528,7 @@ function TesterGuideScreen({
   return (
     <BetaScreen>
       <ScrollView contentContainerStyle={{ gap: beta.spacing.lg, paddingBottom: beta.spacing.xl }}>
-        <BetaButton accessibilityLabel="Back to home" onPress={onBack} variant="ghost">
-          Back to home
-        </BetaButton>
+        <BackArrowButton accessibilityLabel="Back to home" onPress={onBack} />
 
         <BetaPanel tone="black">
           <BetaKicker>BETA TEST SCRIPT</BetaKicker>
@@ -2091,61 +2135,119 @@ function CollectorProfilePanel({
         (photoReadyCount > 0 ? 25 : 0),
     ),
   );
+  const collectorRank =
+    readinessScore >= 90
+      ? "Elite Trader"
+      : readinessScore >= 65
+        ? "Verified Builder"
+        : "Rising Collector";
 
   return (
     <BetaScreen>
       <ScrollView contentContainerStyle={{ gap: beta.spacing.lg, paddingBottom: beta.spacing.xl }}>
-        <BetaButton accessibilityLabel="Back to home" onPress={onBack} variant="ghost">
-          Back to home
-        </BetaButton>
+        <BackArrowButton accessibilityLabel="Back to home" onPress={onBack} />
 
         <BetaPanel tone="black">
-          <View style={{ alignItems: "center", flexDirection: "row", gap: beta.spacing.md }}>
-            <View
-              style={{
-                alignItems: "center",
-                backgroundColor: beta.colors.orange,
-                borderRadius: 999,
-                height: 58,
-                justifyContent: "center",
-                width: 58,
-              }}
-            >
-              <Image
-                accessibilityLabel="Konnesor symbol"
-                resizeMode="cover"
-                source={konnesorSymbol}
-                style={{ borderRadius: 999, height: 58, width: 58 }}
-              />
-            </View>
-            <View style={{ flex: 1, gap: 4 }}>
-              <BetaKicker>COLLECTOR PROFILE</BetaKicker>
-              <Text style={{ color: beta.colors.ink, fontSize: 28, fontWeight: "900" }}>
-                {collectorName}
-              </Text>
-              <Text style={{ color: beta.colors.inkMuted, fontSize: 13 }}>{email}</Text>
-            </View>
-          </View>
-
           <View
             style={{
-              backgroundColor: beta.colors.orangeSoft,
+              backgroundColor: beta.colors.background,
               borderColor: beta.colors.orange,
-              borderRadius: beta.radius.md,
+              borderRadius: beta.radius.lg,
               borderWidth: 1,
-              gap: beta.spacing.xs,
+              gap: beta.spacing.md,
+              overflow: "hidden",
               padding: beta.spacing.md,
             }}
           >
-            <Text style={{ color: beta.colors.orange, fontSize: 44, fontWeight: "900" }}>
-              {readinessScore}%
-            </Text>
-            <Text style={{ color: beta.colors.ink, fontSize: 16, fontWeight: "900" }}>
-              Beta trade readiness
-            </Text>
-            <BetaBody>
-              Add complete photos, publish-ready records, and active wants to raise this score.
-            </BetaBody>
+            <View
+              style={{
+                backgroundColor: beta.colors.orange,
+                height: 5,
+                left: 0,
+                position: "absolute",
+                right: 0,
+                top: 0,
+              }}
+            />
+
+            <View style={{ alignItems: "center", flexDirection: "row", gap: beta.spacing.md }}>
+              <View
+                style={{
+                  alignItems: "center",
+                  backgroundColor: beta.colors.surface,
+                  borderColor: beta.colors.orange,
+                  borderRadius: beta.radius.lg,
+                  borderWidth: 1,
+                  height: 86,
+                  justifyContent: "center",
+                  width: 86,
+                }}
+              >
+                <Image
+                  accessibilityLabel="Konnesor symbol"
+                  resizeMode="contain"
+                  source={konnesorSymbol}
+                  style={{ height: 70, width: 70 }}
+                />
+              </View>
+              <View style={{ flex: 1, gap: 4 }}>
+                <BetaKicker>COLLECTOR CARD</BetaKicker>
+                <Text style={{ color: beta.colors.ink, fontSize: 29, fontWeight: "900" }}>
+                  {collectorName}
+                </Text>
+                <Text style={{ color: beta.colors.orange, fontSize: 14, fontWeight: "900" }}>
+                  {collectorRank}
+                </Text>
+                <Text style={{ color: beta.colors.inkMuted, fontSize: 12 }}>{email}</Text>
+              </View>
+            </View>
+
+            <View style={{ flexDirection: "row", gap: beta.spacing.sm }}>
+              {[
+                ["Score", `${readinessScore}%`],
+                ["Pieces", collectionSummary.totalItems],
+                ["Wants", wishlistSummary.activeItems],
+              ].map(([label, value]) => (
+                <View
+                  key={label}
+                  style={{
+                    backgroundColor: beta.colors.surfaceElevated,
+                    borderColor: beta.colors.borderStrong,
+                    borderRadius: beta.radius.md,
+                    borderWidth: 1,
+                    flex: 1,
+                    padding: beta.spacing.sm,
+                  }}
+                >
+                  <Text style={{ color: beta.colors.ink, fontSize: 22, fontWeight: "900" }}>
+                    {value}
+                  </Text>
+                  <Text style={{ color: beta.colors.orange, fontSize: 10, fontWeight: "900" }}>
+                    {label}
+                  </Text>
+                </View>
+              ))}
+            </View>
+
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: beta.spacing.sm }}>
+              {["Vintage Tee Hunter", "Photo Proof", "Trade Ready"].map((badge) => (
+                <View
+                  key={badge}
+                  style={{
+                    backgroundColor: beta.colors.orangeSoft,
+                    borderColor: beta.colors.orange,
+                    borderRadius: 999,
+                    borderWidth: 1,
+                    paddingHorizontal: beta.spacing.md,
+                    paddingVertical: beta.spacing.xs,
+                  }}
+                >
+                  <Text style={{ color: beta.colors.ink, fontSize: 11, fontWeight: "900" }}>
+                    {badge}
+                  </Text>
+                </View>
+              ))}
+            </View>
           </View>
         </BetaPanel>
 
@@ -2441,12 +2543,23 @@ function InventoryTab({
         </BetaButton>
 
         <BetaPanel>
-          <BetaKicker>FIND RECORDS</BetaKicker>
-          <BetaTextField
+          <TextInput
+            accessibilityLabel="Search collection"
             autoCapitalize="none"
-            label="Search collection"
             onChangeText={setQuery}
-            placeholder="Search title, era, tag, category, size"
+            placeholder=""
+            placeholderTextColor={theme.colors.inkMuted}
+            style={{
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border,
+              borderRadius: theme.radius.md,
+              borderWidth: 1,
+              color: theme.colors.ink,
+              fontSize: 16,
+              minHeight: 52,
+              paddingHorizontal: theme.spacing.md,
+              paddingVertical: theme.spacing.sm,
+            }}
             value={query}
           />
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: theme.spacing.sm }}>
@@ -2621,12 +2734,23 @@ function WishlistTab({
         </BetaButton>
 
         <BetaPanel>
-          <BetaKicker>FIND WANTS</BetaKicker>
-          <BetaTextField
+          <TextInput
+            accessibilityLabel="Search wishlist"
             autoCapitalize="none"
-            label="Search wishlist"
             onChangeText={setQuery}
-            placeholder="Search title, era, category, priority"
+            placeholder=""
+            placeholderTextColor={theme.colors.inkMuted}
+            style={{
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border,
+              borderRadius: theme.radius.md,
+              borderWidth: 1,
+              color: theme.colors.ink,
+              fontSize: 16,
+              minHeight: 52,
+              paddingHorizontal: theme.spacing.md,
+              paddingVertical: theme.spacing.sm,
+            }}
             value={query}
           />
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: theme.spacing.sm }}>
@@ -3155,9 +3279,7 @@ function ConversationDetail({
       <ScrollView
         contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}
       >
-        <BetaButton accessibilityLabel="Back to messages" onPress={onBack} variant="ghost">
-          Back to messages
-        </BetaButton>
+        <BackArrowButton accessibilityLabel="Back to messages" onPress={onBack} />
 
         <BetaPanel tone={conversation.contextType === "trade" ? "black" : "peach"}>
           <Text
@@ -3413,9 +3535,7 @@ function InventoryDetail({
       <ScrollView
         contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}
       >
-        <BetaButton accessibilityLabel="Back to collection" onPress={onBack} variant="ghost">
-          Back to collection
-        </BetaButton>
+        <BackArrowButton accessibilityLabel="Back to collection" onPress={onBack} />
         <ItemDetailHero item={currentItem} publishReady={publishCheck.isValid} value={value} />
         <ItemPhotoGallery
           onRemovePhoto={removePhoto}
@@ -3683,9 +3803,7 @@ function InventoryEdit({ item, onBack }: { item: TradeableItem | undefined; onBa
       <ScrollView
         contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}
       >
-        <BetaButton accessibilityLabel="Back to item detail" onPress={onBack} variant="ghost">
-          Back to item
-        </BetaButton>
+        <BackArrowButton accessibilityLabel="Back to item detail" onPress={onBack} />
         <View style={{ gap: theme.spacing.sm }}>
           <BetaKicker>ITEM BUILDER</BetaKicker>
           <BetaTitle>Shape the item record.</BetaTitle>
@@ -3941,9 +4059,7 @@ function WishlistDetail({
       <ScrollView
         contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}
       >
-        <BetaButton accessibilityLabel="Back to wishlist" onPress={onBack} variant="ghost">
-          Back to wishlist
-        </BetaButton>
+        <BackArrowButton accessibilityLabel="Back to wishlist" onPress={onBack} />
         <View style={{ gap: theme.spacing.sm }}>
           <BetaKicker>
             {item.isGrail
@@ -4051,9 +4167,7 @@ function WishlistEdit({ item, onBack }: { item: WishlistItem | undefined; onBack
       <ScrollView
         contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}
       >
-        <BetaButton accessibilityLabel="Back to wishlist detail" onPress={onBack} variant="ghost">
-          Back to want
-        </BetaButton>
+        <BackArrowButton accessibilityLabel="Back to wishlist detail" onPress={onBack} />
         <View style={{ gap: theme.spacing.sm }}>
           <BetaKicker>WISH BUILDER</BetaKicker>
           <BetaTitle>Define the hunt.</BetaTitle>
@@ -5262,10 +5376,8 @@ function MissingRecord({ onBack, title }: { onBack: () => void; title: string })
   return (
     <BetaScreen>
       <View style={{ gap: theme.spacing.md }}>
+        <BackArrowButton accessibilityLabel="Back" onPress={onBack} />
         <BetaTitle size={24}>{title}</BetaTitle>
-        <BetaButton accessibilityLabel="Back" onPress={onBack}>
-          Back
-        </BetaButton>
       </View>
     </BetaScreen>
   );
@@ -5604,13 +5716,10 @@ function TradesTab({
         <ScrollView
           contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}
         >
-          <BetaButton
+          <BackArrowButton
             accessibilityLabel="Back to trades"
             onPress={() => setRoute({ mode: "list", tradeId: undefined })}
-            variant="ghost"
-          >
-            Back to trades
-          </BetaButton>
+          />
 
           <View style={{ gap: theme.spacing.sm }}>
             <BetaKicker>COMPOSE TRADE</BetaKicker>
@@ -6174,9 +6283,7 @@ function TradeDetail({ onBack, trade }: { onBack: () => void; trade: Trade }) {
       <ScrollView
         contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}
       >
-        <BetaButton accessibilityLabel="Back to trades" onPress={onBack} variant="ghost">
-          Back to trades
-        </BetaButton>
+        <BackArrowButton accessibilityLabel="Back to trades" onPress={onBack} />
         <BetaPanel tone="black">
           <Text style={{ color: theme.colors.orangeSoft, fontSize: 12, fontWeight: "900" }}>
             LIVE TRADE
@@ -6228,9 +6335,7 @@ function LocalTradeDetail({
       <ScrollView
         contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}
       >
-        <BetaButton accessibilityLabel="Back to trades" onPress={onBack} variant="ghost">
-          Back to trades
-        </BetaButton>
+        <BackArrowButton accessibilityLabel="Back to trades" onPress={onBack} />
         <BetaPanel tone="black">
           <Text style={{ color: theme.colors.orangeSoft, fontSize: 12, fontWeight: "900" }}>
             LOCAL PROPOSAL
