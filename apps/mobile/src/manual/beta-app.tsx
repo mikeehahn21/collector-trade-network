@@ -25,6 +25,7 @@ import {
   WISHLIST_PRIORITIES,
   WISHLIST_VISIBILITY_OPTIONS,
 } from "@ctn/constants";
+import { apiRoutes } from "@ctn/api-contracts";
 import type {
   CollectionSummary,
   Conversation,
@@ -86,6 +87,7 @@ import { WishlistStateProvider, useWishlistState } from "@/state/wishlist-state"
 import { secureStorage } from "@/storage/secure-storage";
 import { DataSyncBootstrap } from "@/sync/data-sync-bootstrap";
 import { ThemeProvider } from "@/theme/theme-provider";
+import { getMobileEnv } from "@/config/env";
 import konnesorSymbol from "../../assets/brand/konnesor-symbol.png";
 import konnesorWordmark from "../../assets/brand/konnesor-wordmark.png";
 
@@ -129,6 +131,24 @@ type InventorySort = "recent" | "ready" | "value";
 type WishlistFilter = "all" | "grails" | "high" | "medium" | "low";
 type WishlistSort = "rank" | "grails" | "recent";
 type BackendHealthStatus = "checking" | "online" | "offline";
+type BackendHealthState = {
+  apiBaseUrl: string;
+  checkedAt?: string | undefined;
+  database?: string | undefined;
+  durationMs?: number | undefined;
+  httpStatus?: number | undefined;
+  reason?: string | undefined;
+  service?: string | undefined;
+  status: BackendHealthStatus;
+};
+type FallbackScope = "messages" | "trades";
+type BackendFallbackState = {
+  checkedAt: string;
+  detail?: string | undefined;
+  operation: string;
+  reason: string;
+  scope: FallbackScope;
+};
 type ImageSource = "camera" | "library";
 type CompSourceId =
   "google" | "ebaySold" | "ebayActive" | "grailed" | "depop" | "etsy" | "mercari" | "poshmark";
@@ -241,6 +261,150 @@ const localConversations: LocalConversation[] = [
 const LOCAL_THREADS_STORAGE_KEY = "konnesor_beta_local_threads";
 const LOCAL_TRADES_STORAGE_KEY = "konnesor_beta_local_trades";
 const LOCAL_FEEDBACK_STORAGE_KEY = "konnesor_beta_feedback";
+const API_HEALTH_TIMEOUT_MS = 5000;
+
+function createInitialBackendHealthState(): BackendHealthState {
+  return { apiBaseUrl: getMobileEnv().apiBaseUrl, status: "checking" };
+}
+
+type BackendHealthResponse = {
+  database?: string | undefined;
+  service?: string | undefined;
+  status?: string | undefined;
+};
+
+type SentryLike = {
+  captureException?: (
+    error: unknown,
+    context?: { extra?: Record<string, unknown>; tags?: Record<string, string> },
+  ) => void;
+  captureMessage?: (
+    message: string,
+    context?: { extra?: Record<string, unknown>; level?: string; tags?: Record<string, string> },
+  ) => void;
+};
+
+async function runBackendHealthCheck(): Promise<BackendHealthState> {
+  const { apiBaseUrl } = getMobileEnv();
+  const startedAt = Date.now();
+  const checkedAt = new Date().toISOString();
+  const url = `${apiBaseUrl}${apiRoutes.health}`;
+
+  try {
+    const response = await withTimeout(fetch(url), API_HEALTH_TIMEOUT_MS);
+    const durationMs = Date.now() - startedAt;
+    let body: BackendHealthResponse = {};
+
+    try {
+      body = (await response.json()) as BackendHealthResponse;
+    } catch (parseError) {
+      reportBackendDiagnostic(
+        "health.parse_failure",
+        {
+          apiBaseUrl,
+          checkedAt,
+          durationMs,
+          httpStatus: response.status,
+          reason: getDiagnosticErrorMessage(parseError),
+        },
+        parseError,
+      );
+    }
+
+    if (!response.ok) {
+      const result: BackendHealthState = {
+        apiBaseUrl,
+        checkedAt,
+        database: body.database,
+        durationMs,
+        httpStatus: response.status,
+        reason: `Health check returned HTTP ${response.status}`,
+        service: body.service,
+        status: "offline",
+      };
+      reportBackendDiagnostic("health.failure", result);
+      return result;
+    }
+
+    const result: BackendHealthState = {
+      apiBaseUrl,
+      checkedAt,
+      database: body.database,
+      durationMs,
+      httpStatus: response.status,
+      service: body.service,
+      status: "online",
+    };
+    reportBackendDiagnostic("health.success", result);
+    return result;
+  } catch (error) {
+    const result: BackendHealthState = {
+      apiBaseUrl,
+      checkedAt,
+      durationMs: Date.now() - startedAt,
+      reason: getDiagnosticErrorMessage(error),
+      status: "offline",
+    };
+    reportBackendDiagnostic("health.failure", result, error);
+    return result;
+  }
+}
+
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(new Error(`Timed out after ${timeoutMs}ms`));
+    }, timeoutMs);
+  });
+
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
+}
+
+function reportBackendDiagnostic(event: string, payload: Record<string, unknown>, error?: unknown) {
+  const message = `[Konnesor API] ${event}`;
+  console.log(message, payload);
+
+  const { sentryDsn } = getMobileEnv();
+  const sentry = (globalThis as { Sentry?: SentryLike }).Sentry;
+  if (!sentryDsn || !sentry) {
+    return;
+  }
+
+  const tags = { area: "backend-connectivity", event };
+  if (error && sentry.captureException) {
+    sentry.captureException(error, { extra: payload, tags });
+    return;
+  }
+
+  sentry.captureMessage?.(message, { extra: payload, level: "info", tags });
+}
+
+function getDiagnosticErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === "string") {
+    return error;
+  }
+  return "Unknown backend error";
+}
+
+function getDiagnosticErrorDetail(error: unknown): string | undefined {
+  if (error instanceof Error) {
+    return error.stack ?? error.name;
+  }
+  if (error && typeof error === "object") {
+    return JSON.stringify(error);
+  }
+  return undefined;
+}
 
 function createDemoPhoto(kind: ItemPhoto["kind"], sortOrder: number): ItemPhoto {
   return {
@@ -301,8 +465,36 @@ function BetaShell() {
   });
   const [isLocalStateHydrated, setIsLocalStateHydrated] = useState(false);
   const [betaFeedback, setBetaFeedback] = useState<BetaFeedback[]>([]);
+  const [backendFallbacks, setBackendFallbacks] = useState<
+    Partial<Record<FallbackScope, BackendFallbackState>>
+  >({});
+  const [backendHealth, setBackendHealth] = useState<BackendHealthState>(
+    createInitialBackendHealthState,
+  );
   const [localThreads, setLocalThreads] = useState<LocalConversation[]>(localConversations);
   const [localTrades, setLocalTrades] = useState<LocalTradeProposal[]>([]);
+
+  const registerBackendFallback = useCallback(
+    (scope: FallbackScope, operation: string, error: unknown) => {
+      const fallback: BackendFallbackState = {
+        checkedAt: new Date().toISOString(),
+        detail: getDiagnosticErrorDetail(error),
+        operation,
+        reason: getDiagnosticErrorMessage(error),
+        scope,
+      };
+
+      setBackendFallbacks((current) => ({ ...current, [scope]: fallback }));
+      reportBackendDiagnostic("fallback", {
+        apiBaseUrl: backendHealth.apiBaseUrl,
+        fallback,
+      });
+    },
+    [backendHealth.apiBaseUrl],
+  );
+  const clearBackendFallback = useCallback((scope: FallbackScope) => {
+    setBackendFallbacks((current) => ({ ...current, [scope]: undefined }));
+  }, []);
 
   useEffect(() => {
     const animation = Animated.sequence([
@@ -368,6 +560,24 @@ function BetaShell() {
 
     return () => animation.stop();
   }, [introLift, introOpacity, introPulse, introScale]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function checkBackendHealth() {
+      const result = await runBackendHealthCheck();
+
+      if (isMounted) {
+        setBackendHealth(result);
+      }
+    }
+
+    void checkBackendHealth();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   function openTab(nextTab: Tab) {
     setTab(nextTab);
@@ -575,7 +785,11 @@ function BetaShell() {
         ) : null}
         {tab === "messages" ? (
           <MessagesTab
+            backendFallback={backendFallbacks.messages}
+            backendHealth={backendHealth}
             localThreads={localThreads}
+            onBackendFallback={registerBackendFallback}
+            onBackendRecovered={clearBackendFallback}
             route={messageRoute}
             setLocalThreads={setLocalThreads}
             setRoute={setMessageRoute}
@@ -584,8 +798,12 @@ function BetaShell() {
         {tab === "trades" ? (
           <TradesTab
             appendLocalTradeThreadMessage={appendLocalTradeThreadMessage}
+            backendFallback={backendFallbacks.trades}
+            backendHealth={backendHealth}
             createLocalTradeThread={createLocalTradeThread}
             localTrades={localTrades}
+            onBackendFallback={registerBackendFallback}
+            onBackendRecovered={clearBackendFallback}
             openLocalConversation={openLocalConversation}
             route={tradeRoute}
             setLocalTrades={setLocalTrades}
@@ -1223,6 +1441,72 @@ function CompFinderScreen({
       </ScrollView>
     </BetaScreen>
   );
+}
+
+function OfflineModeBanner({
+  detail,
+  kind,
+  visible,
+}: {
+  detail?: string | undefined;
+  kind: "message" | "trade";
+  visible: boolean;
+}) {
+  if (!visible) {
+    return null;
+  }
+
+  const noun = kind === "message" ? "message" : "trade";
+
+  return (
+    <View
+      accessibilityRole="alert"
+      style={{
+        backgroundColor: beta.colors.orange,
+        borderColor: beta.colors.orangePressed,
+        borderRadius: beta.radius.md,
+        borderWidth: 1,
+        gap: beta.spacing.xs,
+        padding: beta.spacing.md,
+      }}
+    >
+      <Text style={{ color: beta.colors.background, fontSize: 14, fontWeight: "900" }}>
+        Offline mode
+      </Text>
+      <Text style={{ color: beta.colors.background, fontSize: 13, lineHeight: 18 }}>
+        This {noun} will not reach anyone until the live API is back online.
+      </Text>
+      {detail ? (
+        <Text style={{ color: beta.colors.background, fontSize: 11, fontWeight: "800" }}>
+          Reason: {detail}
+        </Text>
+      ) : null}
+    </View>
+  );
+}
+
+function shouldShowOfflineBanner(
+  backendHealth: BackendHealthState,
+  source: "api" | "local",
+  fallback: BackendFallbackState | undefined,
+  isLoading: boolean,
+): boolean {
+  return Boolean(
+    !isLoading && (backendHealth.status === "offline" || source === "local" || fallback),
+  );
+}
+
+function getOfflineBannerReason(
+  backendHealth: BackendHealthState,
+  fallback: BackendFallbackState | undefined,
+): string | undefined {
+  if (fallback) {
+    return `${fallback.operation}: ${fallback.reason}`;
+  }
+  if (backendHealth.status === "offline") {
+    return backendHealth.reason ?? "Live API health check failed.";
+  }
+  return undefined;
 }
 
 function HomeMatchImage({
@@ -2938,12 +3222,20 @@ const rankButtonTextStyle = {
 };
 
 function MessagesTab({
+  backendFallback,
+  backendHealth,
   localThreads,
+  onBackendFallback,
+  onBackendRecovered,
   route,
   setLocalThreads,
   setRoute,
 }: {
+  backendFallback?: BackendFallbackState | undefined;
+  backendHealth: BackendHealthState;
   localThreads: LocalConversation[];
+  onBackendFallback: (scope: FallbackScope, operation: string, error: unknown) => void;
+  onBackendRecovered: (scope: FallbackScope) => void;
   route: MessageRoute;
   setLocalThreads: (updater: (current: LocalConversation[]) => LocalConversation[]) => void;
   setRoute: (route: MessageRoute) => void;
@@ -2976,13 +3268,15 @@ function MessagesTab({
       setCurrentUser(meResponse.user);
       setApiConversations(conversationsResponse.conversations);
       setSource("api");
-    } catch {
+      onBackendRecovered("messages");
+    } catch (loadError) {
       setError("Live messages are unavailable. Showing local beta conversations.");
       setSource("local");
+      onBackendFallback("messages", "load conversations", loadError);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [onBackendFallback, onBackendRecovered]);
 
   useEffect(() => {
     void refreshConversations();
@@ -3010,11 +3304,12 @@ function MessagesTab({
         if (latestIncoming) {
           void apiRef.current.markMessageRead(latestIncoming.id);
         }
-      } catch {
+      } catch (loadError) {
         setError("This conversation could not be loaded live.");
+        onBackendFallback("messages", `load conversation ${conversationId}`, loadError);
       }
     },
-    [currentUser?.id],
+    [currentUser?.id, onBackendFallback],
   );
 
   useEffect(() => {
@@ -3086,8 +3381,9 @@ function MessagesTab({
       }));
       setDraft("");
       void loadConversationMessages(conversationId);
-    } catch {
+    } catch (sendError) {
       setError("Message could not be sent.");
+      onBackendFallback("messages", `send message ${route.conversationId}`, sendError);
     } finally {
       setIsSending(false);
     }
@@ -3114,6 +3410,7 @@ function MessagesTab({
         }}
         onChangeDraft={handleDraftChange}
         onSend={() => void sendMessage()}
+        offlineReason={getOfflineBannerReason(backendHealth, backendFallback)}
         source={source}
       />
     );
@@ -3128,6 +3425,12 @@ function MessagesTab({
           <BetaTitle size={31}>MESSAGES</BetaTitle>
           <BetaBody>Collector conversations.</BetaBody>
         </View>
+
+        <OfflineModeBanner
+          detail={getOfflineBannerReason(backendHealth, backendFallback)}
+          kind="message"
+          visible={shouldShowOfflineBanner(backendHealth, source, backendFallback, isLoading)}
+        />
 
         {error ? <BetaEmptyState message={error} title="Offline fallback" tone="warning" /> : null}
 
@@ -3291,6 +3594,7 @@ function ConversationDetail({
   onBack,
   onChangeDraft,
   onSend,
+  offlineReason,
   source,
 }: {
   conversation: LocalConversation | undefined;
@@ -3301,6 +3605,7 @@ function ConversationDetail({
   onBack: () => void;
   onChangeDraft: (value: string) => void;
   onSend: () => void;
+  offlineReason?: string | undefined;
   source: "api" | "local";
 }) {
   const theme = beta;
@@ -3315,6 +3620,8 @@ function ConversationDetail({
         contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}
       >
         <BackArrowButton accessibilityLabel="Back to messages" onPress={onBack} />
+
+        <OfflineModeBanner detail={offlineReason} kind="message" visible={source === "local"} />
 
         <BetaPanel tone={conversation.contextType === "trade" ? "black" : "peach"}>
           <Text
@@ -5600,8 +5907,12 @@ function isUsableLocalAssetUri(uri: string): boolean {
 
 function TradesTab({
   appendLocalTradeThreadMessage,
+  backendFallback,
+  backendHealth,
   createLocalTradeThread,
   localTrades,
+  onBackendFallback,
+  onBackendRecovered,
   openLocalConversation,
   route,
   setLocalTrades,
@@ -5611,12 +5922,16 @@ function TradesTab({
     conversationId: string | undefined,
     message: LocalMessage,
   ) => void;
+  backendFallback?: BackendFallbackState | undefined;
+  backendHealth: BackendHealthState;
   createLocalTradeThread: (input: {
     offeredItem: TradeableItem;
     proposal: LocalTradeProposal;
     requestedItem: WishlistItem;
   }) => string;
   localTrades: LocalTradeProposal[];
+  onBackendFallback: (scope: FallbackScope, operation: string, error: unknown) => void;
+  onBackendRecovered: (scope: FallbackScope) => void;
   openLocalConversation: (conversationId: string) => void;
   route: TradeRoute;
   setLocalTrades: (updater: (current: LocalTradeProposal[]) => LocalTradeProposal[]) => void;
@@ -5663,13 +5978,15 @@ function TradesTab({
       const response = await apiRef.current.listTrades();
       setLiveTrades(response.trades);
       setSource("api");
-    } catch {
+      onBackendRecovered("trades");
+    } catch (loadError) {
       setError("Live trades are unavailable. Local proposal workflow is active.");
       setSource("local");
+      onBackendFallback("trades", "load trades", loadError);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [onBackendFallback, onBackendRecovered]);
 
   useEffect(() => {
     void refreshTrades();
@@ -5754,6 +6071,12 @@ function TradesTab({
           <BackArrowButton
             accessibilityLabel="Back to trades"
             onPress={() => setRoute({ mode: "list", tradeId: undefined })}
+          />
+
+          <OfflineModeBanner
+            detail={getOfflineBannerReason(backendHealth, backendFallback)}
+            kind="trade"
+            visible={shouldShowOfflineBanner(backendHealth, source, backendFallback, isLoading)}
           />
 
           <View style={{ gap: theme.spacing.sm }}>
@@ -5876,6 +6199,7 @@ function TradesTab({
               ? () => openLocalConversation(selectedLocalTrade.conversationId ?? "")
               : undefined
           }
+          offlineReason={getOfflineBannerReason(backendHealth, backendFallback)}
           onUpdateStatus={(status) => updateLocalTradeStatus(selectedLocalTrade.id, status)}
           trade={selectedLocalTrade}
         />
@@ -5899,6 +6223,12 @@ function TradesTab({
           <BetaTitle size={31}>TRADES</BetaTitle>
           <BetaBody>Review structured swaps.</BetaBody>
         </View>
+
+        <OfflineModeBanner
+          detail={getOfflineBannerReason(backendHealth, backendFallback)}
+          kind="trade"
+          visible={shouldShowOfflineBanner(backendHealth, source, backendFallback, isLoading)}
+        />
 
         <BetaStatPanel
           stats={[
@@ -6353,12 +6683,14 @@ function LocalTradeDetail({
   getItem,
   onBack,
   onOpenConversation,
+  offlineReason,
   onUpdateStatus,
   trade,
 }: {
   getItem: (itemId: string | undefined) => TradeableItem | undefined;
   onBack: () => void;
   onOpenConversation?: (() => void) | undefined;
+  offlineReason?: string | undefined;
   onUpdateStatus: (status: TradeStatus) => void;
   trade: LocalTradeProposal;
 }) {
@@ -6371,6 +6703,7 @@ function LocalTradeDetail({
         contentContainerStyle={{ gap: theme.spacing.lg, paddingBottom: theme.spacing.xl }}
       >
         <BackArrowButton accessibilityLabel="Back to trades" onPress={onBack} />
+        <OfflineModeBanner detail={offlineReason} kind="trade" visible />
         <BetaPanel tone="black">
           <Text style={{ color: theme.colors.orangeSoft, fontSize: 12, fontWeight: "900" }}>
             LOCAL PROPOSAL
