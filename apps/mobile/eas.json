@@ -11,6 +11,8 @@
       "pnpm": "11.13.1",
       "env": {
         "APP_ENV": "development",
+        "EXPO_PUBLIC_PRIVACY_POLICY_URL": "https://konnesor.app/privacy",
+        "EXPO_PUBLIC_TERMS_OF_SERVICE_URL": "https://konnesor.app/terms",
         "SENTRY_DISABLE_AUTO_UPLOAD": "true",
         "SENTRY_ALLOW_FAILURE": "true"
       }
@@ -22,6 +24,8 @@
       "pnpm": "11.13.1",
       "env": {
         "APP_ENV": "staging",
+        "EXPO_PUBLIC_PRIVACY_POLICY_URL": "https://konnesor.app/privacy",
+        "EXPO_PUBLIC_TERMS_OF_SERVICE_URL": "https://konnesor.app/terms",
         "SENTRY_DISABLE_AUTO_UPLOAD": "true",
         "SENTRY_ALLOW_FAILURE": "true"
       }
@@ -35,6 +39,8 @@
       },
       "env": {
         "APP_ENV": "production",
+        "EXPO_PUBLIC_PRIVACY_POLICY_URL": "https://konnesor.app/privacy",
+        "EXPO_PUBLIC_TERMS_OF_SERVICE_URL": "https://konnesor.app/terms",
         "SENTRY_DISABLE_AUTO_UPLOAD": "true",
         "SENTRY_ALLOW_FAILURE": "true"
       }
@@ -49,6 +55,8 @@
       },
       "env": {
         "APP_ENV": "production",
+        "EXPO_PUBLIC_PRIVACY_POLICY_URL": "https://konnesor.app/privacy",
+        "EXPO_PUBLIC_TERMS_OF_SERVICE_URL": "https://konnesor.app/terms",
         "SENTRY_DISABLE_AUTO_UPLOAD": "true",
         "SENTRY_ALLOW_FAILURE": "true"
       }
@@ -63,6 +71,8 @@
       },
       "env": {
         "APP_ENV": "production",
+        "EXPO_PUBLIC_PRIVACY_POLICY_URL": "https://konnesor.app/privacy",
+        "EXPO_PUBLIC_TERMS_OF_SERVICE_URL": "https://konnesor.app/terms",
         "SENTRY_DISABLE_AUTO_UPLOAD": "true",
         "SENTRY_ALLOW_FAILURE": "true"
       }

@@ -1,6 +1,6 @@
 node_modules/
 dist/
-apps/mobile/dist-testflight-check/
+apps/mobile/dist-*/
 .next/
 .turbo/
 coverage/

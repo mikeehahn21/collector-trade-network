@@ -3,6 +3,8 @@ import Constants from "expo-constants";
 type MobileEnv = {
   apiBaseUrl: string;
   clerkPublishableKey?: string | undefined;
+  privacyPolicyUrl: string;
+  termsOfServiceUrl: string;
   sentryDsn?: string | undefined;
   posthogApiKey?: string | undefined;
   oneSignalAppId?: string | undefined;
@@ -14,6 +16,8 @@ export function getMobileEnv(): MobileEnv {
   return {
     apiBaseUrl: String(extra.apiBaseUrl ?? "http://localhost:4000"),
     clerkPublishableKey: asOptionalString(extra.clerkPublishableKey),
+    privacyPolicyUrl: String(extra.privacyPolicyUrl ?? "https://konnesor.app/privacy"),
+    termsOfServiceUrl: String(extra.termsOfServiceUrl ?? "https://konnesor.app/terms"),
     sentryDsn: asOptionalString(extra.sentryDsn),
     posthogApiKey: asOptionalString(extra.posthogApiKey),
     oneSignalAppId: asOptionalString(extra.oneSignalAppId),
