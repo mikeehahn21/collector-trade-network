@@ -1,6 +1,7 @@
 import type {
   ApiHealth,
   AiReviewWebhookInput,
+  BlockedUser,
   Conversation,
   ConversationMessage,
   ItemVerificationVideoInput,
@@ -12,6 +13,7 @@ import type {
   TradeSummary,
   TradeableItem,
   TradeRecommendation,
+  UserReport,
   UserProfile,
   WishlistItem,
 } from "@ctn/types";
@@ -19,20 +21,24 @@ import type {
 import {
   accessRequestSchema,
   aiReviewWebhookSchema,
+  blockUserSchema,
   createConversationSchema,
   healthResponseSchema,
+  aiListingImageInputSchema,
   inviteCodeSchema,
   itemVerificationVideoSchema,
   markMessageReadSchema,
   tradeableItemDraftSchema,
   tradeableItemPublishSchema,
   recommendationFeedbackSchema,
+  reportUserSchema,
   sendMessageSchema,
   conversationTypingSchema,
   counterTradeSchema,
   createTradeSchema,
   disputeTradeSchema,
   shipTradeSchema,
+  tradeCompletionSchema,
   updateTradeStatusSchema,
   wishlistItemDraftSchema,
   wishlistItemPublishSchema,
@@ -46,6 +52,7 @@ export const apiRoutes = {
   systemConfig: "/v1/admin/system-config",
   items: "/v1/items",
   itemById: "/v1/items/:itemId",
+  publicItems: "/v1/public/items",
   publicItemById: "/v1/public/items/:itemId",
   itemAiSuggestions: "/v1/items/ai-suggestions",
   itemVerificationVideo: "/v1/items/:itemId/verification-video",
@@ -54,6 +61,7 @@ export const apiRoutes = {
   wishlistItems: "/v1/wishlist-items",
   wishlistItemById: "/v1/wishlist-items/:wishlistItemId",
   me: "/v1/me",
+  deleteMe: "/v1/me",
   recommendations: "/v1/recommendations",
   recommendationById: "/v1/recommendations/:recommendationId",
   recommendationFeedback: "/v1/recommendations/:recommendationId/feedback",
@@ -72,6 +80,9 @@ export const apiRoutes = {
   conversationMessages: "/v1/conversations/:conversationId/messages",
   messageRead: "/v1/messages/:messageId/read",
   conversationTyping: "/v1/conversations/typing",
+  reports: "/v1/reports",
+  blockedUsers: "/v1/blocked-users",
+  blockedUserById: "/v1/blocked-users/:blockedUserId",
 } as const;
 
 export const healthContract = {
@@ -144,7 +155,9 @@ export const itemPublishContract = {
 export const itemAiSuggestionContract = {
   method: "POST",
   path: apiRoutes.itemAiSuggestions,
-  body: tradeableItemDraftSchema.pick({ photos: true, title: true, category: true, size: true }),
+  body: tradeableItemDraftSchema
+    .pick({ photos: true, title: true, category: true, size: true })
+    .extend({ aiImage: aiListingImageInputSchema.optional() }),
 } as const;
 
 export const itemVerificationVideoContract = {
@@ -197,6 +210,7 @@ export const receiveTradeContract = {
 export const completeTradeContract = {
   method: "PATCH",
   path: apiRoutes.tradeComplete,
+  body: tradeCompletionSchema,
 } as const;
 
 export const disputeTradeContract = {
@@ -229,6 +243,18 @@ export const conversationTypingContract = {
   body: conversationTypingSchema,
 } as const;
 
+export const reportUserContract = {
+  method: "POST",
+  path: apiRoutes.reports,
+  body: reportUserSchema,
+} as const;
+
+export const blockUserContract = {
+  method: "POST",
+  path: apiRoutes.blockedUsers,
+  body: blockUserSchema,
+} as const;
+
 export const wishlistItemDraftContract = {
   method: "POST",
   path: apiRoutes.wishlistItems,
@@ -243,6 +269,10 @@ export const wishlistItemPublishContract = {
 
 export type MeResponse = {
   user: UserProfile;
+};
+
+export type DeleteAccountResponse = {
+  status: "deleted";
 };
 
 export type ItemsResponse = {
@@ -271,6 +301,10 @@ export type AiReviewWebhookRequest = AiReviewWebhookInput;
 
 export type PublicItemResponse = {
   item: PublicTradeableItem;
+};
+
+export type PublicItemsResponse = {
+  items: PublicTradeableItem[];
 };
 
 export type WishlistItemsResponse = {
@@ -305,6 +339,18 @@ export type TradesResponse = {
 
 export type TradeResponse = {
   trade: Trade;
+};
+
+export type ReportUserResponse = {
+  report: UserReport;
+};
+
+export type BlockUserResponse = {
+  blockedUser: BlockedUser;
+};
+
+export type BlockedUsersResponse = {
+  blockedUsers: BlockedUser[];
 };
 
 export type ConversationsResponse = {
