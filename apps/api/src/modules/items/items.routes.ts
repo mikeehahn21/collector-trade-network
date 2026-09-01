@@ -1,4 +1,6 @@
 import type { FastifyInstance, FastifyRequest } from "fastify";
+import * as Sentry from "@sentry/node";
+import type { AiListingSuggestions } from "@ctn/types";
 
 import {
   apiRoutes,
@@ -19,6 +21,7 @@ import {
   findVerificationStatusByOwner,
   findVisiblePublicItem,
   listItemsByOwner,
+  listVisiblePublicItems,
   updateVerificationVideoForOwner,
   updateItemForOwner,
   type PersistItemInput,
@@ -96,6 +99,16 @@ export async function registerItemRoutes(
     return reply.status(200).send({ item });
   });
 
+  app.get(apiRoutes.publicItems, async (request, reply) => {
+    const user = await requireCurrentUser(request, services);
+    const items = await listVisiblePublicItems(services.db, {
+      id: user.id,
+      roles: user.roles,
+    });
+
+    return reply.status(200).send({ items });
+  });
+
   app.put("/v1/items/:itemId", async (request, reply) => {
     const user = await requireCurrentUser(request, services);
     const itemId = (request.params as { itemId: string }).itemId;
@@ -144,17 +157,9 @@ export async function registerItemRoutes(
       });
     }
 
-    return reply.status(200).send({
-      title: parsed.data.title || "Vintage graphic tee",
-      category: parsed.data.category || "band",
-      size: parsed.data.size || "xl",
-      era: "90s",
-      condition: "very_good",
-      tag: "Single stitch tag",
-      estimatedValue: { min: 120, max: 220, currency: "USD" },
-      confidence: parsed.data.photos.length > 1 ? "medium" : "low",
-      generatedAt: new Date().toISOString(),
-    });
+    const suggestion = await generateAiListingSuggestions(parsed.data, services);
+
+    return reply.status(200).send(suggestion);
   });
 
   app.post("/v1/items/:itemId/verification-video", async (request, reply) => {
@@ -226,6 +231,127 @@ export async function registerItemRoutes(
 
     return reply.status(200).send({ item });
   });
+}
+
+async function generateAiListingSuggestions(
+  input: {
+    aiImage?:
+      | {
+          data: string;
+          mediaType: "image/jpeg" | "image/png" | "image/webp";
+        }
+      | undefined;
+    category?: AiListingSuggestions["category"];
+    photos: Array<{ uri: string }>;
+    size?: AiListingSuggestions["size"];
+    title: string;
+  },
+  services: AppServices,
+): Promise<AiListingSuggestions> {
+  const generatedAt = new Date().toISOString();
+  const usableImage = getVisionImageUrl(input);
+
+  if (!services.env.OPENAI_API_KEY || !usableImage) {
+    return {
+      title: input.title || "Vintage graphic tee",
+      category: input.category || "band",
+      size: input.size || "xl",
+      era: "90s",
+      condition: "very_good",
+      tag: "Single stitch tag",
+      confidence: usableImage ? "low" : "low",
+      generatedAt,
+    };
+  }
+
+  try {
+    const response = await fetch("https://api.openai.com/v1/responses", {
+      body: JSON.stringify({
+        input: [
+          {
+            content: [
+              {
+                text: "Extract vintage tee listing fields from this image. Return strict JSON only with optional title, category, size, era, condition, tag, and confidence. Do not estimate price or value.",
+                type: "input_text",
+              },
+              { image_url: usableImage, type: "input_image" },
+            ],
+            role: "user",
+          },
+        ],
+        model: "gpt-4.1-mini",
+      }),
+      headers: {
+        Authorization: `Bearer ${services.env.OPENAI_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      method: "POST",
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenAI suggestion failed with ${response.status}`);
+    }
+
+    const body = (await response.json()) as {
+      output_text?: string;
+      output?: Array<{ content?: Array<{ text?: string }> }>;
+    };
+    const text = body.output_text ?? body.output?.flatMap((item) => item.content ?? [])[0]?.text;
+    const parsed = parseAiSuggestionJson(text);
+
+    return {
+      title: parsed.title || input.title || "Vintage graphic tee",
+      category: parsed.category || input.category || "band",
+      size: parsed.size || input.size || "xl",
+      era: parsed.era || "90s",
+      condition: parsed.condition || "very_good",
+      tag: parsed.tag || "Unknown tag",
+      confidence: parsed.confidence || "medium",
+      generatedAt,
+    };
+  } catch (error) {
+    if (services.env.SENTRY_DSN) {
+      Sentry.captureException(error, { tags: { feature: "ai_listing_suggestions" } });
+    }
+    return {
+      title: input.title || "Vintage graphic tee",
+      category: input.category || "band",
+      size: input.size || "xl",
+      era: "90s",
+      condition: "very_good",
+      tag: "Single stitch tag",
+      confidence: "low",
+      generatedAt,
+    };
+  }
+}
+
+function getVisionImageUrl(input: {
+  aiImage?: { data: string; mediaType: "image/jpeg" | "image/png" | "image/webp" } | undefined;
+  photos: Array<{ uri: string }>;
+}): string | undefined {
+  if (input.aiImage) {
+    return `data:${input.aiImage.mediaType};base64,${input.aiImage.data}`;
+  }
+
+  return input.photos.find((photo) => isVisionReadableImageUri(photo.uri))?.uri;
+}
+
+function isVisionReadableImageUri(uri: string): boolean {
+  return uri.startsWith("https://") || uri.startsWith("data:image/");
+}
+
+function parseAiSuggestionJson(text: string | undefined): Partial<AiListingSuggestions> {
+  if (!text) {
+    return {};
+  }
+
+  try {
+    const parsed = JSON.parse(text) as Partial<AiListingSuggestions>;
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
 }
 
 async function requireCurrentUser(request: FastifyRequest, services: AppServices) {

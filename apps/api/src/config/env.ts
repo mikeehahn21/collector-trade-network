@@ -15,6 +15,8 @@ const envSchema = z.object({
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
   OPENAI_API_KEY: z.string().optional(),
   AI_REVIEW_WEBHOOK_SECRET: z.string().optional(),
+  ONESIGNAL_APP_ID: z.string().optional(),
+  ONESIGNAL_REST_API_KEY: z.string().optional(),
   SENTRY_DSN: z.string().optional(),
 });
 

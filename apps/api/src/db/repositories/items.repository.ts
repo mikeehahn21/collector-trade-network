@@ -163,19 +163,56 @@ export async function findVisiblePublicItem(
     "select * from item_photos where item_id = $1 order by sort_order asc",
     [itemId],
   );
-  const item = mapItem(row, photos);
+  return mapPublicItem(row, photos);
+}
 
-  return {
-    ...item,
-    owner: {
-      id: row.owner_id,
-      displayName: row.owner_display_name,
-      locationRegion: row.owner_location_region ?? undefined,
-      roles: row.owner_roles,
-      trustScore: row.owner_trust_score ?? 50,
-      isElite: row.owner_is_elite ?? false,
-    },
-  };
+export async function listVisiblePublicItems(
+  db: Queryable,
+  viewer: { id: string; roles: PublicTradeableItem["owner"]["roles"] },
+  limit = 24,
+): Promise<PublicTradeableItem[]> {
+  const safeLimit = Math.min(Math.max(Math.floor(limit), 1), 24);
+  const rows = await queryMany<PublicItemRow>(
+    db,
+    `
+      select
+        items.*,
+        users.display_name as owner_display_name,
+        users.location_region as owner_location_region,
+        users.roles as owner_roles,
+        users.trust_score as owner_trust_score,
+        users.is_elite as owner_is_elite
+      from items
+      join users on users.id = items.owner_id
+      where items.owner_id <> $1
+        and items.status = 'tradeable'
+        and items.verification_status = 'verified'
+        and items.archived_at is null
+        and users.access_status = 'active'
+      order by items.published_at desc nulls last, items.updated_at desc
+      limit $2
+    `,
+    [viewer.id, safeLimit],
+  );
+
+  const visibleRows = rows.filter((row) => canViewItem(row, viewer));
+
+  if (visibleRows.length === 0) {
+    return [];
+  }
+
+  const photos = await queryMany<ItemPhotoRow>(
+    db,
+    "select * from item_photos where item_id = any($1::uuid[]) order by sort_order asc",
+    [visibleRows.map((row) => row.id)],
+  );
+
+  return visibleRows.map((row) =>
+    mapPublicItem(
+      row,
+      photos.filter((photo) => photo.item_id === row.id),
+    ),
+  );
 }
 
 export async function createItemForOwner(
@@ -417,6 +454,35 @@ function mapItem(row: ItemRow, photos: ItemPhotoRow[]): TradeableItem {
     updatedAt: row.updated_at.toISOString(),
     publishedAt: row.published_at?.toISOString(),
     archivedAt: row.archived_at?.toISOString(),
+  };
+}
+
+function mapPublicItem(row: PublicItemRow, photos: ItemPhotoRow[]): PublicTradeableItem {
+  const item = mapItem(row, photos);
+
+  return {
+    id: item.id,
+    photos: item.photos,
+    title: item.title,
+    category: item.category,
+    size: item.size,
+    era: item.era,
+    tag: item.tag,
+    condition: item.condition,
+    flaws: item.flaws,
+    status: item.status,
+    verificationStatus: item.verificationStatus,
+    createdAt: item.createdAt,
+    updatedAt: item.updatedAt,
+    publishedAt: item.publishedAt,
+    owner: {
+      id: row.owner_id,
+      displayName: row.owner_display_name,
+      locationRegion: row.owner_location_region ?? undefined,
+      roles: row.owner_roles,
+      trustScore: row.owner_trust_score ?? 50,
+      isElite: row.owner_is_elite ?? false,
+    },
   };
 }
 

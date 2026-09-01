@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifyRequest } from "fastify";
 
 import {
   apiRoutes,
+  completeTradeContract,
   counterTradeContract,
   createTradeContract,
   disputeTradeContract,
@@ -55,7 +56,7 @@ export async function registerTradeRoutes(
       });
     }
 
-    await notifyTradeProposed(request.log, trade);
+    await notifyTradeProposed(request.log, services.env, trade);
 
     return reply.status(201).send({ trade });
   });
@@ -112,7 +113,7 @@ export async function registerTradeRoutes(
       });
     }
 
-    await notifyTradeStatusChanged(request.log, trade, parsed.data.status);
+    await notifyTradeStatusChanged(request.log, services.env, trade, parsed.data.status);
 
     return reply.status(200).send({ trade });
   });
@@ -144,7 +145,7 @@ export async function registerTradeRoutes(
       });
     }
 
-    await notifyTradeStatusChanged(request.log, trade, "countered");
+    await notifyTradeStatusChanged(request.log, services.env, trade, "countered");
 
     return reply.status(200).send({ trade });
   });
@@ -210,6 +211,15 @@ export async function registerTradeRoutes(
   app.patch("/v1/trades/:tradeId/complete", async (request, reply) => {
     const user = await requireCurrentUser(request, services);
     const tradeId = (request.params as { tradeId: string }).tradeId;
+    const parsed = completeTradeContract.body.safeParse(request.body ?? {});
+
+    if (!parsed.success || !parsed.data.satisfied) {
+      return reply.status(400).send({
+        code: "INVALID_COMPLETION_CONFIRMATION",
+        message: "Confirm that you received the item and are satisfied before completing.",
+      });
+    }
+
     const trade = await completeTradeForUser(services.db, tradeId, user.id);
 
     if (!trade) {
@@ -219,7 +229,15 @@ export async function registerTradeRoutes(
       });
     }
 
-    await createTradeSystemMessage(services.db, trade.id, user.id, "Trade completed.");
+    await createTradeSystemMessage(
+      services.db,
+      trade.id,
+      user.id,
+      trade.status === "completed"
+        ? "Both collectors confirmed completion. Trade completed."
+        : `${user.displayName} confirmed completion. Waiting on the other collector.`,
+    );
+    await notifyTradeStatusChanged(request.log, services.env, trade, trade.status);
 
     return reply.status(200).send({ trade });
   });

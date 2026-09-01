@@ -84,6 +84,90 @@ export async function findUserByClerkId(
   return row ? mapUser(row) : undefined;
 }
 
+export async function deleteUserAccountData(db: Queryable, userId: string): Promise<boolean> {
+  const deletedDisplayName = "Deleted User";
+  const deletedMarker = `deleted_${userId}`;
+
+  await db.query("delete from user_blocks where blocker_id = $1 or blocked_user_id = $1", [userId]);
+  await db.query("delete from wishlist_items where owner_id = $1", [userId]);
+  await db.query(
+    "delete from item_photos where item_id in (select id from items where owner_id = $1)",
+    [userId],
+  );
+  await db.query(
+    `
+      update items
+      set title = 'Deleted user item',
+          category = null,
+          size = null,
+          measurements = '{}'::jsonb,
+          era = null,
+          tag = null,
+          condition = null,
+          flaws = '[]'::jsonb,
+          estimated_value = '{"currency":"USD"}'::jsonb,
+          status = 'archived',
+          trade_preference = null,
+          trade_notes = null,
+          visibility = 'private',
+          communication_preference = 'approved_traders',
+          allows_photo_requests = false,
+          allows_measurement_requests = false,
+          verification_video_url = null,
+          verification_status = 'pending',
+          verification_failed_reason = null,
+          verified_at = null,
+          ai_metadata = null,
+          ai_suggestions = null,
+          archived_at = coalesce(archived_at, now()),
+          updated_at = now()
+      where owner_id = $1
+    `,
+    [userId],
+  );
+  await db.query(
+    `
+      update messages
+      set content = '[message removed by deleted user]',
+          type = 'system_event'
+      where sender_id = $1
+    `,
+    [userId],
+  );
+  await db.query(
+    `
+      update trades
+      set proposer_notes = case when proposer_id = $1 then null else proposer_notes end,
+          counterparty_notes = case when counterparty_id = $1 then null else counterparty_notes end,
+          updated_at = now()
+      where proposer_id = $1 or counterparty_id = $1
+    `,
+    [userId],
+  );
+
+  const result = await db.query(
+    `
+      update users
+      set clerk_user_id = $2,
+          email = $3,
+          display_name = $4,
+          location_region = null,
+          bio = null,
+          social_handle = null,
+          access_status = 'suspended',
+          roles = array['guest'],
+          trust_score = 0,
+          is_elite = false,
+          reputation_updated_at = now(),
+          updated_at = now()
+      where id = $1
+    `,
+    [userId, deletedMarker, `${deletedMarker}@konnesor.local`, deletedDisplayName],
+  );
+
+  return result.rowCount === 1;
+}
+
 export function mapUser(row: UserRow): UserProfile {
   return {
     id: row.id,
