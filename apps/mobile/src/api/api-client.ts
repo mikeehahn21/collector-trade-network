@@ -3,13 +3,18 @@ import type {
   ConversationMessagesResponse,
   ConversationResponse,
   ConversationsResponse,
+  BlockedUsersResponse,
+  BlockUserResponse,
+  DeleteAccountResponse,
   ItemResponse,
   ItemVerificationStatusResponse,
   ItemVerificationVideoRequest,
   ItemsResponse,
   MeResponse,
   PublicItemResponse,
+  PublicItemsResponse,
   RecommendationFeedbackResponse,
+  ReportUserResponse,
   RecommendationResponse,
   RecommendationsResponse,
   ReputationMetricsResponse,
@@ -23,9 +28,13 @@ import type {
 } from "@ctn/api-contracts";
 import { apiRoutes } from "@ctn/api-contracts";
 import type {
+  AiListingSuggestions,
+  AiListingSuggestionInput,
   CreateTradeInput,
   CounterTradeInput,
   DisputeTradeInput,
+  BlockUserInput,
+  ReportUserInput,
   SendMessageInput,
   ShipTradeInput,
   RecommendationFeedbackRating,
@@ -51,8 +60,10 @@ export type ApiClient = {
   upsertMe: (
     profile: Pick<UserProfile, "bio" | "displayName" | "email" | "locationRegion" | "socialHandle">,
   ) => Promise<MeResponse>;
+  deleteMe: () => Promise<DeleteAccountResponse>;
   listItems: () => Promise<ItemsResponse>;
   createItem: (item: Partial<TradeableItem>) => Promise<ItemResponse>;
+  getItemAiSuggestions: (item: AiListingSuggestionInput) => Promise<AiListingSuggestions>;
   publishItem: (item: Partial<TradeableItem>) => Promise<ItemResponse>;
   updateItem: (itemId: string, item: Partial<TradeableItem>) => Promise<ItemResponse>;
   deleteItem: (itemId: string) => Promise<void>;
@@ -62,6 +73,7 @@ export type ApiClient = {
   ) => Promise<ItemVerificationStatusResponse>;
   getItemVerificationStatus: (itemId: string) => Promise<ItemVerificationStatusResponse>;
   getPublicItem: (itemId: string) => Promise<PublicItemResponse>;
+  listPublicItems: () => Promise<PublicItemsResponse>;
   listWishlistItems: () => Promise<WishlistItemsResponse>;
   createWishlistItem: (item: Partial<WishlistItem>) => Promise<WishlistItemResponse>;
   publishWishlistItem: (item: Partial<WishlistItem>) => Promise<WishlistItemResponse>;
@@ -104,6 +116,10 @@ export type ApiClient = {
   ) => Promise<ConversationMessageResponse>;
   markMessageRead: (messageId: string) => Promise<void>;
   markConversationTyping: (conversationId: string) => Promise<void>;
+  reportUser: (input: ReportUserInput) => Promise<ReportUserResponse>;
+  blockUser: (input: BlockUserInput) => Promise<BlockUserResponse>;
+  listBlockedUsers: () => Promise<BlockedUsersResponse>;
+  unblockUser: (blockedUserId: string) => Promise<void>;
   getReputationMetrics: () => Promise<ReputationMetricsResponse>;
   recalculateReputation: () => Promise<ReputationRecalculateResponse>;
   getWaitlistStatus: (email: string) => Promise<WaitlistStatusResponse>;
@@ -141,9 +157,15 @@ export function createApiClient(getAuthHeaders: AuthHeaderProvider): ApiClient {
     getMe: () => request<MeResponse>(apiRoutes.me),
     upsertMe: (profile) =>
       request<MeResponse>(apiRoutes.me, { method: "PUT", body: JSON.stringify(profile) }),
+    deleteMe: () => request<DeleteAccountResponse>(apiRoutes.deleteMe, { method: "DELETE" }),
     listItems: () => request<ItemsResponse>(apiRoutes.items),
     createItem: (item) =>
       request<ItemResponse>(apiRoutes.items, { method: "POST", body: JSON.stringify(item) }),
+    getItemAiSuggestions: (item) =>
+      request<AiListingSuggestions>(apiRoutes.itemAiSuggestions, {
+        method: "POST",
+        body: JSON.stringify(item),
+      }),
     publishItem: (item) =>
       request<ItemResponse>(`${apiRoutes.items}/publish`, {
         method: "POST",
@@ -160,6 +182,7 @@ export function createApiClient(getAuthHeaders: AuthHeaderProvider): ApiClient {
     getItemVerificationStatus: (itemId) =>
       request<ItemVerificationStatusResponse>(`/v1/items/${itemId}/verification-status`),
     getPublicItem: (itemId) => request<PublicItemResponse>(`/v1/public/items/${itemId}`),
+    listPublicItems: () => request<PublicItemsResponse>(apiRoutes.publicItems),
     listWishlistItems: () => request<WishlistItemsResponse>(apiRoutes.wishlistItems),
     createWishlistItem: (item) =>
       request<WishlistItemResponse>(apiRoutes.wishlistItems, {
@@ -217,7 +240,7 @@ export function createApiClient(getAuthHeaders: AuthHeaderProvider): ApiClient {
     completeTrade: (tradeId) =>
       request<TradeResponse>(`/v1/trades/${tradeId}/complete`, {
         method: "PATCH",
-        body: JSON.stringify({}),
+        body: JSON.stringify({ satisfied: true }),
       }),
     disputeTrade: (tradeId, input) =>
       request<TradeResponse>(`/v1/trades/${tradeId}/dispute`, {
@@ -251,6 +274,19 @@ export function createApiClient(getAuthHeaders: AuthHeaderProvider): ApiClient {
         method: "POST",
         body: JSON.stringify({ conversationId }),
       }),
+    reportUser: (input) =>
+      request<ReportUserResponse>(apiRoutes.reports, {
+        method: "POST",
+        body: JSON.stringify(input),
+      }),
+    blockUser: (input) =>
+      request<BlockUserResponse>(apiRoutes.blockedUsers, {
+        method: "POST",
+        body: JSON.stringify(input),
+      }),
+    listBlockedUsers: () => request<BlockedUsersResponse>(apiRoutes.blockedUsers),
+    unblockUser: (blockedUserId) =>
+      request<void>(`/v1/blocked-users/${blockedUserId}`, { method: "DELETE" }),
     getReputationMetrics: () => request<ReputationMetricsResponse>(apiRoutes.reputationMetrics),
     recalculateReputation: () =>
       request<ReputationRecalculateResponse>(apiRoutes.reputationRecalculate, {
