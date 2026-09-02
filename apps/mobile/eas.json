@@ -47,6 +47,7 @@
     },
     "testflight": {
       "distribution": "store",
+      "environment": "production",
       "autoIncrement": true,
       "node": "22.13.0",
       "pnpm": "11.13.1",
