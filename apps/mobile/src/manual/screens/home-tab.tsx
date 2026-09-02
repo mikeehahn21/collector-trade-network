@@ -133,6 +133,145 @@ import {
 import { CompFinderScreen } from "./comp-finder-screen";
 import { toDisplayConversation } from "./messages-tab";
 
+const demoHomeFeedItems: PublicTradeableItem[] = [
+  {
+    category: "movie",
+    condition: "very_good",
+    createdAt: "2026-08-01T12:00:00.000Z",
+    era: "1990s",
+    flaws: ["Light cracking on print"],
+    id: "demo_home_halloween_tee",
+    owner: {
+      completionRate: 96,
+      displayName: "Avery R.",
+      id: "demo_collector_avery",
+      isElite: true,
+      locationRegion: "Chicago, IL",
+      roles: ["verified_collector"],
+      tradeCount: 42,
+      trustScore: 94,
+    },
+    photos: [
+      {
+        createdAt: "2026-08-01T12:00:00.000Z",
+        id: "demo_home_halloween_tee_front",
+        kind: "front",
+        sortOrder: 0,
+        uri: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=85",
+      },
+    ],
+    publishedAt: "2026-08-01T12:00:00.000Z",
+    size: "xl",
+    status: "tradeable",
+    tag: "Screen Stars",
+    title: "90s horror movie tee",
+    updatedAt: "2026-08-01T12:00:00.000Z",
+    verificationStatus: "verified",
+  },
+  {
+    category: "band",
+    condition: "excellent",
+    createdAt: "2026-08-02T12:00:00.000Z",
+    era: "1990s",
+    flaws: [],
+    id: "demo_home_band_tee",
+    owner: {
+      completionRate: 91,
+      displayName: "Mike T.",
+      id: "demo_collector_mike",
+      isElite: false,
+      locationRegion: "Cleveland, OH",
+      roles: ["verified_collector"],
+      tradeCount: 27,
+      trustScore: 88,
+    },
+    photos: [
+      {
+        createdAt: "2026-08-02T12:00:00.000Z",
+        id: "demo_home_band_tee_front",
+        kind: "front",
+        sortOrder: 0,
+        uri: "https://images.unsplash.com/photo-1503341504253-dff4815485f1?auto=format&fit=crop&w=900&q=85",
+      },
+    ],
+    publishedAt: "2026-08-02T12:00:00.000Z",
+    size: "l",
+    status: "tradeable",
+    tag: "Fruit of the Loom",
+    title: "Faded tour graphic tee",
+    updatedAt: "2026-08-02T12:00:00.000Z",
+    verificationStatus: "verified",
+  },
+  {
+    category: "sports",
+    condition: "good",
+    createdAt: "2026-08-03T12:00:00.000Z",
+    era: "2000s",
+    flaws: ["Small pinhole near hem"],
+    id: "demo_home_sports_tee",
+    owner: {
+      completionRate: 100,
+      displayName: "Jordan K.",
+      id: "demo_collector_jordan",
+      isElite: true,
+      locationRegion: "Detroit, MI",
+      roles: ["verified_collector", "verified_seller"],
+      tradeCount: 61,
+      trustScore: 97,
+    },
+    photos: [
+      {
+        createdAt: "2026-08-03T12:00:00.000Z",
+        id: "demo_home_sports_tee_front",
+        kind: "front",
+        sortOrder: 0,
+        uri: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=85",
+      },
+    ],
+    publishedAt: "2026-08-03T12:00:00.000Z",
+    size: "xl",
+    status: "tradeable",
+    tag: "Hanes Beefy-T",
+    title: "Vintage sports graphic tee",
+    updatedAt: "2026-08-03T12:00:00.000Z",
+    verificationStatus: "verified",
+  },
+  {
+    category: "rap",
+    condition: "very_good",
+    createdAt: "2026-08-04T12:00:00.000Z",
+    era: "2000s",
+    flaws: ["Soft fade"],
+    id: "demo_home_rap_tee",
+    owner: {
+      completionRate: 89,
+      displayName: "Chris B.",
+      id: "demo_collector_chris",
+      isElite: false,
+      locationRegion: "Atlanta, GA",
+      roles: ["active_trader"],
+      tradeCount: 18,
+      trustScore: 84,
+    },
+    photos: [
+      {
+        createdAt: "2026-08-04T12:00:00.000Z",
+        id: "demo_home_rap_tee_front",
+        kind: "front",
+        sortOrder: 0,
+        uri: "https://images.unsplash.com/photo-1554568218-0f1715e72254?auto=format&fit=crop&w=900&q=85",
+      },
+    ],
+    publishedAt: "2026-08-04T12:00:00.000Z",
+    size: "xxl",
+    status: "tradeable",
+    tag: "Gildan Ultra Cotton",
+    title: "Rap promo style tee",
+    updatedAt: "2026-08-04T12:00:00.000Z",
+    verificationStatus: "pending",
+  },
+];
+
 export function HomeTab({
   blockedUsers,
   localThreads,
@@ -350,6 +489,14 @@ export function HomeTab({
   }
 
   async function createTradeFromFeed(entry: HomeFeedEntry) {
+    if (entry.kind === "preview") {
+      Alert.alert(
+        "Preview trade",
+        "This is sample marketplace content so you can preview the Home feed before more real collectors join.",
+      );
+      return;
+    }
+
     const counterpartyItemId = entry.counterpartyItem?.id;
     const proposerItemId = entry.recommendation?.yourMatchingItems[0]?.id ?? tradeableItems[0]?.id;
 
@@ -526,7 +673,7 @@ export type HomeFeedEntry = {
   counterpartyItem?: PublicTradeableItem | undefined;
   counterpartyItemSummary?: TradeRecommendation["theirMatchingItems"][number] | undefined;
   id: string;
-  kind: "recommendation" | "browse";
+  kind: "recommendation" | "browse" | "preview";
   recommendation?: TradeRecommendation | undefined;
 };
 
@@ -568,7 +715,16 @@ export function buildHomeFeedEntries({
             kind: "browse" as const,
           }));
 
-  return [...recommendationEntries, ...fallbackEntries];
+  const liveEntries = [...recommendationEntries, ...fallbackEntries];
+  if (liveEntries.length > 0) {
+    return liveEntries;
+  }
+
+  return demoHomeFeedItems.map((item) => ({
+    counterpartyItem: item,
+    id: `preview_${item.id}`,
+    kind: "preview" as const,
+  }));
 }
 
 export function HomeFeedCard({
@@ -601,7 +757,9 @@ export function HomeFeedCard({
       ? "MUTUAL"
       : recommendation
         ? "MATCH"
-        : "YOU MIGHT LIKE THIS";
+        : entry.kind === "preview"
+          ? "BETA PREVIEW"
+          : "YOU MIGHT LIKE THIS";
   const category = item?.category ?? itemSummary?.category;
   const size = item?.size ?? itemSummary?.size;
   const photo = item?.photos[0];
@@ -720,6 +878,10 @@ export function HomeFeedCard({
               {recommendation.reasons[0]?.label ?? "Strong collector fit"} / score{" "}
               {recommendation.score}
             </Text>
+          ) : entry.kind === "preview" ? (
+            <Text style={{ color: beta.colors.inkMuted, fontSize: 12, lineHeight: 17 }}>
+              Sample feed card for beta preview. Real matches appear here as collectors add items.
+            </Text>
           ) : null}
 
           <View
@@ -732,7 +894,11 @@ export function HomeFeedCard({
             }}
           >
             <Text style={{ color: beta.colors.background, fontSize: 14, fontWeight: "900" }}>
-              {isCreating ? "Sending..." : "Propose trade"}
+              {isCreating
+                ? "Sending..."
+                : entry.kind === "preview"
+                  ? "Preview trade"
+                  : "Propose trade"}
             </Text>
           </View>
         </View>
