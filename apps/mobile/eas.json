@@ -58,6 +58,7 @@
         "APP_ENV": "production",
         "EXPO_PUBLIC_PRIVACY_POLICY_URL": "https://konnesor.app/privacy",
         "EXPO_PUBLIC_TERMS_OF_SERVICE_URL": "https://konnesor.app/terms",
+        "EXPO_NO_CAPABILITY_SYNC": "1",
         "SENTRY_DISABLE_AUTO_UPLOAD": "true",
         "SENTRY_ALLOW_FAILURE": "true"
       }
