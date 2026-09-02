@@ -68,23 +68,23 @@ export default function BetaApp() {
 
   return (
     <SafeAreaProvider>
-      <MobileAuthProvider>
-        <ThemeProvider>
-          <OnboardingStateProvider>
-            <CollectionStateProvider>
-              <WishlistStateProvider>
-                <UserProfileProvider>
-                  <DataSyncBootstrap />
-                  <StatusBar barStyle="light-content" />
-                  <AppErrorBoundary>
+      <AppErrorBoundary>
+        <MobileAuthProvider>
+          <ThemeProvider>
+            <OnboardingStateProvider>
+              <CollectionStateProvider>
+                <WishlistStateProvider>
+                  <UserProfileProvider>
+                    <DataSyncBootstrap />
+                    <StatusBar barStyle="light-content" />
                     <BetaShell />
-                  </AppErrorBoundary>
-                </UserProfileProvider>
-              </WishlistStateProvider>
-            </CollectionStateProvider>
-          </OnboardingStateProvider>
-        </ThemeProvider>
-      </MobileAuthProvider>
+                  </UserProfileProvider>
+                </WishlistStateProvider>
+              </CollectionStateProvider>
+            </OnboardingStateProvider>
+          </ThemeProvider>
+        </MobileAuthProvider>
+      </AppErrorBoundary>
     </SafeAreaProvider>
   );
 }
