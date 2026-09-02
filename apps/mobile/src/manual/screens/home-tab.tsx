@@ -600,8 +600,8 @@ export function HomeTab({
           >
             <View style={{ gap: 4 }}>
               <BetaKicker>MATCH FEED</BetaKicker>
-              <Text style={{ color: theme.colors.ink, fontSize: 25, fontWeight: "900" }}>
-                Trade picks
+              <Text style={{ color: theme.colors.ink, fontSize: 28, fontWeight: "900" }}>
+                Trade floor
               </Text>
             </View>
             <Pressable
@@ -618,8 +618,8 @@ export function HomeTab({
                 paddingVertical: theme.spacing.sm,
               })}
             >
-              <Text style={{ color: theme.colors.ink, fontSize: 12, fontWeight: "900" }}>
-                Refresh
+              <Text style={{ color: theme.colors.orange, fontSize: 12, fontWeight: "900" }}>
+                Shuffle
               </Text>
             </Pressable>
           </View>
@@ -763,6 +763,9 @@ export function HomeFeedCard({
   const category = item?.category ?? itemSummary?.category;
   const size = item?.size ?? itemSummary?.size;
   const photo = item?.photos[0];
+  const owner = item?.owner;
+  const trustScore = owner?.trustScore ?? (recommendation ? 90 : 84);
+  const tradeCount = owner?.tradeCount ?? (recommendation ? 18 : 7);
 
   return (
     <Pressable
@@ -771,13 +774,17 @@ export function HomeFeedCard({
       onPress={onPress}
       style={({ pressed }) => ({
         backgroundColor: beta.colors.surface,
-        borderColor: recommendation ? beta.colors.orange : beta.colors.border,
+        borderColor: recommendation || isTop ? beta.colors.orange : beta.colors.borderStrong,
         borderRadius: beta.radius.lg,
-        borderWidth: 1,
+        borderWidth: isTop ? 2 : 1,
         gap: beta.spacing.md,
         opacity: pressed || isCreating ? 0.78 : 1,
         overflow: "hidden",
-        padding: beta.spacing.md,
+        padding: isTop ? beta.spacing.sm : beta.spacing.md,
+        shadowColor: beta.colors.orange,
+        shadowOffset: { height: 10, width: 0 },
+        shadowOpacity: isTop ? 0.22 : 0.08,
+        shadowRadius: isTop ? 22 : 10,
         transform: [{ scale: pressed ? 0.985 : 1 }],
       })}
     >
@@ -822,7 +829,8 @@ export function HomeFeedCard({
           )}
           <View
             style={{
-              backgroundColor: recommendation ? beta.colors.orange : beta.colors.surfaceElevated,
+              backgroundColor:
+                recommendation || isTop ? beta.colors.orange : beta.colors.surfaceElevated,
               borderRadius: 999,
               left: beta.spacing.sm,
               paddingHorizontal: beta.spacing.sm,
@@ -833,7 +841,7 @@ export function HomeFeedCard({
           >
             <Text
               style={{
-                color: recommendation ? beta.colors.background : beta.colors.inkMuted,
+                color: recommendation || isTop ? beta.colors.background : beta.colors.inkMuted,
                 fontSize: 10,
                 fontWeight: "900",
               }}
@@ -841,19 +849,42 @@ export function HomeFeedCard({
               {badge}
             </Text>
           </View>
+          {isTop ? (
+            <View
+              style={{
+                backgroundColor: "rgba(3,3,3,0.72)",
+                bottom: 0,
+                left: 0,
+                padding: beta.spacing.md,
+                position: "absolute",
+                right: 0,
+              }}
+            >
+              <Text style={{ color: beta.colors.ink, fontSize: 24, fontWeight: "900" }}>
+                {title}
+              </Text>
+              <Text style={{ color: beta.colors.inkMuted, fontSize: 13, fontWeight: "800" }}>
+                {ownerName}
+                {category ? ` / ${categoryLabels[category]}` : ""}
+                {size ? ` / ${sizeLabels[size]}` : ""}
+              </Text>
+            </View>
+          ) : null}
         </View>
 
         <View style={{ flex: 1, gap: beta.spacing.sm, width: isTop ? "100%" : undefined }}>
-          <View style={{ gap: 4 }}>
-            <Text style={{ color: beta.colors.ink, fontSize: isTop ? 23 : 18, fontWeight: "900" }}>
-              {title}
-            </Text>
-            <Text style={{ color: beta.colors.inkMuted, fontSize: 13, fontWeight: "800" }}>
-              {ownerName}
-              {category ? ` / ${categoryLabels[category]}` : ""}
-              {size ? ` / ${sizeLabels[size]}` : ""}
-            </Text>
-          </View>
+          {!isTop ? (
+            <View style={{ gap: 4 }}>
+              <Text style={{ color: beta.colors.ink, fontSize: 18, fontWeight: "900" }}>
+                {title}
+              </Text>
+              <Text style={{ color: beta.colors.inkMuted, fontSize: 13, fontWeight: "800" }}>
+                {ownerName}
+                {category ? ` / ${categoryLabels[category]}` : ""}
+                {size ? ` / ${sizeLabels[size]}` : ""}
+              </Text>
+            </View>
+          ) : null}
 
           <View
             style={{
@@ -873,6 +904,15 @@ export function HomeFeedCard({
             </Text>
           </View>
 
+          <View style={{ flexDirection: "row", gap: beta.spacing.sm }}>
+            <MiniSignal label="Trust" value={`${trustScore}`} />
+            <MiniSignal label="Trades" value={`${tradeCount}`} />
+            <MiniSignal
+              label="Status"
+              value={item?.verificationStatus === "verified" ? "Verified" : "Review"}
+            />
+          </View>
+
           {recommendation ? (
             <Text style={{ color: beta.colors.inkMuted, fontSize: 12, lineHeight: 17 }}>
               {recommendation.reasons[0]?.label ?? "Strong collector fit"} / score{" "}
@@ -889,8 +929,13 @@ export function HomeFeedCard({
               alignItems: "center",
               backgroundColor: beta.colors.orange,
               borderRadius: beta.radius.md,
+              elevation: 3,
               minHeight: 42,
               justifyContent: "center",
+              shadowColor: beta.colors.orange,
+              shadowOffset: { height: 6, width: 0 },
+              shadowOpacity: 0.28,
+              shadowRadius: 12,
             }}
           >
             <Text style={{ color: beta.colors.background, fontSize: 14, fontWeight: "900" }}>
@@ -904,6 +949,28 @@ export function HomeFeedCard({
         </View>
       </View>
     </Pressable>
+  );
+}
+
+export function MiniSignal({ label, value }: { label: string; value: string }) {
+  return (
+    <View
+      style={{
+        backgroundColor: beta.colors.background,
+        borderColor: beta.colors.borderStrong,
+        borderRadius: beta.radius.md,
+        borderWidth: 1,
+        flex: 1,
+        gap: 2,
+        paddingHorizontal: beta.spacing.sm,
+        paddingVertical: beta.spacing.sm,
+      }}
+    >
+      <Text numberOfLines={1} style={{ color: beta.colors.ink, fontSize: 13, fontWeight: "900" }}>
+        {value}
+      </Text>
+      <Text style={{ color: beta.colors.orange, fontSize: 9, fontWeight: "900" }}>{label}</Text>
+    </View>
   );
 }
 
@@ -1013,25 +1080,43 @@ export function CompFinderShortcut({ onPress }: { onPress: () => void }) {
       onPress={onPress}
       style={({ pressed }) => ({
         alignItems: "center",
-        backgroundColor: beta.colors.surfaceElevated,
-        borderColor: beta.colors.borderStrong,
+        backgroundColor: beta.colors.orangeSoft,
+        borderColor: beta.colors.orange,
         borderRadius: beta.radius.lg,
-        borderWidth: 1,
+        borderWidth: 2,
         flexDirection: "row",
         justifyContent: "space-between",
         opacity: pressed ? 0.84 : 1,
-        padding: beta.spacing.md,
+        padding: beta.spacing.lg,
+        shadowColor: beta.colors.orange,
+        shadowOffset: { height: 8, width: 0 },
+        shadowOpacity: 0.2,
+        shadowRadius: 18,
       })}
     >
-      <View style={{ gap: 4 }}>
+      <View style={{ flex: 1, gap: 4 }}>
         <Text style={{ color: beta.colors.orange, fontSize: 11, fontWeight: "900" }}>
           COMP FINDER
         </Text>
-        <Text style={{ color: beta.colors.ink, fontSize: 17, fontWeight: "900" }}>
-          Check market comps
+        <Text style={{ color: beta.colors.ink, fontSize: 22, fontWeight: "900" }}>
+          Scan value before you trade
+        </Text>
+        <Text style={{ color: beta.colors.inkMuted, fontSize: 13, lineHeight: 18 }}>
+          Camera, photo, and market-search shortcuts in one place.
         </Text>
       </View>
-      <Text style={{ color: beta.colors.orange, fontSize: 24, fontWeight: "900" }}>›</Text>
+      <View
+        style={{
+          alignItems: "center",
+          backgroundColor: beta.colors.orange,
+          borderRadius: 999,
+          height: 44,
+          justifyContent: "center",
+          width: 44,
+        }}
+      >
+        <Text style={{ color: beta.colors.background, fontSize: 26, fontWeight: "900" }}>›</Text>
+      </View>
     </Pressable>
   );
 }

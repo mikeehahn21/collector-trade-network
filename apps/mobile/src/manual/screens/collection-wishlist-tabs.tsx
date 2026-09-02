@@ -370,7 +370,7 @@ export function InventoryTab({
       >
         <View style={{ gap: theme.spacing.sm }}>
           <BetaTitle size={31}>COLLECTION</BetaTitle>
-          <BetaBody>Your tradeable pieces.</BetaBody>
+          <BetaBody>Build your trade rack with photos, clips, and clean item details.</BetaBody>
         </View>
 
         <BetaStatPanel
@@ -381,16 +381,33 @@ export function InventoryTab({
           ]}
         />
 
-        <BetaButton accessibilityLabel="Add sample item" onPress={addSampleItem}>
-          Add collection item
-        </BetaButton>
-        <BetaButton
-          accessibilityLabel="Bulk add collection photos"
-          onPress={() => void addBulkPhotoDrafts()}
-          variant="secondary"
-        >
-          Bulk add photos
-        </BetaButton>
+        <BetaPanel tone="black">
+          <View style={{ gap: theme.spacing.xs }}>
+            <BetaKicker>ADD ITEMS</BetaKicker>
+            <Text style={{ color: theme.colors.ink, fontSize: 22, fontWeight: "900" }}>
+              Start with the photos.
+            </Text>
+            <Text style={{ color: theme.colors.inkMuted, fontSize: 13, lineHeight: 19 }}>
+              Create one listing or drop in a batch, then tighten the details before publishing.
+            </Text>
+          </View>
+          <View style={{ flexDirection: "row", gap: theme.spacing.sm }}>
+            <View style={{ flex: 1 }}>
+              <BetaButton accessibilityLabel="Add collection item" onPress={addSampleItem}>
+                Add item
+              </BetaButton>
+            </View>
+            <View style={{ flex: 1 }}>
+              <BetaButton
+                accessibilityLabel="Bulk add collection photos"
+                onPress={() => void addBulkPhotoDrafts()}
+                variant="black"
+              >
+                Bulk photos
+              </BetaButton>
+            </View>
+          </View>
+        </BetaPanel>
 
         <BetaPanel>
           <TextInput
@@ -447,9 +464,9 @@ export function InventoryTab({
               />
             ))}
           </View>
-          <BetaBody>
-            Showing {filteredItems.length} of {visibleItems.length} collection records.
-          </BetaBody>
+          <Text style={{ color: theme.colors.inkMuted, fontSize: 12, fontWeight: "800" }}>
+            {filteredItems.length} / {visibleItems.length} shown
+          </Text>
         </BetaPanel>
 
         {visibleItems.length === 0 ? (
