@@ -628,7 +628,20 @@ export function CollectorProfilePanel({
   wishlistSummary: WishlistSummary;
 }) {
   const onboarding = useOnboardingState();
-  const collectorName = profile?.displayName ?? "Collector";
+  const { card, saveCollectorCard } = useUserProfile();
+  const [isEditingCard, setIsEditingCard] = useState(false);
+  const [draftAvatarUri, setDraftAvatarUri] = useState(card.avatarUri ?? "");
+  const [draftDisplayName, setDraftDisplayName] = useState(
+    card.displayName ?? profile?.displayName ?? "Collector",
+  );
+  const [draftTagline, setDraftTagline] = useState(card.tagline ?? profile?.bio ?? "");
+  const [cardStatus, setCardStatus] = useState<string | undefined>();
+  const [isSavingCard, setIsSavingCard] = useState(false);
+  const collectorName = card.displayName ?? profile?.displayName ?? "Collector";
+  const collectorTagline =
+    card.tagline ??
+    profile?.bio ??
+    buildDefaultCollectorTagline(onboarding.state.categories, onboarding.state.wornSizes);
   const email = auth.userEmail ?? "Local beta session";
   const readinessScore = Math.min(
     100,
@@ -645,6 +658,88 @@ export function CollectorProfilePanel({
       : readinessScore >= 65
         ? "Verified Builder"
         : "Rising Collector";
+  const preferredBadges = [
+    ...onboarding.state.categories.slice(0, 3).map((category) => categoryLabels[category]),
+    ...onboarding.state.wornSizes.slice(0, 2).map((size) => sizeLabels[size]),
+  ];
+
+  useEffect(() => {
+    setDraftAvatarUri(card.avatarUri ?? "");
+    setDraftDisplayName(card.displayName ?? profile?.displayName ?? "Collector");
+    setDraftTagline(card.tagline ?? profile?.bio ?? "");
+  }, [card.avatarUri, card.displayName, card.tagline, profile?.bio, profile?.displayName]);
+
+  async function pickCollectorAvatar(source: ImageSource) {
+    const permission =
+      source === "camera"
+        ? await ImagePicker.requestCameraPermissionsAsync()
+        : await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permission.granted) {
+      Alert.alert(
+        "Photo permission needed",
+        source === "camera"
+          ? "Allow camera access so Konnesor can take your collector card photo."
+          : "Allow photo access so Konnesor can use your collector card photo.",
+      );
+      return;
+    }
+
+    const result =
+      source === "camera"
+        ? await ImagePicker.launchCameraAsync({
+            allowsEditing: true,
+            aspect: [1, 1],
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            quality: 0.82,
+          })
+        : await ImagePicker.launchImageLibraryAsync({
+            allowsEditing: true,
+            aspect: [1, 1],
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            quality: 0.82,
+          });
+
+    if (result.canceled || !result.assets[0]?.uri) {
+      return;
+    }
+
+    setDraftAvatarUri(result.assets[0].uri);
+    setCardStatus("Photo selected. Save the card when it looks right.");
+  }
+
+  async function saveCard() {
+    const nextName = draftDisplayName.trim();
+    const nextTagline = draftTagline.trim();
+
+    if (nextName.length < 2) {
+      Alert.alert("Name needed", "Add at least 2 characters for your collector name.");
+      return;
+    }
+
+    if (nextName.length > 40) {
+      Alert.alert("Name too long", "Keep your collector name under 40 characters.");
+      return;
+    }
+
+    if (nextTagline.length > 160) {
+      Alert.alert("Tagline too long", "Keep your collector tagline under 160 characters.");
+      return;
+    }
+
+    setIsSavingCard(true);
+    try {
+      await saveCollectorCard({
+        avatarUri: draftAvatarUri,
+        displayName: nextName,
+        tagline: nextTagline,
+      });
+      setIsEditingCard(false);
+      setCardStatus("Collector card updated.");
+    } finally {
+      setIsSavingCard(false);
+    }
+  }
 
   return (
     <BetaScreen>
@@ -687,12 +782,21 @@ export function CollectorProfilePanel({
                   width: 86,
                 }}
               >
-                <Image
-                  accessibilityLabel="Konnesor symbol"
-                  resizeMode="contain"
-                  source={konnesorSymbol}
-                  style={{ height: 70, width: 70 }}
-                />
+                {card.avatarUri ? (
+                  <Image
+                    accessibilityLabel="Collector card photo"
+                    resizeMode="cover"
+                    source={{ uri: card.avatarUri }}
+                    style={{ height: "100%", width: "100%" }}
+                  />
+                ) : (
+                  <Image
+                    accessibilityLabel="Konnesor symbol"
+                    resizeMode="contain"
+                    source={konnesorSymbol}
+                    style={{ height: 70, width: 70 }}
+                  />
+                )}
               </View>
               <View style={{ flex: 1, gap: 4 }}>
                 <BetaKicker>COLLECTOR CARD</BetaKicker>
@@ -701,6 +805,9 @@ export function CollectorProfilePanel({
                 </Text>
                 <Text style={{ color: beta.colors.orange, fontSize: 14, fontWeight: "900" }}>
                   {collectorRank}
+                </Text>
+                <Text style={{ color: beta.colors.ink, fontSize: 13, fontWeight: "800" }}>
+                  {collectorTagline}
                 </Text>
                 <Text style={{ color: beta.colors.inkMuted, fontSize: 12 }}>{email}</Text>
               </View>
@@ -734,7 +841,11 @@ export function CollectorProfilePanel({
             </View>
 
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: beta.spacing.sm }}>
-              {["Vintage Tee Hunter", "Photo Proof", "Trade Ready"].map((badge) => (
+              {[
+                ...(preferredBadges.length > 0 ? preferredBadges : ["Vintage Tee Hunter"]),
+                "Photo Proof",
+                "Trade Ready",
+              ].map((badge) => (
                 <View
                   key={badge}
                   style={{
@@ -752,6 +863,93 @@ export function CollectorProfilePanel({
                 </View>
               ))}
             </View>
+
+            {isEditingCard ? (
+              <View
+                style={{
+                  backgroundColor: beta.colors.surface,
+                  borderColor: beta.colors.borderStrong,
+                  borderRadius: beta.radius.md,
+                  borderWidth: 1,
+                  gap: beta.spacing.sm,
+                  padding: beta.spacing.md,
+                }}
+              >
+                <BetaKicker>CUSTOMIZE</BetaKicker>
+                <View style={{ flexDirection: "row", gap: beta.spacing.sm }}>
+                  <BetaButton
+                    accessibilityLabel="Take collector card photo"
+                    onPress={() => void pickCollectorAvatar("camera")}
+                    variant="secondary"
+                  >
+                    Camera
+                  </BetaButton>
+                  <BetaButton
+                    accessibilityLabel="Choose collector card photo"
+                    onPress={() => void pickCollectorAvatar("library")}
+                    variant="secondary"
+                  >
+                    Library
+                  </BetaButton>
+                </View>
+                {draftAvatarUri ? (
+                  <Image
+                    accessibilityLabel="Selected collector card photo preview"
+                    resizeMode="cover"
+                    source={{ uri: draftAvatarUri }}
+                    style={{
+                      alignSelf: "center",
+                      borderColor: beta.colors.orange,
+                      borderRadius: beta.radius.lg,
+                      borderWidth: 1,
+                      height: 132,
+                      width: 132,
+                    }}
+                  />
+                ) : null}
+                <BetaTextField
+                  label="Collector name"
+                  maxLength={40}
+                  onChangeText={setDraftDisplayName}
+                  placeholder="Collector name"
+                  value={draftDisplayName}
+                />
+                <BetaTextField
+                  label="Tagline"
+                  maxLength={160}
+                  multiline
+                  onChangeText={setDraftTagline}
+                  placeholder="90s rap tees / XL / open to grail trades"
+                  value={draftTagline}
+                />
+                <View style={{ flexDirection: "row", gap: beta.spacing.sm }}>
+                  <BetaButton
+                    accessibilityLabel="Save collector card"
+                    disabled={isSavingCard}
+                    onPress={() => void saveCard()}
+                  >
+                    {isSavingCard ? "Saving..." : "Save card"}
+                  </BetaButton>
+                  <BetaButton
+                    accessibilityLabel="Cancel collector card editing"
+                    onPress={() => setIsEditingCard(false)}
+                    variant="secondary"
+                  >
+                    Cancel
+                  </BetaButton>
+                </View>
+              </View>
+            ) : (
+              <BetaButton
+                accessibilityLabel="Customize collector card"
+                onPress={() => setIsEditingCard(true)}
+                variant="secondary"
+              >
+                Customize card
+              </BetaButton>
+            )}
+
+            {cardStatus ? <BetaBody>{cardStatus}</BetaBody> : null}
           </View>
         </BetaPanel>
 
@@ -836,6 +1034,34 @@ export function ProfileActionRow({
       <Text style={{ color: beta.colors.inkMuted, fontSize: 13, lineHeight: 18 }}>{detail}</Text>
     </Pressable>
   );
+}
+
+export function buildDefaultCollectorTagline(
+  categories: VintageCategory[],
+  wornSizes: ShirtSize[],
+): string {
+  const categoryText = categories
+    .slice(0, 2)
+    .map((category) => categoryLabels[category])
+    .join(" / ");
+  const sizeText = wornSizes
+    .slice(0, 2)
+    .map((size) => sizeLabels[size])
+    .join(", ");
+
+  if (categoryText && sizeText) {
+    return `${categoryText} collector / ${sizeText}`;
+  }
+
+  if (categoryText) {
+    return `${categoryText} collector`;
+  }
+
+  if (sizeText) {
+    return `${sizeText} collector`;
+  }
+
+  return "Vintage tee hunter / open to strong trades";
 }
 
 export function LegalConsentLine() {
