@@ -13,6 +13,10 @@
         "APP_ENV": "development",
         "EXPO_PUBLIC_PRIVACY_POLICY_URL": "https://konnesor.app/privacy",
         "EXPO_PUBLIC_TERMS_OF_SERVICE_URL": "https://konnesor.app/terms",
+        "EXPO_PUBLIC_ENABLE_PUSH_NOTIFICATIONS": "false",
+        "EXPO_PUBLIC_ENABLE_PUSH_USER_ASSOCIATION": "false",
+        "EXPO_PUBLIC_ENABLE_PUSH_CLICK_ROUTING": "false",
+        "EXPO_PUBLIC_ENABLE_PUSH_PERMISSION_REQUESTS": "false",
         "SENTRY_DISABLE_AUTO_UPLOAD": "true",
         "SENTRY_ALLOW_FAILURE": "true"
       }
@@ -26,6 +30,10 @@
         "APP_ENV": "staging",
         "EXPO_PUBLIC_PRIVACY_POLICY_URL": "https://konnesor.app/privacy",
         "EXPO_PUBLIC_TERMS_OF_SERVICE_URL": "https://konnesor.app/terms",
+        "EXPO_PUBLIC_ENABLE_PUSH_NOTIFICATIONS": "false",
+        "EXPO_PUBLIC_ENABLE_PUSH_USER_ASSOCIATION": "false",
+        "EXPO_PUBLIC_ENABLE_PUSH_CLICK_ROUTING": "false",
+        "EXPO_PUBLIC_ENABLE_PUSH_PERMISSION_REQUESTS": "false",
         "SENTRY_DISABLE_AUTO_UPLOAD": "true",
         "SENTRY_ALLOW_FAILURE": "true"
       }
@@ -41,6 +49,10 @@
         "APP_ENV": "production",
         "EXPO_PUBLIC_PRIVACY_POLICY_URL": "https://konnesor.app/privacy",
         "EXPO_PUBLIC_TERMS_OF_SERVICE_URL": "https://konnesor.app/terms",
+        "EXPO_PUBLIC_ENABLE_PUSH_NOTIFICATIONS": "false",
+        "EXPO_PUBLIC_ENABLE_PUSH_USER_ASSOCIATION": "false",
+        "EXPO_PUBLIC_ENABLE_PUSH_CLICK_ROUTING": "false",
+        "EXPO_PUBLIC_ENABLE_PUSH_PERMISSION_REQUESTS": "false",
         "SENTRY_DISABLE_AUTO_UPLOAD": "true",
         "SENTRY_ALLOW_FAILURE": "true"
       }
@@ -58,6 +70,32 @@
         "APP_ENV": "production",
         "EXPO_PUBLIC_PRIVACY_POLICY_URL": "https://konnesor.app/privacy",
         "EXPO_PUBLIC_TERMS_OF_SERVICE_URL": "https://konnesor.app/terms",
+        "EXPO_PUBLIC_ENABLE_PUSH_NOTIFICATIONS": "false",
+        "EXPO_PUBLIC_ENABLE_PUSH_USER_ASSOCIATION": "false",
+        "EXPO_PUBLIC_ENABLE_PUSH_CLICK_ROUTING": "false",
+        "EXPO_PUBLIC_ENABLE_PUSH_PERMISSION_REQUESTS": "false",
+        "EXPO_NO_CAPABILITY_SYNC": "1",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true",
+        "SENTRY_ALLOW_FAILURE": "true"
+      }
+    },
+    "testflight-push-diag-a": {
+      "distribution": "store",
+      "environment": "production",
+      "autoIncrement": true,
+      "node": "22.13.0",
+      "pnpm": "11.13.1",
+      "ios": {
+        "image": "latest"
+      },
+      "env": {
+        "APP_ENV": "production",
+        "EXPO_PUBLIC_PRIVACY_POLICY_URL": "https://konnesor.app/privacy",
+        "EXPO_PUBLIC_TERMS_OF_SERVICE_URL": "https://konnesor.app/terms",
+        "EXPO_PUBLIC_ENABLE_PUSH_NOTIFICATIONS": "true",
+        "EXPO_PUBLIC_ENABLE_PUSH_USER_ASSOCIATION": "false",
+        "EXPO_PUBLIC_ENABLE_PUSH_CLICK_ROUTING": "false",
+        "EXPO_PUBLIC_ENABLE_PUSH_PERMISSION_REQUESTS": "false",
         "EXPO_NO_CAPABILITY_SYNC": "1",
         "SENTRY_DISABLE_AUTO_UPLOAD": "true",
         "SENTRY_ALLOW_FAILURE": "true"
@@ -75,6 +113,10 @@
         "APP_ENV": "production",
         "EXPO_PUBLIC_PRIVACY_POLICY_URL": "https://konnesor.app/privacy",
         "EXPO_PUBLIC_TERMS_OF_SERVICE_URL": "https://konnesor.app/terms",
+        "EXPO_PUBLIC_ENABLE_PUSH_NOTIFICATIONS": "false",
+        "EXPO_PUBLIC_ENABLE_PUSH_USER_ASSOCIATION": "false",
+        "EXPO_PUBLIC_ENABLE_PUSH_CLICK_ROUTING": "false",
+        "EXPO_PUBLIC_ENABLE_PUSH_PERMISSION_REQUESTS": "false",
         "SENTRY_DISABLE_AUTO_UPLOAD": "true",
         "SENTRY_ALLOW_FAILURE": "true"
       }

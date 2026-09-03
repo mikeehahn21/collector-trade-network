@@ -465,6 +465,7 @@ function BetaShell() {
 
   useKonnesorPushNotifications({
     auth,
+    notificationsOptIn: onboarding.state.notificationsEnabled,
     onOpenMessage: openMessageFromPush,
     onOpenTrade: openTradeFromPush,
   });

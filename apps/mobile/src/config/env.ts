@@ -8,6 +8,10 @@ type MobileEnv = {
   sentryDsn?: string | undefined;
   posthogApiKey?: string | undefined;
   oneSignalAppId?: string | undefined;
+  pushNotificationsEnabled: boolean;
+  pushUserAssociationEnabled: boolean;
+  pushClickRoutingEnabled: boolean;
+  pushPermissionRequestsEnabled: boolean;
 };
 
 export function getMobileEnv(): MobileEnv {
@@ -21,9 +25,17 @@ export function getMobileEnv(): MobileEnv {
     sentryDsn: asOptionalString(extra.sentryDsn),
     posthogApiKey: asOptionalString(extra.posthogApiKey),
     oneSignalAppId: asOptionalString(extra.oneSignalAppId),
+    pushNotificationsEnabled: asBoolean(extra.pushNotificationsEnabled),
+    pushUserAssociationEnabled: asBoolean(extra.pushUserAssociationEnabled),
+    pushClickRoutingEnabled: asBoolean(extra.pushClickRoutingEnabled),
+    pushPermissionRequestsEnabled: asBoolean(extra.pushPermissionRequestsEnabled),
   };
 }
 
 function asOptionalString(value: unknown): string | undefined {
   return typeof value === "string" && value.length > 0 ? value : undefined;
+}
+
+function asBoolean(value: unknown): boolean {
+  return value === true || value === "true" || value === "1";
 }

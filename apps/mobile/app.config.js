@@ -85,6 +85,11 @@ module.exports = {
       sentryDsn: process.env.EXPO_PUBLIC_SENTRY_DSN ?? "",
       posthogApiKey: process.env.EXPO_PUBLIC_POSTHOG_API_KEY ?? "",
       oneSignalAppId: process.env.EXPO_PUBLIC_ONESIGNAL_APP_ID ?? "",
+      pushNotificationsEnabled: process.env.EXPO_PUBLIC_ENABLE_PUSH_NOTIFICATIONS ?? "false",
+      pushUserAssociationEnabled: process.env.EXPO_PUBLIC_ENABLE_PUSH_USER_ASSOCIATION ?? "false",
+      pushClickRoutingEnabled: process.env.EXPO_PUBLIC_ENABLE_PUSH_CLICK_ROUTING ?? "false",
+      pushPermissionRequestsEnabled:
+        process.env.EXPO_PUBLIC_ENABLE_PUSH_PERMISSION_REQUESTS ?? "false",
     },
   },
 };
