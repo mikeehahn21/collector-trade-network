@@ -56,7 +56,6 @@ module.exports = {
         "onesignal-expo-plugin",
         {
           mode: ONESIGNAL_MODE,
-          disableLocation: true,
         },
       ],
       "expo-router",

@@ -251,8 +251,8 @@ importers:
         specifier: ~3.3.8
         version: 3.3.15
       onesignal-expo-plugin:
-        specifier: 2.7.1
-        version: 2.7.1(expo@52.0.49(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@expo/metro-runtime@4.0.1(react-native@0.76.9(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6)))(bufferutil@4.1.0)(react-native@0.76.9(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6))(react@18.3.1)(utf-8-validate@6.0.6))(react-native-onesignal@5.5.8(react-native@0.76.9(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6)))(typescript@5.9.3)
+        specifier: 2.4.0
+        version: 2.4.0(react-native-onesignal@5.3.0)(typescript@5.9.3)
       react:
         specifier: 18.3.1
         version: 18.3.1
@@ -263,8 +263,8 @@ importers:
         specifier: 0.76.9
         version: 0.76.9(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6)
       react-native-onesignal:
-        specifier: 5.5.8
-        version: 5.5.8(react-native@0.76.9(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6))
+        specifier: 5.3.0
+        version: 5.3.0
       react-native-reanimated:
         specifier: ~3.16.1
         version: 3.16.7(@babel/core@7.29.7)(react-native@0.76.9(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6))(react@18.3.1)
@@ -2434,16 +2434,16 @@ packages:
       }
     hasBin: true
 
-  "@expo/image-utils@0.11.5":
-    resolution:
-      {
-        integrity: sha512-KPQBTpmpAfy/Vu9y4wPW808/qtZxjYmyJg8cm2QCPAupp+qEWA3b5zmk0ulOwQ9OgeHxuCPgUqWgkwHFo7UsrQ==,
-      }
-
   "@expo/image-utils@0.6.5":
     resolution:
       {
         integrity: sha512-RsS/1CwJYzccvlprYktD42KjyfWZECH6PPIEowvoSmXfGLfdViwcUEI4RvBfKX5Jli6P67H+6YmHvPTbGOboew==,
+      }
+
+  "@expo/image-utils@0.8.17":
+    resolution:
+      {
+        integrity: sha512-1eVrX6FFkPNl9DJNiw3Gjsf6PtG7HttbapEVvcROVrA9PCMikujOJWWHDYKGptmKoVIIVajFZE8UHGHUb3mPug==,
       }
 
   "@expo/json-file@11.0.0":
@@ -2503,13 +2503,13 @@ packages:
         integrity: sha512-CxiPpd980s0jyxi7eyN3i/7YKu3XL+8qPjBZUCYtc0+axpGweqIkq2CslyLSKHyqVyH/zlPkbVgWdyiYavFS5Q==,
       }
 
-  "@expo/require-utils@57.0.5":
+  "@expo/require-utils@55.0.8":
     resolution:
       {
-        integrity: sha512-kTAXj9lDFEIPMsbAOGCGbjBbMF0oi7CqkYM79KOX0DDD9wSwXmlKL1z2h8OwsrBf7mbOo2DjlRvZu4BEjrIxGw==,
+        integrity: sha512-DDS5R67iz2SJwncbpcUMHtnsq31dSfllhaEncKxGlK0/ewgc2CaXUCkDA2AumfT7ubnSXiPkU9Gn8v2xCrvj+A==,
       }
     peerDependencies:
-      typescript: ^5.0.0 || ^5.0.0-0 || ^6.0.0 || ^7.0.0
+      typescript: ^5.0.0 || ^5.0.0-0
     peerDependenciesMeta:
       typescript:
         optional: true
@@ -9490,13 +9490,12 @@ packages:
         integrity: sha512-lNaJgI+2Q5URQBkccEKHTQOPaXdUxnZZElQTZY0MFUAuaEqe1E+Nyvgdz/aIyNi6Z9MzO5dv1H8n58/GELp3+w==,
       }
 
-  onesignal-expo-plugin@2.7.1:
+  onesignal-expo-plugin@2.4.0:
     resolution:
       {
-        integrity: sha512-w7AOPJiMHnuOu15aL+9rjIFXfEk50jm2RLno9R8YTdMW288k9yNDbGNswemTkr18fWCq5FEhadDE55FRl+7oQw==,
+        integrity: sha512-gH0IUDyJAsSKCsIm1Lf2Zb9HRQVOmUpIqSDpQDRIjxNBpHKWMWM0Rtw9Vtr2/exmt4mmqj4Sz/XJo+jWLbxqtw==,
       }
     peerDependencies:
-      expo: ">=53.0.0"
       react-native-onesignal: ">=5.0.0"
 
   onetime@2.0.1:
@@ -10264,13 +10263,11 @@ packages:
       react: "*"
       react-native: "*"
 
-  react-native-onesignal@5.5.8:
+  react-native-onesignal@5.3.0:
     resolution:
       {
-        integrity: sha512-5EWrqeimjEVl2U+kZZqtWErjYJ9ZnnPYZehdOx3XX5RWkpAJdSbqVws7TtiOszyQAyRZK6adCWabgh7+pY1R9g==,
+        integrity: sha512-9ab+JSoszd84SpTXPqZ7pqiAhyzAi3Ra+RRLBwkLKQQbLDIFma26xce6NWCHe+fN/Vd6JdsLM+IOLWkRQ1MyAA==,
       }
-    peerDependencies:
-      react-native: ">=0.79.0"
 
   react-native-reanimated@3.16.7:
     resolution:
@@ -13866,19 +13863,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  "@expo/image-utils@0.11.5(typescript@5.9.3)":
-    dependencies:
-      "@expo/require-utils": 57.0.5(typescript@5.9.3)
-      "@expo/spawn-async": 1.8.0
-      chalk: 4.1.2
-      getenv: 2.0.0
-      jimp-compact: 0.16.1
-      parse-png: 2.1.0
-      semver: 7.8.5
-    transitivePeerDependencies:
-      - supports-color
-      - typescript
-
   "@expo/image-utils@0.6.5":
     dependencies:
       "@expo/spawn-async": 1.8.0
@@ -13891,6 +13875,19 @@ snapshots:
       semver: 7.8.5
       temp-dir: 2.0.0
       unique-string: 2.0.0
+
+  "@expo/image-utils@0.8.17(typescript@5.9.3)":
+    dependencies:
+      "@expo/require-utils": 55.0.8(typescript@5.9.3)
+      "@expo/spawn-async": 1.8.0
+      chalk: 4.1.2
+      getenv: 2.0.0
+      jimp-compact: 0.16.1
+      parse-png: 2.1.0
+      semver: 7.8.5
+    transitivePeerDependencies:
+      - supports-color
+      - typescript
 
   "@expo/json-file@11.0.0":
     dependencies:
@@ -13970,7 +13967,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  "@expo/require-utils@57.0.5(typescript@5.9.3)":
+  "@expo/require-utils@55.0.8(typescript@5.9.3)":
     dependencies:
       "@babel/code-frame": 7.29.7
       "@babel/core": 7.29.7
@@ -18631,11 +18628,10 @@ snapshots:
     dependencies:
       wrappy: 1.0.2
 
-  onesignal-expo-plugin@2.7.1(expo@52.0.49(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@expo/metro-runtime@4.0.1(react-native@0.76.9(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6)))(bufferutil@4.1.0)(react-native@0.76.9(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6))(react@18.3.1)(utf-8-validate@6.0.6))(react-native-onesignal@5.5.8(react-native@0.76.9(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6)))(typescript@5.9.3):
+  onesignal-expo-plugin@2.4.0(react-native-onesignal@5.3.0)(typescript@5.9.3):
     dependencies:
-      "@expo/image-utils": 0.11.5(typescript@5.9.3)
-      expo: 52.0.49(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@expo/metro-runtime@4.0.1(react-native@0.76.9(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6)))(bufferutil@4.1.0)(react-native@0.76.9(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6))(react@18.3.1)(utf-8-validate@6.0.6)
-      react-native-onesignal: 5.5.8(react-native@0.76.9(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6))
+      "@expo/image-utils": 0.8.17(typescript@5.9.3)
+      react-native-onesignal: 5.3.0
     transitivePeerDependencies:
       - supports-color
       - typescript
@@ -19072,10 +19068,9 @@ snapshots:
       react: 18.3.1
       react-native: 0.76.9(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6)
 
-  react-native-onesignal@5.5.8(react-native@0.76.9(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6)):
+  react-native-onesignal@5.3.0:
     dependencies:
       invariant: 2.2.4
-      react-native: 0.76.9(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6)
 
   react-native-reanimated@3.16.7(@babel/core@7.29.7)(react-native@0.76.9(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(bufferutil@4.1.0)(react@18.3.1)(utf-8-validate@6.0.6))(react@18.3.1):
     dependencies:
