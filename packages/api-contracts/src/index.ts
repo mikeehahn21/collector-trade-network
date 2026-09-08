@@ -9,6 +9,7 @@ import type {
   RecommendationFeedback,
   RecommendationFeedbackMetrics,
   RecommendationSummary,
+  ReputationMetrics,
   Trade,
   TradeSummary,
   TradeableItem,
@@ -369,8 +370,6 @@ export type ConversationMessagesResponse = {
 export type ConversationMessageResponse = {
   message: ConversationMessage;
 };
-
-import type { ReputationMetrics } from "@ctn/types";
 
 export const reputationMetricsContract = {
   method: "GET",

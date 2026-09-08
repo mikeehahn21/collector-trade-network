@@ -547,6 +547,10 @@ export function getDiagnosticErrorMessage(error: unknown): string {
 }
 
 export function getDiagnosticErrorDetail(error: unknown): string | undefined {
+  const diagnosticFields = getDiagnosticErrorFields(error);
+  if (diagnosticFields) {
+    return JSON.stringify(diagnosticFields);
+  }
   if (error instanceof Error) {
     return error.stack ?? error.name;
   }
@@ -554,6 +558,23 @@ export function getDiagnosticErrorDetail(error: unknown): string | undefined {
     return JSON.stringify(error);
   }
   return undefined;
+}
+
+function getDiagnosticErrorFields(error: unknown): Record<string, unknown> | undefined {
+  if (!error || typeof error !== "object") {
+    return undefined;
+  }
+
+  const record = error as Record<string, unknown>;
+  const detail: Record<string, unknown> = {};
+  for (const key of ["name", "message", "status", "method", "path", "code", "responseBody"]) {
+    const value = record[key];
+    if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+      detail[key] = value;
+    }
+  }
+
+  return Object.keys(detail).length > 0 ? detail : undefined;
 }
 
 export function _createDemoPhoto(kind: ItemPhoto["kind"], sortOrder: number): ItemPhoto {

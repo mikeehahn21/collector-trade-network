@@ -39,6 +39,7 @@ export default tseslint.config(
             "lint-staged.config.cjs",
             "commitlint.config.cjs",
             "apps/mobile/app.config.js",
+            "apps/mobile/vitest.config.mjs",
             "apps/mobile/plugins/with-fmt-cxx17.js",
           ],
         },
@@ -58,7 +59,12 @@ export default tseslint.config(
   },
   // Root config files and CJS modules: disable type-checked rules that don't apply
   {
-    files: ["eslint.config.mjs", "*.cjs", "apps/mobile/plugins/*.js"],
+    files: [
+      "eslint.config.mjs",
+      "*.cjs",
+      "apps/mobile/vitest.config.mjs",
+      "apps/mobile/plugins/*.js",
+    ],
     rules: {
       "@typescript-eslint/no-unsafe-argument": "off",
       "@typescript-eslint/no-unsafe-member-access": "off",

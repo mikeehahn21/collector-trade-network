@@ -55,6 +55,38 @@ export type AuthHeaderProvider = () => Promise<
   | undefined
 >;
 
+export class ApiRequestError extends Error {
+  readonly code: string | undefined;
+  readonly method: string;
+  readonly path: string;
+  readonly responseBody: string | undefined;
+  readonly status: number;
+  readonly url: string;
+
+  constructor(input: {
+    code?: string | undefined;
+    method: string;
+    path: string;
+    responseBody?: string | undefined;
+    serverMessage?: string | undefined;
+    status: number;
+    url: string;
+  }) {
+    const codeSuffix = input.code ? ` (${input.code})` : "";
+    const serverMessageSuffix = input.serverMessage ? `: ${input.serverMessage}` : "";
+    super(
+      `${input.method} ${input.path} failed with HTTP ${input.status}${codeSuffix}${serverMessageSuffix}`,
+    );
+    this.name = "ApiRequestError";
+    this.code = input.code;
+    this.method = input.method;
+    this.path = input.path;
+    this.responseBody = input.responseBody;
+    this.status = input.status;
+    this.url = input.url;
+  }
+}
+
 export type ApiClient = {
   getMe: () => Promise<MeResponse>;
   upsertMe: (
@@ -131,7 +163,9 @@ export function createApiClient(getAuthHeaders: AuthHeaderProvider): ApiClient {
 
   async function request<TResponse>(path: string, options: RequestInit = {}): Promise<TResponse> {
     const auth = await getAuthHeaders();
-    const response = await fetchWithRetry(`${apiBaseUrl}${path}`, {
+    const method = options.method ?? "GET";
+    const url = `${apiBaseUrl}${path}`;
+    const response = await fetchWithRetry(url, {
       ...options,
       headers: {
         "content-type": "application/json",
@@ -143,7 +177,17 @@ export function createApiClient(getAuthHeaders: AuthHeaderProvider): ApiClient {
     });
 
     if (!response.ok) {
-      throw new Error(`API request failed with ${response.status}`);
+      const responseBody = await readErrorResponseBody(response);
+      const parsedError = parseErrorResponseBody(responseBody);
+      throw new ApiRequestError({
+        code: parsedError.code,
+        method,
+        path: redactQueryString(path),
+        responseBody,
+        serverMessage: parsedError.message,
+        status: response.status,
+        url: redactQueryString(url),
+      });
     }
 
     if (response.status === 204) {
@@ -299,6 +343,49 @@ export function createApiClient(getAuthHeaders: AuthHeaderProvider): ApiClient {
       ),
     getSystemConfig: () => request<SystemConfigResponse>(apiRoutes.systemConfig),
   };
+}
+
+async function readErrorResponseBody(response: Response): Promise<string | undefined> {
+  try {
+    const text = await response.text();
+    return text ? truncateDiagnosticValue(text, 1_000) : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function parseErrorResponseBody(responseBody: string | undefined): {
+  code?: string | undefined;
+  message?: string | undefined;
+} {
+  if (!responseBody) {
+    return {};
+  }
+
+  try {
+    const parsed = JSON.parse(responseBody) as unknown;
+    if (!parsed || typeof parsed !== "object") {
+      return {};
+    }
+    const record = parsed as Record<string, unknown>;
+    return {
+      code: typeof record.code === "string" ? record.code : undefined,
+      message: typeof record.message === "string" ? record.message : undefined,
+    };
+  } catch {
+    return {};
+  }
+}
+
+function redactQueryString(value: string): string {
+  return value.replace(/\?.*$/, "?[redacted]");
+}
+
+function truncateDiagnosticValue(value: string, maxLength: number): string {
+  if (value.length <= maxLength) {
+    return value;
+  }
+  return `${value.slice(0, maxLength)}...`;
 }
 
 async function fetchWithRetry(url: string, options: RequestInit): Promise<Response> {
