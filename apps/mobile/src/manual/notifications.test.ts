@@ -251,6 +251,17 @@ describe("manual push notification routing", () => {
     expect(sdk.Notifications.canRequestPermission).not.toHaveBeenCalled();
     expect(sdk.Notifications.requestPermission).not.toHaveBeenCalled();
   });
+
+  it("handles permission request exceptions without throwing", async () => {
+    const sdk = createSdk();
+    vi.mocked(sdk.Notifications.requestPermission).mockRejectedValue(
+      new Error("permission bridge failed"),
+    );
+
+    await expect(
+      requestOneSignalPermissionOnce({ oneSignal: sdk, wasRequested: false }),
+    ).resolves.toBe("error");
+  });
 });
 
 function createSdk() {

@@ -194,21 +194,26 @@ export async function requestOneSignalPermissionOnce({
   oneSignal: OneSignalSdk;
   wasRequested: boolean;
 }) {
-  if (wasRequested) {
-    recordPushBreadcrumb("permission request skipped", { reason: "already requested" });
-    return "already_requested" as const;
-  }
+  try {
+    if (wasRequested) {
+      recordPushBreadcrumb("permission request skipped", { reason: "already requested" });
+      return "already_requested" as const;
+    }
 
-  const canRequest = await oneSignal.Notifications.canRequestPermission?.();
-  if (canRequest === false) {
-    recordPushBreadcrumb("permission request skipped", { reason: "denied or unavailable" });
-    return "denied_or_unavailable" as const;
-  }
+    const canRequest = await oneSignal.Notifications.canRequestPermission?.();
+    if (canRequest === false) {
+      recordPushBreadcrumb("permission request skipped", { reason: "denied or unavailable" });
+      return "denied_or_unavailable" as const;
+    }
 
-  recordPushBreadcrumb("permission requested");
-  const granted = await oneSignal.Notifications.requestPermission?.(false);
-  recordPushBreadcrumb("permission completed", { granted: Boolean(granted) });
-  return granted ? ("granted" as const) : ("denied" as const);
+    recordPushBreadcrumb("permission requested");
+    const granted = await oneSignal.Notifications.requestPermission?.(false);
+    recordPushBreadcrumb("permission completed", { granted: Boolean(granted) });
+    return granted ? ("granted" as const) : ("denied" as const);
+  } catch (error) {
+    recordPushException("permission request failed", error);
+    return "error" as const;
+  }
 }
 
 export function recordPushBreadcrumb(message: string, data?: Record<string, unknown>) {

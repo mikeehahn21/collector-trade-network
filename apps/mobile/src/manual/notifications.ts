@@ -101,7 +101,18 @@ export function useKonnesorPushNotifications({
     });
 
     const oneSignal = oneSignalRef.current;
-    if (!oneSignal || !initializedRef.current || !config.userAssociationEnabled || !auth.isLoaded) {
+    if (!oneSignal || !initializedRef.current) {
+      recordPushBreadcrumb("user association skipped", { reason: "runtime not initialized" });
+      return;
+    }
+
+    if (!config.userAssociationEnabled) {
+      recordPushBreadcrumb("user association skipped", { reason: "feature flag disabled" });
+      return;
+    }
+
+    if (!auth.isLoaded) {
+      recordPushBreadcrumb("user association skipped", { reason: "auth not loaded" });
       return;
     }
 
@@ -131,7 +142,13 @@ export function useKonnesorPushNotifications({
 
   useEffect(() => {
     const oneSignal = oneSignalRef.current;
-    if (!oneSignal || !initializedRef.current || !config.clickRoutingEnabled) {
+    if (!oneSignal || !initializedRef.current) {
+      recordPushBreadcrumb("click routing skipped", { reason: "runtime not initialized" });
+      return;
+    }
+
+    if (!config.clickRoutingEnabled) {
+      recordPushBreadcrumb("click routing skipped", { reason: "feature flag disabled" });
       return;
     }
 
@@ -145,13 +162,23 @@ export function useKonnesorPushNotifications({
 
   useEffect(() => {
     const oneSignal = oneSignalRef.current;
-    if (
-      !oneSignal ||
-      !initializedRef.current ||
-      !config.permissionRequestsEnabled ||
-      !notificationsOptIn ||
-      permissionRequestStartedRef.current
-    ) {
+    if (!oneSignal || !initializedRef.current) {
+      recordPushBreadcrumb("permission request skipped", { reason: "runtime not initialized" });
+      return;
+    }
+
+    if (!config.permissionRequestsEnabled) {
+      recordPushBreadcrumb("permission request skipped", { reason: "feature flag disabled" });
+      return;
+    }
+
+    if (!notificationsOptIn) {
+      recordPushBreadcrumb("permission request skipped", { reason: "user not opted in" });
+      return;
+    }
+
+    if (permissionRequestStartedRef.current) {
+      recordPushBreadcrumb("permission request skipped", { reason: "already started" });
       return;
     }
 
