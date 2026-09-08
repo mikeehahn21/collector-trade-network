@@ -294,11 +294,10 @@ export function CompFinderPanel({
           />
           <View style={{ flex: 1, gap: beta.spacing.xs }}>
             <Text style={{ color: beta.colors.ink, fontSize: 15, fontWeight: "900" }}>
-              Photo attached for manual review
+              Photo attached
             </Text>
             <Text style={{ color: beta.colors.inkMuted, fontSize: 12, lineHeight: 17 }}>
-              MVP comps use search terms now. Full visual recognition can plug into this panel
-              later.
+              Add any visible tag, graphic, era, or size clues below to sharpen the comp search.
             </Text>
           </View>
         </View>
@@ -449,8 +448,8 @@ export function CompFinderPanel({
       ) : null}
 
       <Text style={{ color: beta.colors.inkMuted, fontSize: 12, lineHeight: 18 }}>
-        Comp Finder opens outside search results for beta. Treat values as research leads until tag,
-        condition, measurements, sold-price evidence, and listing dates are verified.
+        Treat values as research leads until tag, condition, measurements, sold-price evidence, and
+        listing dates are verified.
       </Text>
     </BetaPanel>
   );
@@ -476,7 +475,7 @@ export function CompReadinessChecklist({
     >
       <View style={{ flexDirection: "row", gap: beta.spacing.sm, justifyContent: "space-between" }}>
         <Text style={{ color: beta.colors.ink, fontSize: 16, fontWeight: "900" }}>
-          Research readiness
+          Search strength
         </Text>
         <Text style={{ color: beta.colors.orange, fontSize: 12, fontWeight: "900" }}>
           {completeCount}/{items.length}
