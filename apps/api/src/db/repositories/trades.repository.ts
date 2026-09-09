@@ -28,6 +28,8 @@ type TradeRow = {
   carrier_counterparty: TradeCarrier | null;
   proposer_notes: string | null;
   counterparty_notes: string | null;
+  completed_confirmed_at_proposer: Date | null;
+  completed_confirmed_at_counterparty: Date | null;
   completed_at: Date | null;
   disputed_at: Date | null;
   dispute_reason: string | null;
@@ -81,7 +83,8 @@ export async function createTrade(
     !counterpartyItem ||
     proposerItem.owner_id !== input.proposerId ||
     counterpartyItem.owner_id === input.proposerId ||
-    counterpartyItem.visibility === "private"
+    counterpartyItem.visibility === "private" ||
+    (await hasBlockingRelationship(db, input.proposerId, counterpartyItem.owner_id))
   ) {
     return undefined;
   }
@@ -117,7 +120,16 @@ export async function listTradesForUser(db: Queryable, userId: string): Promise<
     db,
     `
       ${tradeSelectSql}
-      where trades.proposer_id = $1 or trades.counterparty_id = $1
+      where (trades.proposer_id = $1 or trades.counterparty_id = $1)
+        and not exists (
+          select 1
+          from user_blocks
+          where user_blocks.blocker_id = $1
+            and user_blocks.blocked_user_id = case
+              when trades.proposer_id = $1 then trades.counterparty_id
+              else trades.proposer_id
+            end
+        )
       order by trades.updated_at desc
     `,
     [userId],
@@ -137,6 +149,15 @@ export async function findTradeByParticipant(
       ${tradeSelectSql}
       where trades.id = $1
         and (trades.proposer_id = $2 or trades.counterparty_id = $2)
+        and not exists (
+          select 1
+          from user_blocks
+          where user_blocks.blocker_id = $2
+            and user_blocks.blocked_user_id = case
+              when trades.proposer_id = $2 then trades.counterparty_id
+              else trades.proposer_id
+            end
+        )
     `,
     [tradeId, userId],
   );
@@ -235,26 +256,46 @@ export async function completeTradeForUser(
 ): Promise<Trade | undefined> {
   const trade = await findTradeByParticipant(db, tradeId, userId);
 
-  if (!trade || !canCompleteTrade(trade)) {
+  if (!trade || !canConfirmTradeCompletion(trade, userId)) {
     return undefined;
   }
+
+  const isProposer = trade.proposerId === userId;
+  const completionColumn = isProposer
+    ? "completed_confirmed_at_proposer"
+    : "completed_confirmed_at_counterparty";
 
   await db.query(
     `
       update trades set
-        status = 'completed',
-        completed_at = now(),
+        ${completionColumn} = coalesce(${completionColumn}, now()),
+        status = case
+          when coalesce(completed_confirmed_at_proposer, case when $2 = 'proposer' then now() end) is not null
+           and coalesce(completed_confirmed_at_counterparty, case when $2 = 'counterparty' then now() end) is not null
+          then 'completed'
+          else status
+        end,
+        completed_at = case
+          when coalesce(completed_confirmed_at_proposer, case when $2 = 'proposer' then now() end) is not null
+           and coalesce(completed_confirmed_at_counterparty, case when $2 = 'counterparty' then now() end) is not null
+          then coalesce(completed_at, now())
+          else completed_at
+        end,
         updated_at = now()
       where id = $1
     `,
-    [tradeId],
-  );
-  await db.query(
-    "update items set status = 'traded', updated_at = now() where id = any($1::uuid[])",
-    [[trade.proposerItemId, trade.counterpartyItemId]],
+    [tradeId, isProposer ? "proposer" : "counterparty"],
   );
 
-  return findTradeByParticipant(db, tradeId, userId);
+  const updated = await findTradeByParticipant(db, tradeId, userId);
+  if (updated?.status === "completed") {
+    await db.query(
+      "update items set status = 'traded', updated_at = now() where id = any($1::uuid[])",
+      [[updated.proposerItemId, updated.counterpartyItemId]],
+    );
+  }
+
+  return updated;
 }
 
 export async function disputeTradeForUser(
@@ -379,6 +420,22 @@ export function canCompleteTrade(trade: Trade): boolean {
   );
 }
 
+export function canConfirmTradeCompletion(trade: Trade, userId: string): boolean {
+  if (!canCompleteTrade(trade)) {
+    return false;
+  }
+
+  if (trade.proposerId === userId) {
+    return !trade.proposerCompletedConfirmedAt;
+  }
+
+  if (trade.counterpartyId === userId) {
+    return !trade.counterpartyCompletedConfirmedAt;
+  }
+
+  return false;
+}
+
 export function canDisputeTrade(trade: Trade, userId: string): boolean {
   return (
     trade.status === "accepted" &&
@@ -436,6 +493,8 @@ const tradeSelectSql = `
     trades.carrier_counterparty,
     trades.proposer_notes,
     trades.counterparty_notes,
+    trades.completed_confirmed_at_proposer,
+    trades.completed_confirmed_at_counterparty,
     trades.completed_at,
     trades.disputed_at,
     trades.dispute_reason,
@@ -488,6 +547,8 @@ function mapTrade(row: TradeRow, viewerId: string): Trade {
     },
     proposerNotes: row.proposer_notes ?? undefined,
     counterpartyNotes: row.counterparty_notes ?? undefined,
+    proposerCompletedConfirmedAt: row.completed_confirmed_at_proposer?.toISOString(),
+    counterpartyCompletedConfirmedAt: row.completed_confirmed_at_counterparty?.toISOString(),
     completedAt: row.completed_at?.toISOString(),
     disputedAt: row.disputed_at?.toISOString(),
     disputeReason: row.dispute_reason ?? undefined,
@@ -495,4 +556,24 @@ function mapTrade(row: TradeRow, viewerId: string): Trade {
     createdAt: row.created_at.toISOString(),
     updatedAt: row.updated_at.toISOString(),
   };
+}
+
+async function hasBlockingRelationship(
+  db: Queryable,
+  userId: string,
+  otherUserId: string,
+): Promise<boolean> {
+  const row = await queryOne<{ blocker_id: string }>(
+    db,
+    `
+      select blocker_id
+      from user_blocks
+      where (blocker_id = $1 and blocked_user_id = $2)
+         or (blocker_id = $2 and blocked_user_id = $1)
+      limit 1
+    `,
+    [userId, otherUserId],
+  );
+
+  return Boolean(row);
 }

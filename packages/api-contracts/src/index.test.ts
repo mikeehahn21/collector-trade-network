@@ -26,6 +26,7 @@ describe("api contracts", () => {
   });
 
   it("defines Sprint 7 item inspection and feedback routes", () => {
+    expect(apiRoutes.publicItems).toBe("/v1/public/items");
     expect(apiRoutes.publicItemById).toBe("/v1/public/items/:itemId");
     expect(apiRoutes.recommendationFeedback).toBe("/v1/recommendations/:recommendationId/feedback");
     expect(apiRoutes.recommendationFeedbackMetrics).toBe(

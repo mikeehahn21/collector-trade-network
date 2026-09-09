@@ -3,13 +3,18 @@ import type {
   ConversationMessagesResponse,
   ConversationResponse,
   ConversationsResponse,
+  BlockedUsersResponse,
+  BlockUserResponse,
+  DeleteAccountResponse,
   ItemResponse,
   ItemVerificationStatusResponse,
   ItemVerificationVideoRequest,
   ItemsResponse,
   MeResponse,
   PublicItemResponse,
+  PublicItemsResponse,
   RecommendationFeedbackResponse,
+  ReportUserResponse,
   RecommendationResponse,
   RecommendationsResponse,
   ReputationMetricsResponse,
@@ -23,9 +28,13 @@ import type {
 } from "@ctn/api-contracts";
 import { apiRoutes } from "@ctn/api-contracts";
 import type {
+  AiListingSuggestions,
+  AiListingSuggestionInput,
   CreateTradeInput,
   CounterTradeInput,
   DisputeTradeInput,
+  BlockUserInput,
+  ReportUserInput,
   SendMessageInput,
   ShipTradeInput,
   RecommendationFeedbackRating,
@@ -46,13 +55,47 @@ export type AuthHeaderProvider = () => Promise<
   | undefined
 >;
 
+export class ApiRequestError extends Error {
+  readonly code: string | undefined;
+  readonly method: string;
+  readonly path: string;
+  readonly responseBody: string | undefined;
+  readonly status: number;
+  readonly url: string;
+
+  constructor(input: {
+    code?: string | undefined;
+    method: string;
+    path: string;
+    responseBody?: string | undefined;
+    serverMessage?: string | undefined;
+    status: number;
+    url: string;
+  }) {
+    const codeSuffix = input.code ? ` (${input.code})` : "";
+    const serverMessageSuffix = input.serverMessage ? `: ${input.serverMessage}` : "";
+    super(
+      `${input.method} ${input.path} failed with HTTP ${input.status}${codeSuffix}${serverMessageSuffix}`,
+    );
+    this.name = "ApiRequestError";
+    this.code = input.code;
+    this.method = input.method;
+    this.path = input.path;
+    this.responseBody = input.responseBody;
+    this.status = input.status;
+    this.url = input.url;
+  }
+}
+
 export type ApiClient = {
   getMe: () => Promise<MeResponse>;
   upsertMe: (
     profile: Pick<UserProfile, "bio" | "displayName" | "email" | "locationRegion" | "socialHandle">,
   ) => Promise<MeResponse>;
+  deleteMe: () => Promise<DeleteAccountResponse>;
   listItems: () => Promise<ItemsResponse>;
   createItem: (item: Partial<TradeableItem>) => Promise<ItemResponse>;
+  getItemAiSuggestions: (item: AiListingSuggestionInput) => Promise<AiListingSuggestions>;
   publishItem: (item: Partial<TradeableItem>) => Promise<ItemResponse>;
   updateItem: (itemId: string, item: Partial<TradeableItem>) => Promise<ItemResponse>;
   deleteItem: (itemId: string) => Promise<void>;
@@ -62,6 +105,7 @@ export type ApiClient = {
   ) => Promise<ItemVerificationStatusResponse>;
   getItemVerificationStatus: (itemId: string) => Promise<ItemVerificationStatusResponse>;
   getPublicItem: (itemId: string) => Promise<PublicItemResponse>;
+  listPublicItems: () => Promise<PublicItemsResponse>;
   listWishlistItems: () => Promise<WishlistItemsResponse>;
   createWishlistItem: (item: Partial<WishlistItem>) => Promise<WishlistItemResponse>;
   publishWishlistItem: (item: Partial<WishlistItem>) => Promise<WishlistItemResponse>;
@@ -104,6 +148,10 @@ export type ApiClient = {
   ) => Promise<ConversationMessageResponse>;
   markMessageRead: (messageId: string) => Promise<void>;
   markConversationTyping: (conversationId: string) => Promise<void>;
+  reportUser: (input: ReportUserInput) => Promise<ReportUserResponse>;
+  blockUser: (input: BlockUserInput) => Promise<BlockUserResponse>;
+  listBlockedUsers: () => Promise<BlockedUsersResponse>;
+  unblockUser: (blockedUserId: string) => Promise<void>;
   getReputationMetrics: () => Promise<ReputationMetricsResponse>;
   recalculateReputation: () => Promise<ReputationRecalculateResponse>;
   getWaitlistStatus: (email: string) => Promise<WaitlistStatusResponse>;
@@ -115,7 +163,9 @@ export function createApiClient(getAuthHeaders: AuthHeaderProvider): ApiClient {
 
   async function request<TResponse>(path: string, options: RequestInit = {}): Promise<TResponse> {
     const auth = await getAuthHeaders();
-    const response = await fetchWithRetry(`${apiBaseUrl}${path}`, {
+    const method = options.method ?? "GET";
+    const url = `${apiBaseUrl}${path}`;
+    const response = await fetchWithRetry(url, {
       ...options,
       headers: {
         "content-type": "application/json",
@@ -127,7 +177,17 @@ export function createApiClient(getAuthHeaders: AuthHeaderProvider): ApiClient {
     });
 
     if (!response.ok) {
-      throw new Error(`API request failed with ${response.status}`);
+      const responseBody = await readErrorResponseBody(response);
+      const parsedError = parseErrorResponseBody(responseBody);
+      throw new ApiRequestError({
+        code: parsedError.code,
+        method,
+        path: redactQueryString(path),
+        responseBody,
+        serverMessage: parsedError.message,
+        status: response.status,
+        url: redactQueryString(url),
+      });
     }
 
     if (response.status === 204) {
@@ -141,9 +201,15 @@ export function createApiClient(getAuthHeaders: AuthHeaderProvider): ApiClient {
     getMe: () => request<MeResponse>(apiRoutes.me),
     upsertMe: (profile) =>
       request<MeResponse>(apiRoutes.me, { method: "PUT", body: JSON.stringify(profile) }),
+    deleteMe: () => request<DeleteAccountResponse>(apiRoutes.deleteMe, { method: "DELETE" }),
     listItems: () => request<ItemsResponse>(apiRoutes.items),
     createItem: (item) =>
       request<ItemResponse>(apiRoutes.items, { method: "POST", body: JSON.stringify(item) }),
+    getItemAiSuggestions: (item) =>
+      request<AiListingSuggestions>(apiRoutes.itemAiSuggestions, {
+        method: "POST",
+        body: JSON.stringify(item),
+      }),
     publishItem: (item) =>
       request<ItemResponse>(`${apiRoutes.items}/publish`, {
         method: "POST",
@@ -160,6 +226,7 @@ export function createApiClient(getAuthHeaders: AuthHeaderProvider): ApiClient {
     getItemVerificationStatus: (itemId) =>
       request<ItemVerificationStatusResponse>(`/v1/items/${itemId}/verification-status`),
     getPublicItem: (itemId) => request<PublicItemResponse>(`/v1/public/items/${itemId}`),
+    listPublicItems: () => request<PublicItemsResponse>(apiRoutes.publicItems),
     listWishlistItems: () => request<WishlistItemsResponse>(apiRoutes.wishlistItems),
     createWishlistItem: (item) =>
       request<WishlistItemResponse>(apiRoutes.wishlistItems, {
@@ -217,7 +284,7 @@ export function createApiClient(getAuthHeaders: AuthHeaderProvider): ApiClient {
     completeTrade: (tradeId) =>
       request<TradeResponse>(`/v1/trades/${tradeId}/complete`, {
         method: "PATCH",
-        body: JSON.stringify({}),
+        body: JSON.stringify({ satisfied: true }),
       }),
     disputeTrade: (tradeId, input) =>
       request<TradeResponse>(`/v1/trades/${tradeId}/dispute`, {
@@ -251,6 +318,19 @@ export function createApiClient(getAuthHeaders: AuthHeaderProvider): ApiClient {
         method: "POST",
         body: JSON.stringify({ conversationId }),
       }),
+    reportUser: (input) =>
+      request<ReportUserResponse>(apiRoutes.reports, {
+        method: "POST",
+        body: JSON.stringify(input),
+      }),
+    blockUser: (input) =>
+      request<BlockUserResponse>(apiRoutes.blockedUsers, {
+        method: "POST",
+        body: JSON.stringify(input),
+      }),
+    listBlockedUsers: () => request<BlockedUsersResponse>(apiRoutes.blockedUsers),
+    unblockUser: (blockedUserId) =>
+      request<void>(`/v1/blocked-users/${blockedUserId}`, { method: "DELETE" }),
     getReputationMetrics: () => request<ReputationMetricsResponse>(apiRoutes.reputationMetrics),
     recalculateReputation: () =>
       request<ReputationRecalculateResponse>(apiRoutes.reputationRecalculate, {
@@ -263,6 +343,49 @@ export function createApiClient(getAuthHeaders: AuthHeaderProvider): ApiClient {
       ),
     getSystemConfig: () => request<SystemConfigResponse>(apiRoutes.systemConfig),
   };
+}
+
+async function readErrorResponseBody(response: Response): Promise<string | undefined> {
+  try {
+    const text = await response.text();
+    return text ? truncateDiagnosticValue(text, 1_000) : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function parseErrorResponseBody(responseBody: string | undefined): {
+  code?: string | undefined;
+  message?: string | undefined;
+} {
+  if (!responseBody) {
+    return {};
+  }
+
+  try {
+    const parsed = JSON.parse(responseBody) as unknown;
+    if (!parsed || typeof parsed !== "object") {
+      return {};
+    }
+    const record = parsed as Record<string, unknown>;
+    return {
+      code: typeof record.code === "string" ? record.code : undefined,
+      message: typeof record.message === "string" ? record.message : undefined,
+    };
+  } catch {
+    return {};
+  }
+}
+
+function redactQueryString(value: string): string {
+  return value.replace(/\?.*$/, "?[redacted]");
+}
+
+function truncateDiagnosticValue(value: string, maxLength: number): string {
+  if (value.length <= maxLength) {
+    return value;
+  }
+  return `${value.slice(0, maxLength)}...`;
 }
 
 async function fetchWithRetry(url: string, options: RequestInit): Promise<Response> {

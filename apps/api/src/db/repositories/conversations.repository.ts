@@ -114,6 +114,14 @@ export async function listConversationsForUser(
       join conversation_participants on conversation_participants.conversation_id = conversations.id
       where conversation_participants.user_id = $1
         and conversations.archived_at is null
+        and not exists (
+          select 1
+          from conversation_participants blocked_participant
+          join user_blocks on user_blocks.blocked_user_id = blocked_participant.user_id
+          where blocked_participant.conversation_id = conversations.id
+            and blocked_participant.user_id <> $1
+            and user_blocks.blocker_id = $1
+        )
       order by conversations.updated_at desc
       limit 50
     `,
@@ -138,6 +146,14 @@ export async function findConversationForUser(
       where conversations.id = $1
         and conversation_participants.user_id = $2
         and conversations.archived_at is null
+        and not exists (
+          select 1
+          from conversation_participants blocked_participant
+          join user_blocks on user_blocks.blocked_user_id = blocked_participant.user_id
+          where blocked_participant.conversation_id = conversations.id
+            and blocked_participant.user_id <> $2
+            and user_blocks.blocker_id = $2
+        )
     `,
     [conversationId, userId],
   );
@@ -166,11 +182,17 @@ export async function listMessagesForConversation(
       from messages
       join users on users.id = messages.sender_id
       where messages.conversation_id = $1
-        and ($2::timestamptz is null or messages.created_at < $2::timestamptz)
+        and not exists (
+          select 1
+          from user_blocks
+          where user_blocks.blocker_id = $2
+            and user_blocks.blocked_user_id = messages.sender_id
+        )
+        and ($3::timestamptz is null or messages.created_at < $3::timestamptz)
       order by messages.created_at desc
-      limit $3
+      limit $4
     `,
-    [conversationId, before ?? null, limit],
+    [conversationId, userId, before ?? null, limit],
   );
 
   return rows.reverse().map(mapMessage);
@@ -185,6 +207,24 @@ export async function createMessageForConversation(
 ): Promise<ConversationMessage | undefined> {
   const isParticipant = await isConversationParticipant(db, conversationId, senderId);
   if (!isParticipant) {
+    return undefined;
+  }
+
+  const blocked = await queryOne<{ blocked_user_id: string }>(
+    db,
+    `
+      select user_blocks.blocked_user_id
+      from conversation_participants
+      join user_blocks on user_blocks.blocker_id = conversation_participants.user_id
+      where conversation_participants.conversation_id = $1
+        and conversation_participants.user_id <> $2
+        and user_blocks.blocked_user_id = $2
+      limit 1
+    `,
+    [conversationId, senderId],
+  );
+
+  if (blocked) {
     return undefined;
   }
 

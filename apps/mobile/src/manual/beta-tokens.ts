@@ -13,8 +13,11 @@ export const betaTokens = {
     accent: "#FF6A13",
     orangePressed: "#D95700",
     orangeSoft: "#321A0B",
+    orangeGlow: "rgba(255, 106, 19, 0.34)",
     accentMuted: "#321A0B",
     border: "#2A251F",
+    borderStrong: "#463629",
+    overlay: "rgba(255, 106, 19, 0.1)",
     success: "#53D178",
     warning: "#FFB347",
     danger: "#FF5A3D",
@@ -29,6 +32,6 @@ export const betaTokens = {
   radius: {
     sm: 6,
     md: 8,
-    lg: 12,
+    lg: 8,
   },
 } as const;

@@ -23,6 +23,23 @@ export type UserProfile = {
   updatedAt: string;
 };
 
+export type ReportReason = "inappropriate_content" | "scam_fraud" | "harassment" | "other";
+
+export type UserReport = {
+  id: string;
+  reporterId: string;
+  reportedUserId: string;
+  reason: ReportReason;
+  note?: string | undefined;
+  createdAt: string;
+};
+
+export type BlockedUser = {
+  userId: string;
+  displayName: string;
+  blockedAt: string;
+};
+
 export type AccessApplication = {
   id: string;
   name: string;
@@ -209,9 +226,27 @@ export type PublicCollectorSummary = {
   roles: UserRole[];
   trustScore: number;
   isElite: boolean;
+  tradeCount?: number | undefined;
+  completionRate?: number | undefined;
 };
 
-export type PublicTradeableItem = TradeableItem & {
+export type PublicTradeableItem = Pick<
+  TradeableItem,
+  | "category"
+  | "condition"
+  | "createdAt"
+  | "era"
+  | "flaws"
+  | "id"
+  | "photos"
+  | "publishedAt"
+  | "size"
+  | "status"
+  | "tag"
+  | "title"
+  | "updatedAt"
+  | "verificationStatus"
+> & {
   owner: PublicCollectorSummary;
 };
 
@@ -225,6 +260,18 @@ export type AiListingSuggestions = {
   estimatedValue?: EstimatedValueRange | undefined;
   confidence: "low" | "medium" | "high";
   generatedAt: string;
+};
+
+export type AiListingImageInput = {
+  data: string;
+  mediaType: "image/jpeg" | "image/png" | "image/webp";
+};
+
+export type AiListingSuggestionInput = Pick<
+  Partial<TradeableItem>,
+  "category" | "photos" | "size" | "title"
+> & {
+  aiImage?: AiListingImageInput | undefined;
 };
 
 export type CollectionSummary = {
@@ -407,6 +454,8 @@ export type Trade = {
   counterpartyShipping: TradeShippingSide;
   proposerNotes?: string | undefined;
   counterpartyNotes?: string | undefined;
+  proposerCompletedConfirmedAt?: string | undefined;
+  counterpartyCompletedConfirmedAt?: string | undefined;
   completedAt?: string | undefined;
   disputedAt?: string | undefined;
   disputeReason?: string | undefined;
@@ -436,8 +485,22 @@ export type ShipTradeInput = {
   carrier: TradeCarrier;
 };
 
+export type TradeCompletionInput = {
+  satisfied: boolean;
+};
+
 export type DisputeTradeInput = {
   reason: string;
+};
+
+export type ReportUserInput = {
+  reportedUserId: string;
+  reason: ReportReason;
+  note?: string | undefined;
+};
+
+export type BlockUserInput = {
+  blockedUserId: string;
 };
 
 export type TradeSummary = {

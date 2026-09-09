@@ -4,6 +4,7 @@ packages:
 
 allowBuilds:
   "@clerk/shared": true
+  "@sentry/cli": true
   "@sentry/cli@3.6.0": true
   browser-tabs-lock: true
   bufferutil: true

@@ -6,6 +6,7 @@
  * Uses only Node.js built-ins — no external dependencies.
  */
 import { readFileSync, writeFileSync, readdirSync, statSync } from "fs";
+import { fileURLToPath } from "url";
 import { join } from "path";
 
 function walkDir(dir) {
@@ -22,7 +23,7 @@ function walkDir(dir) {
   return files;
 }
 
-const distDir = new URL("../dist", import.meta.url).pathname;
+const distDir = fileURLToPath(new URL("../dist", import.meta.url));
 const files = walkDir(distDir);
 let count = 0;
 

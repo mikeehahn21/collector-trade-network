@@ -24,6 +24,23 @@ export const conversationTypingSchema = z.object({
   conversationId: z.string().uuid(),
 });
 
+export const reportReasonSchema = z.enum([
+  "inappropriate_content",
+  "scam_fraud",
+  "harassment",
+  "other",
+]);
+
+export const reportUserSchema = z.object({
+  reportedUserId: z.string().uuid(),
+  reason: reportReasonSchema,
+  note: z.string().trim().max(1000).optional(),
+});
+
+export const blockUserSchema = z.object({
+  blockedUserId: z.string().uuid(),
+});
+
 export const collectorTypeSchema = z.enum([
   "collector",
   "seller",
@@ -139,6 +156,11 @@ export const aiListingSuggestionsSchema = z.object({
   generatedAt: z.string().datetime(),
 });
 
+export const aiListingImageInputSchema = z.object({
+  data: z.string().min(100).max(7_500_000),
+  mediaType: z.enum(["image/jpeg", "image/png", "image/webp"]),
+});
+
 export const tradeableItemDraftSchema = z.object({
   photos: z.array(itemPhotoSchema).max(12).default([]),
   title: z.string().trim().max(120).default(""),
@@ -249,6 +271,10 @@ export const counterTradeSchema = z.object({
 export const shipTradeSchema = z.object({
   trackingNumber: z.string().trim().min(1, "Tracking number is required.").max(255),
   carrier: tradeCarrierSchema,
+});
+
+export const tradeCompletionSchema = z.object({
+  satisfied: z.boolean().default(true),
 });
 
 export const disputeTradeSchema = z.object({

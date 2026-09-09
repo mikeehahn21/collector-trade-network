@@ -20,6 +20,7 @@ import {
   markContextualTyping,
   sendContextualMessage,
 } from "./conversations.service";
+import { notifyConversationMessage } from "./conversation-notifications";
 
 export async function registerConversationRoutes(
   app: FastifyInstance,
@@ -107,6 +108,17 @@ export async function registerConversationRoutes(
       return reply.status(403).send({
         code: "MESSAGE_NOT_ALLOWED",
         message: "You cannot send messages in that conversation.",
+      });
+    }
+
+    const conversation = await getContextualConversation(services.db, conversationId, user.id);
+    if (conversation) {
+      await notifyConversationMessage({
+        conversation,
+        env: services.env,
+        logger: request.log,
+        message,
+        senderUserId: user.id,
       });
     }
 

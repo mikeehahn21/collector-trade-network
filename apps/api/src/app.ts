@@ -17,6 +17,7 @@ import { registerHealthRoutes } from "./modules/health/health.routes";
 import { registerConversationRoutes } from "./modules/conversations/conversations.routes";
 import { registerItemRoutes } from "./modules/items/items.routes";
 import { registerRecommendationRoutes } from "./modules/recommendations/recommendations.routes";
+import { registerReportRoutes } from "./modules/reports/reports.routes";
 import { registerReputationRoutes } from "./modules/reputation/reputation.routes";
 import { registerTradeRoutes } from "./modules/trades/trades.routes";
 import { registerUserRoutes } from "./modules/users/users.routes";
@@ -105,6 +106,7 @@ export async function buildApp(env: Env) {
   await registerWishlistRoutes(appInstance, { db, env });
   await registerRecommendationRoutes(appInstance, { db, env });
   await registerReputationRoutes(appInstance, { db, env });
+  await registerReportRoutes(appInstance, { db, env });
   await registerTradeRoutes(appInstance, { db, env });
   await registerConversationRoutes(appInstance, { db, env });
 
