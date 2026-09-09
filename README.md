@@ -1,4 +1,4 @@
-# Collector Trade Network
+# Konnesor App
 
 > AI-powered trusted social trading network for collectors. MVP wedge: Vintage T-shirts.
 
