@@ -277,12 +277,14 @@ export function HomeTab({
   localThreads,
   localTrades,
   onOpenTradeDetail,
+  onOpenDiagnostics,
   onUnblockUser,
   setTab,
 }: {
   blockedUsers: BlockedUser[];
   localThreads: LocalConversation[];
   localTrades: LocalTradeProposal[];
+  onOpenDiagnostics: () => void;
   onOpenTradeDetail: (tradeId: string) => void;
   onUnblockUser: (userId: string) => void;
   setTab: (tab: Tab) => void;
@@ -555,6 +557,7 @@ export function HomeTab({
           <Pressable
             accessibilityLabel="Open collector profile"
             accessibilityRole="button"
+            onLongPress={onOpenDiagnostics}
             onPress={() => setShowProfile(true)}
             style={({ pressed }) => ({
               alignItems: "center",
@@ -601,7 +604,7 @@ export function HomeTab({
             <View style={{ gap: 4 }}>
               <BetaKicker>MATCH FEED</BetaKicker>
               <Text style={{ color: theme.colors.ink, fontSize: 28, fontWeight: "900" }}>
-                Trade floor
+                Picks for you
               </Text>
             </View>
             <Pressable
@@ -627,15 +630,24 @@ export function HomeTab({
           {recommendationsLoading ? (
             <BetaEmptyState message="Ranking live collector inventory." title="Loading matches" />
           ) : feedEntries.length > 0 ? (
-            feedEntries.map((entry, index) => (
-              <HomeFeedCard
-                entry={entry}
-                isCreating={tradeCreateId === entry.id}
-                isTop={index === 0}
-                key={entry.id}
-                onPress={() => void createTradeFromFeed(entry)}
+            <>
+              <HomeFeedContextCard
+                collectionCount={collectionSummary.tradeableItems}
+                entries={feedEntries}
+                onOpenCollection={() => setTab("inventory")}
+                onOpenWishlist={() => setTab("wishlist")}
+                wishlistCount={wishlistSummary.activeItems}
               />
-            ))
+              {feedEntries.map((entry, index) => (
+                <HomeFeedCard
+                  entry={entry}
+                  isCreating={tradeCreateId === entry.id}
+                  isTop={index === 0}
+                  key={entry.id}
+                  onPress={() => void createTradeFromFeed(entry)}
+                />
+              ))}
+            </>
           ) : (
             <BetaEmptyState
               message={
@@ -725,6 +737,83 @@ export function buildHomeFeedEntries({
     id: `preview_${item.id}`,
     kind: "preview" as const,
   }));
+}
+
+export function HomeFeedContextCard({
+  collectionCount,
+  entries,
+  onOpenCollection,
+  onOpenWishlist,
+  wishlistCount,
+}: {
+  collectionCount: number;
+  entries: HomeFeedEntry[];
+  onOpenCollection: () => void;
+  onOpenWishlist: () => void;
+  wishlistCount: number;
+}) {
+  const recommendationCount = entries.filter((entry) => entry.kind === "recommendation").length;
+  const browseCount = entries.filter((entry) => entry.kind === "browse").length;
+  const previewCount = entries.filter((entry) => entry.kind === "preview").length;
+  const headline =
+    recommendationCount > 0
+      ? `${recommendationCount} live match${recommendationCount === 1 ? "" : "es"} ranked for you`
+      : browseCount > 0
+        ? "Browse live tradeable pieces while matches build"
+        : "Preview the trade floor before more collectors join";
+  const body =
+    recommendationCount > 0
+      ? "Tap any card to propose that exact trade. Grail and mutual-match cards get the orange highlight."
+      : browseCount > 0
+        ? "These are real tradeable items from the live marketplace, shown until Konnesor has enough signal to rank personal matches."
+        : "These sample cards show the full matching experience so the Home screen does not feel empty during early beta testing.";
+  const showCollectionAction = collectionCount === 0;
+  const showWishlistAction = wishlistCount === 0;
+
+  return (
+    <BetaPanel tone={recommendationCount > 0 ? "black" : "peach"}>
+      <View style={{ gap: 4 }}>
+        <BetaKicker>
+          {recommendationCount > 0
+            ? "LIVE MATCHES"
+            : browseCount > 0
+              ? "BROWSE MODE"
+              : "BETA PREVIEW"}
+        </BetaKicker>
+        <Text style={{ color: beta.colors.ink, fontSize: 20, fontWeight: "900" }}>{headline}</Text>
+        <Text style={{ color: beta.colors.inkMuted, fontSize: 13, lineHeight: 19 }}>{body}</Text>
+      </View>
+
+      {showCollectionAction || showWishlistAction ? (
+        <View style={{ flexDirection: "row", gap: beta.spacing.sm }}>
+          {showCollectionAction ? (
+            <View style={{ flex: 1 }}>
+              <BetaButton accessibilityLabel="Add collection item" onPress={onOpenCollection}>
+                Add Collection
+              </BetaButton>
+            </View>
+          ) : null}
+          {showWishlistAction ? (
+            <View style={{ flex: 1 }}>
+              <BetaButton
+                accessibilityLabel="Add wishlist item"
+                onPress={onOpenWishlist}
+                variant={showCollectionAction ? "secondary" : "primary"}
+              >
+                Add Wishlist
+              </BetaButton>
+            </View>
+          ) : null}
+        </View>
+      ) : null}
+
+      <View style={{ flexDirection: "row", gap: beta.spacing.sm }}>
+        <MiniSignal label="Matches" value={`${recommendationCount}`} />
+        <MiniSignal label="Browse" value={`${browseCount}`} />
+        <MiniSignal label="Preview" value={`${previewCount}`} />
+      </View>
+    </BetaPanel>
+  );
 }
 
 export function HomeFeedCard({

@@ -58,6 +58,7 @@ import type {
   WishlistItem,
 } from "./beta-app.shared";
 import { InventoryTab, WishlistTab } from "./screens/collection-wishlist-tabs";
+import { DiagnosticsScreen } from "./screens/diagnostics-screen";
 import { HomeTab } from "./screens/home-tab";
 import { FirstRunOnboardingFlow, KonnesorIntro } from "./screens/onboarding-flow";
 import { MessagesTab } from "./screens/messages-tab";
@@ -93,6 +94,7 @@ function BetaShell() {
   const onboarding = useOnboardingState();
   const auth = useAuthSession();
   const [showIntro, setShowIntro] = useState(true);
+  const [showDiagnostics, setShowDiagnostics] = useState(false);
   const introLift = useRef(new Animated.Value(18)).current;
   const introOpacity = useRef(new Animated.Value(0)).current;
   const introPulse = useRef(new Animated.Value(0)).current;
@@ -232,6 +234,7 @@ function BetaShell() {
   }, []);
 
   function openTab(nextTab: Tab) {
+    setShowDiagnostics(false);
     setTab(nextTab);
     if (nextTab !== "inventory") {
       setInventoryRoute({ itemId: undefined, mode: "list" });
@@ -513,6 +516,19 @@ function BetaShell() {
     return <FirstRunOnboardingFlow />;
   }
 
+  if (showDiagnostics) {
+    return (
+      <DiagnosticsScreen
+        backendFallbacks={backendFallbacks}
+        backendHealth={backendHealth}
+        blockedUserCount={blockedUsers.length}
+        localThreadCount={visibleLocalThreads.length}
+        localTradeCount={visibleLocalTrades.length}
+        onBack={() => setShowDiagnostics(false)}
+      />
+    );
+  }
+
   return (
     <View style={{ backgroundColor: beta.colors.background, flex: 1 }}>
       <View style={{ flex: 1 }}>
@@ -526,6 +542,7 @@ function BetaShell() {
               setTradeRoute({ mode: "detail", tradeId });
             }}
             onUnblockUser={unblockUserLocally}
+            onOpenDiagnostics={() => setShowDiagnostics(true)}
             setTab={openTab}
           />
         ) : null}
